@@ -21,60 +21,35 @@ namespace RedArrow.Jsorm.Core.Map
 			IdMap = new IdMap<TModel, string>(id);
 			return IdMap;
 		}
+
 		protected IIdMap Id(Expression<Func<TModel, Guid>> id)
 		{
 			IdMap = new IdMap<TModel, Guid>(id);
 			return IdMap;
 		}
 
-		protected IAttributeMap Attribute<TProp>(Expression<Func<TModel, TProp>> attribute)
+		protected IAttributeMap Attribute<TProp>(Expression<Func<TModel, TProp>> attribute, string attrName = null)
 		{
 			var propName = attribute.PropertyName();
-			var attrMap = new AttributeMap<TModel, TProp>(attribute);
+			var attrMap = new AttributeMap<TModel, TProp>(attribute, attrName ?? propName);
 			AttributeMaps[propName] = attrMap;
 			return attrMap;
 		}
 
-		protected IAttributeMap Attribute<TProp>(Expression<Func<TModel, TProp>> attribute, string attrName)
-		{
-			var propName = attribute.PropertyName();
-			var attrMap = new AttributeMap<TModel, TProp>(attribute, attrName);
-			AttributeMaps[propName] = attrMap;
-			return attrMap;
-		}
-
-		protected IHasOneMap HasOne<TProp>(Expression<Func<TModel, TProp>> toOne)
+		protected IHasOneMap HasOne<TProp>(Expression<Func<TModel, TProp>> toOne, string attrName = null)
 			where TProp : new()
 		{
 			var propName = toOne.PropertyName();
-			var toOneMap = new HasOneMap<TModel, TProp>(toOne);
+			var toOneMap = new HasOneMap<TModel, TProp>(toOne, attrName ?? propName);
 			HasOneMaps[propName] = toOneMap;
 			return toOneMap;
 		}
 
-		protected IHasOneMap HasOne<TProp>(Expression<Func<TModel, TProp>> toOne, string attrName)
-			where TProp : new()
-		{
-			var propName = toOne.PropertyName();
-			var toOneMap = new HasOneMap<TModel, TProp>(toOne, attrName);
-			HasOneMaps[propName] = toOneMap;
-			return toOneMap;
-		}
-
-		protected IHasManyMap HasMany<TElement>(Expression<Func<TModel, IEnumerable<TElement>>> toMany)
+		protected IHasManyMap HasMany<TElement>(Expression<Func<TModel, IEnumerable<TElement>>> toMany, string attrName = null)
 			where TElement : new()
 		{
 			var propName = toMany.PropertyName();
-			var toManyMap = new HasManyMap<TModel, TElement>(toMany);
-			HasManyMaps[propName] = toManyMap;
-			return toManyMap;
-		}
-
-		protected IHasManyMap HasMany<TElement>(Expression<Func<TModel, IEnumerable<TElement>>> toMany, string attrName)
-			where TElement : new()
-		{
-			var propName = toMany.PropertyName();
-			var toManyMap = new HasManyMap<TModel, TElement>(toMany, attrName);
+			var toManyMap = new HasManyMap<TModel, TElement>(toMany, attrName ?? propName);
 			HasManyMaps[propName] = toManyMap;
 			return toManyMap;
 		}
