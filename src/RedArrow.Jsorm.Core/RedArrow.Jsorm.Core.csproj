@@ -41,14 +41,17 @@
   <ItemGroup>
     <Compile Include="Extensions\ExpressionExtensions.cs" />
     <Compile Include="Map\AttributeMap.cs" />
+    <Compile Include="Map\Attributes\FilterAttribute.cs" />
+    <Compile Include="Map\Attributes\IMapAttribute.cs" />
+    <Compile Include="Map\Attributes\SortOrderAttribute.cs" />
     <Compile Include="Map\HasManyMap.cs" />
-    <Compile Include="Map\IAttributeMap.cs" />
     <Compile Include="Map\IdMap.cs" />
-    <Compile Include="Map\IHasManyMap.cs" />
+    <Compile Include="Map\Id\GuidCombGenerator.cs" />
+    <Compile Include="Map\Id\IIdentifierGenerator.cs" />
     <Compile Include="Map\IIdMap.cs" />
     <Compile Include="Map\IPropertyMap.cs" />
+    <Compile Include="Map\IReferenceMap.cs" />
     <Compile Include="Map\IResourceMap.cs" />
-    <Compile Include="Map\IHasOneMap.cs" />
     <Compile Include="Map\PropertyMap.cs" />
     <Compile Include="Map\ResourceMap.cs" />
     <Compile Include="Map\HasOneMap.cs" />
