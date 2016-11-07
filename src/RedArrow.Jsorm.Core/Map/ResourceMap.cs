@@ -73,7 +73,7 @@ namespace RedArrow.Jsorm.Core.Map
 			return attribute;
 		}
 
-		protected FilterAttribute<TModel> FilterBy<TProp>(Expression<Func<TModel, TProp>> attribute)
+		protected FilterAttribute<TModel> FilterBy<TProp>(Expression<Func<TModel, TProp>> attribute, FilterOp op, TProp value)
 		{
 			throw new NotImplementedException();
 		} 

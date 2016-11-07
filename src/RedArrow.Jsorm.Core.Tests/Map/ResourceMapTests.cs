@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using RedArrow.Jsorm.Core.Map;
+using RedArrow.Jsorm.Core.Map.Attributes;
 using RedArrow.Jsorm.Core.Map.Id;
 using Xunit;
 
