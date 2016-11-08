@@ -209,7 +209,10 @@ namespace RedArrow.Jsorm.Core.Tests.Map
 				HasMany(x => x.ModelHasManyEnumerable, attrName);
 				HasMany(x => x.HasOneModelArray);
 				HasMany(x => x.ModelHasManyList);
-				HasMany(x => x.ModelHasManySet);
+				HasMany(x => x.ModelHasManySet)
+					.SortBy(x => x.ModelHasOne)
+					.Ascending()
+					.Cascade();
 			}
 		}
 

@@ -1,7 +1,4 @@
-﻿using System;
-using RedArrow.Jsorm.Core.Map.Id;
-
-namespace RedArrow.Jsorm.Core.Map
+﻿namespace RedArrow.Jsorm.Core.Map.Id
 {
 	public interface IIdMap : IPropertyMap
 	{

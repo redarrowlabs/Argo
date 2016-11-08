@@ -41,20 +41,25 @@
   <ItemGroup>
     <Compile Include="Extensions\ExpressionExtensions.cs" />
     <Compile Include="Map\AttributeMap.cs" />
-    <Compile Include="Map\Attributes\FilterAttribute.cs" />
+    <Compile Include="Map\Attributes\BatchSizeAttribute.cs" />
+    <Compile Include="Map\Attributes\CascadeStyleAttribute.cs" />
+    <Compile Include="Map\Attributes\FetchStrategyAttribute.cs" />
     <Compile Include="Map\Attributes\IMapAttribute.cs" />
     <Compile Include="Map\Attributes\SortOrderAttribute.cs" />
-    <Compile Include="Map\HasManyMap.cs" />
-    <Compile Include="Map\IdMap.cs" />
+    <Compile Include="Map\HasMany\HasManyMap.cs" />
+    <Compile Include="Map\HasMany\ICascadeHasManyMap.cs" />
+    <Compile Include="Map\HasMany\ISortedHasManyMap.cs" />
+    <Compile Include="Map\HasMany\IHasManyMap.cs" />
+    <Compile Include="Map\HasOne\IHasOneMap.cs" />
+    <Compile Include="Map\Id\IdMap.cs" />
     <Compile Include="Map\Id\GuidCombGenerator.cs" />
     <Compile Include="Map\Id\IIdentifierGenerator.cs" />
-    <Compile Include="Map\IIdMap.cs" />
+    <Compile Include="Map\Id\IIdMap.cs" />
     <Compile Include="Map\IPropertyMap.cs" />
-    <Compile Include="Map\IReferenceMap.cs" />
     <Compile Include="Map\IResourceMap.cs" />
     <Compile Include="Map\PropertyMap.cs" />
     <Compile Include="Map\ResourceMap.cs" />
-    <Compile Include="Map\HasOneMap.cs" />
+    <Compile Include="Map\HasOne\HasOneMap.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />

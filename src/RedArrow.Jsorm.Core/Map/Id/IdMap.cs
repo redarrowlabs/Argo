@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
-using RedArrow.Jsorm.Core.Map.Id;
 
-namespace RedArrow.Jsorm.Core.Map
+namespace RedArrow.Jsorm.Core.Map.Id
 {
 	public class IdMap<TModel, TId> : PropertyMap<TModel, TId>, IIdMap
 		where TModel : new()

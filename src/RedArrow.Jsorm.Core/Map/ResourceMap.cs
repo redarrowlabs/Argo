@@ -4,6 +4,9 @@ using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 using RedArrow.Jsorm.Core.Extensions;
 using RedArrow.Jsorm.Core.Map.Attributes;
+using RedArrow.Jsorm.Core.Map.HasMany;
+using RedArrow.Jsorm.Core.Map.HasOne;
+using RedArrow.Jsorm.Core.Map.Id;
 
 namespace RedArrow.Jsorm.Core.Map
 {
@@ -17,8 +20,6 @@ namespace RedArrow.Jsorm.Core.Map
 		private readonly IDictionary<string, IPropertyMap> _referenceMaps = new Dictionary<string, IPropertyMap>();
 
 		private readonly IDictionary<string, IPropertyMap> _collectionMaps = new Dictionary<string, IPropertyMap>();
-		
-		private readonly IDictionary<string, IMapAttribute> _attributes = new Dictionary<string, IMapAttribute>(); 
 
 		protected IdMap<TModel, string> Id(Expression<Func<TModel, string>> id)
 		{
@@ -51,7 +52,7 @@ namespace RedArrow.Jsorm.Core.Map
 			return toOneMap;
 		}
 
-		protected HasManyMap<TModel, TElement> HasMany<TElement>(Expression<Func<TModel, IEnumerable<TElement>>> toMany, string attrName = null)
+		protected IHasManyMap<TModel, TElement> HasMany<TElement>(Expression<Func<TModel, IEnumerable<TElement>>> toMany, string attrName = null)
 			where TElement : new()
 		{
 			var propName = toMany.PropertyName();
@@ -59,23 +60,5 @@ namespace RedArrow.Jsorm.Core.Map
 			_collectionMaps[propName] = toManyMap;
 			return toManyMap;
 		}
-		
-		protected SortOrderAttribute<TModel> SortBy<TProp>(Expression<Func<TModel, TProp>> attribute)
-		{
-			var attrName = attribute.PropertyName();
-			return SortBy(attrName);
-		}
-
-		protected SortOrderAttribute<TModel> SortBy(string attrName)
-		{
-			var attribute = new SortOrderAttribute<TModel>(attrName);
-			_attributes[nameof(SortBy)] = attribute;
-			return attribute;
-		}
-
-		protected FilterAttribute<TModel> FilterBy<TProp>(Expression<Func<TModel, TProp>> attribute, FilterOp op, TProp value)
-		{
-			throw new NotImplementedException();
-		} 
 	}
 }

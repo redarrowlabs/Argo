@@ -5,7 +5,8 @@ using RedArrow.Jsorm.Core.Extensions;
 
 namespace RedArrow.Jsorm.Core.Map.Attributes
 {
-	public class SortOrderAttribute<TModel> : IMapAttribute
+	public class SortOrderAttribute<TModel, TElement> : IMapAttribute
+		where TElement : new()
 	{
 		internal enum SortOrder
 		{
@@ -13,44 +14,48 @@ namespace RedArrow.Jsorm.Core.Map.Attributes
 			Descending
 		}
 
+		private string CollectionAttribute { get; }
+
 		private IList<string> SortAttributes { get; }
 		private IDictionary<string, SortOrder> SortOrders { get; }
 
 		private string _currentAttribute;
 
-		public SortOrderAttribute(string attrName)
+		public SortOrderAttribute(string collectionAttr, string elementAttr)
 		{
+			CollectionAttribute = collectionAttr;
+
 			SortAttributes = new List<string>();
 			SortOrders = new Dictionary<string, SortOrder>();
 
-			ThenBy(attrName);
+			ThenBy(elementAttr);
 		}
 
-		public SortOrderAttribute<TModel> ThenBy<TProp>(Expression<Func<TModel, TProp>> attribute)
+		public SortOrderAttribute<TModel, TElement> ThenBy<TProp>(Expression<Func<TElement, TProp>> elementAttr)
 		{
-			var attrName = attribute.PropertyName();
+			var attrName = elementAttr.PropertyName();
 			return ThenBy(attrName);
 		}
 
-		public SortOrderAttribute<TModel> ThenBy(string attrName)
+		public SortOrderAttribute<TModel, TElement> ThenBy(string elementAttr)
 		{
-			_currentAttribute = attrName;
+			_currentAttribute = elementAttr;
 
 			if (!SortAttributes.Contains(_currentAttribute))
 			{
 				SortAttributes.Add(_currentAttribute);
+				SortOrders[_currentAttribute] = SortOrder.Ascending;
 			}
-			SortOrders[_currentAttribute] = SortOrder.Ascending;
 			return this;
 		}
 
-		public SortOrderAttribute<TModel> Ascending()
+		public SortOrderAttribute<TModel, TElement> Ascending()
 		{
 			SortOrders[_currentAttribute] = SortOrder.Ascending;
 			return this;
 		}
 
-		public SortOrderAttribute<TModel> Descending()
+		public SortOrderAttribute<TModel, TElement> Descending()
 		{
 			SortOrders[_currentAttribute] = SortOrder.Descending;
 			return this;
