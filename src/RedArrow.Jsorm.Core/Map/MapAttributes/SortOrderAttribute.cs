@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using RedArrow.Jsorm.Core.Extensions;
 
-namespace RedArrow.Jsorm.Core.Map.Attributes
+namespace RedArrow.Jsorm.Core.Map.MapAttributes
 {
 	public class SortOrderAttribute<TModel, TElement> : IMapAttribute
 		where TElement : new()
