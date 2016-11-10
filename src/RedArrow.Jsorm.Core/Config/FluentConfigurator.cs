@@ -8,7 +8,7 @@ namespace RedArrow.Jsorm.Core.Config
     public class FluentConfigurator
     {
         private IList<Action<MappingConfiguration>> MapBuilders { get; }
-        private Func<IModelRegistry> ModelRegistryBuilder { get; set; }
+        private Func<ICacheProvider> ModelRegistryBuilder { get; set; }
 
         internal SessionConfiguration SessionConfiguration { get; }
 
@@ -44,7 +44,7 @@ namespace RedArrow.Jsorm.Core.Config
 
             mapConfig.Configure(SessionConfiguration);
 
-            SessionConfiguration.ModelRegistry = ModelRegistryBuilder();
+            SessionConfiguration.CacheProvider = ModelRegistryBuilder();
 
             return SessionConfiguration;
         }

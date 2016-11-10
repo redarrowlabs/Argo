@@ -12,21 +12,20 @@ namespace RedArrow.Jsorm.Core.Config
     public class SessionConfiguration
     {
         internal IList<IResourceMap> Maps { get; }
-        internal IModelRegistry ModelRegistry { get; set; }
+        internal ICacheProvider CacheProvider { get; set; }
 
         internal SessionConfiguration()
         {
             Maps = new List<IResourceMap>();
-            ModelRegistry = new DefaultModelRegistry();
+            CacheProvider = new DefaultCacheProvider();
         }
 
         public ISessionFactory BuildSessionFactory()
         {
-            var factory = new SessionFactory(ModelRegistry);
+            var factory = new SessionFactory(CacheProvider);
 
             foreach (var map in Maps)
             {
-                factory.Register(map.ModelType);
                 map.Configure(factory);
             }
 

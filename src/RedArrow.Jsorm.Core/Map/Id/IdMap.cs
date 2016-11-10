@@ -6,6 +6,7 @@ namespace RedArrow.Jsorm.Core.Map.Id
 {
     public class IdMap<TModel, TId> : PropertyMap<TModel, TId>, IIdMap
         where TModel : new()
+        where TId : class
     {
         private readonly Func<TModel, TId> _getId;
 
@@ -18,7 +19,7 @@ namespace RedArrow.Jsorm.Core.Map.Id
 
         public override void Configure(ISessionFactory factory)
         {
-            throw new NotImplementedException();
+            factory.Register(_getId);
         }
 
         public TId GetId(TModel model)

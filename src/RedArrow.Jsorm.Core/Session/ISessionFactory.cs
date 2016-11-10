@@ -4,6 +4,8 @@ namespace RedArrow.Jsorm.Core.Session
 {
     public interface ISessionFactory
     {
-        void Register(Type modelType);
+        ISession CreateSession();
+
+        void Register(Func<object, object> getId);
     }
 }
