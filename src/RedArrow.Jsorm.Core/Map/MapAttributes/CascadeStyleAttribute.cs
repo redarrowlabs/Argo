@@ -1,4 +1,4 @@
-﻿namespace RedArrow.Jsorm.Core.Map.Attributes
+﻿namespace RedArrow.Jsorm.Core.Map.MapAttributes
 {
 	public class CascadeStyleAttribute : IMapAttribute
 	{

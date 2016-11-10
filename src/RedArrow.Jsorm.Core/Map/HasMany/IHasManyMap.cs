@@ -1,6 +1,5 @@
 using System;
 using System.Linq.Expressions;
-using RedArrow.Jsorm.Core.Map.Attributes;
 
 namespace RedArrow.Jsorm.Core.Map.HasMany
 {

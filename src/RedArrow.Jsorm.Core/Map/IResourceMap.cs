@@ -1,6 +1,9 @@
-﻿namespace RedArrow.Jsorm.Core.Map
+﻿using RedArrow.Jsorm.Core.Session;
+
+namespace RedArrow.Jsorm.Core.Map
 {
-	public interface IResourceMap
-	{
-	}
+    public interface IResourceMap
+    {
+        void Configure(ISessionFactory factory);
+    }
 }
