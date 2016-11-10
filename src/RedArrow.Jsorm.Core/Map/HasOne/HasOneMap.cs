@@ -8,7 +8,6 @@ namespace RedArrow.Jsorm.Core.Map.HasOne
     public class HasOneMap<TModel, TProp> :
         PropertyMap<TModel, TProp>,
         IHasOneMap<TModel, TProp>
-        where TProp : new()
     {
         public HasOneMap(Expression<Func<TModel, TProp>> property, string attrName = null) :
             base(property, attrName)

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RedArrow.Jsorm.Core.Map.Id.Generator;
+using System;
 
 namespace RedArrow.Jsorm.Core.Session
 {
@@ -6,6 +7,10 @@ namespace RedArrow.Jsorm.Core.Session
     {
         ISession CreateSession();
 
-        void Register(Func<object, object> getId);
+        void Register(Type modelType);
+
+        void Register<TModel>(Func<object, Guid> getId);
+
+        void Register<TModel>(IIdentifierGenerator generator);
     }
 }

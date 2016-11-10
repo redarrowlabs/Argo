@@ -27,7 +27,7 @@ namespace RedArrow.Jsorm.Core.Config
             return this;
         }
 
-        public FluentConfigurator Registry(Func<AbstractModelRegistry> modelRegistry)
+        public FluentConfigurator Cache(Func<ICacheProvider> modelRegistry)
         {
             ModelRegistryBuilder = modelRegistry;
             return this;

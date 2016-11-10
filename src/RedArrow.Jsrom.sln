@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RedArrow.Jsorm.Core", "RedA
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "~Tests", "~Tests", "{38A57A5C-EF3C-423E-A33E-5796E03760AD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RedArrow.Jsorm.Core.Tests", "RedArrow.Jsorm.Core.Tests\RedArrow.Jsorm.Core.Tests.csproj", "{48B4F3A3-FA21-432A-A8D3-97FD964E0061}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,8 +19,15 @@ Global
 		{F540B5CA-B7C2-4799-9EB2-B5401BD1F28C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F540B5CA-B7C2-4799-9EB2-B5401BD1F28C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F540B5CA-B7C2-4799-9EB2-B5401BD1F28C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{48B4F3A3-FA21-432A-A8D3-97FD964E0061}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{48B4F3A3-FA21-432A-A8D3-97FD964E0061}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{48B4F3A3-FA21-432A-A8D3-97FD964E0061}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{48B4F3A3-FA21-432A-A8D3-97FD964E0061}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{48B4F3A3-FA21-432A-A8D3-97FD964E0061} = {38A57A5C-EF3C-423E-A33E-5796E03760AD}
 	EndGlobalSection
 EndGlobal

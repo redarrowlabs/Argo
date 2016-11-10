@@ -10,7 +10,7 @@
     {
         // TODO
         // private AutoMapsStore AutoMaps { get; }
-        private ResourceMapsStore ResourceMaps { get; }
+        public ResourceMapsStore ResourceMaps { get; }
 
         public MappingConfiguration()
         {

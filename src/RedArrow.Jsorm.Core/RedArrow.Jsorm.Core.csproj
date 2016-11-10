@@ -40,7 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Config\SessionConfiguration.cs" />
-    <Compile Include="Config\Jsorm.cs" />
+    <Compile Include="Config\Fluently.cs" />
     <Compile Include="Config\FluentConfigurator.cs" />
     <Compile Include="Config\ResourceMapsStore.cs" />
     <Compile Include="Extensions\EnumerableExtensions.cs" />
@@ -62,8 +62,8 @@
     <Compile Include="Map\HasMany\IHasManyMap.cs" />
     <Compile Include="Map\HasOne\IHasOneMap.cs" />
     <Compile Include="Map\Id\IdMap.cs" />
-    <Compile Include="Map\Id\GuidCombGenerator.cs" />
-    <Compile Include="Map\Id\IIdentifierGenerator.cs" />
+    <Compile Include="Map\Id\Generator\GuidCombGenerator.cs" />
+    <Compile Include="Map\Id\Generator\IIdentifierGenerator.cs" />
     <Compile Include="Map\Id\IIdMap.cs" />
     <Compile Include="Map\IPropertyMap.cs" />
     <Compile Include="Map\IResourceMap.cs" />

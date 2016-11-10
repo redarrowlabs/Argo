@@ -1,6 +1,6 @@
 ﻿namespace RedArrow.Jsorm.Core.Config
 {
-    public static class Jsorm
+    public static class Fluently
     {
         public static FluentConfigurator Configure()
         {

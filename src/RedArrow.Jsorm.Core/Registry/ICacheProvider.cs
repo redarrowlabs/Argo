@@ -2,7 +2,7 @@
 
 namespace RedArrow.Jsorm.Core.Registry
 {
-    internal interface ICacheProvider
+    public interface ICacheProvider
     {
         void Register(Type type);
 
