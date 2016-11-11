@@ -22,6 +22,8 @@ namespace RedArrow.Jsorm.Core.Tests.Session
             subject.Register<TestModel>(x => idFunc((TestModel)x));
 
             var id = subject.IdAccessors[model.GetType()](model);
+
+            Assert.Equal(model.Id, id);
         }
 
         private Func<TModel, TId> GetAccessor<TModel, TId>(Expression<Func<TModel, TId>> expression)
@@ -37,11 +39,6 @@ namespace RedArrow.Jsorm.Core.Tests.Session
         private class TestModel
         {
             public Guid Id { get; set; }
-
-            public Func<TestModel, Guid> GetIdAccessor(Expression<Func<TestModel, Guid>> expression)
-            {
-                return expression.Compile();
-            }
         }
     }
 }
