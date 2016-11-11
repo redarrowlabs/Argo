@@ -40,7 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Config\SessionConfiguration.cs" />
-    <Compile Include="Config\Jsorm.cs" />
+    <Compile Include="Config\Fluently.cs" />
     <Compile Include="Config\FluentConfigurator.cs" />
     <Compile Include="Config\ResourceMapsStore.cs" />
     <Compile Include="Extensions\EnumerableExtensions.cs" />
@@ -48,6 +48,7 @@
     <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="Infrastructure\JsormException.cs" />
     <Compile Include="Infrastructure\ModelNotRegisteredException.cs" />
+    <Compile Include="Infrastructure\ModelTypeMismatchException.cs" />
     <Compile Include="LibLog\LibLog.cs" />
     <Compile Include="Map\AttributeMap.cs" />
     <Compile Include="Map\MapAttributes\BatchSizeAttribute.cs" />
@@ -61,8 +62,8 @@
     <Compile Include="Map\HasMany\IHasManyMap.cs" />
     <Compile Include="Map\HasOne\IHasOneMap.cs" />
     <Compile Include="Map\Id\IdMap.cs" />
-    <Compile Include="Map\Id\GuidCombGenerator.cs" />
-    <Compile Include="Map\Id\IIdentifierGenerator.cs" />
+    <Compile Include="Map\Id\Generator\GuidCombGenerator.cs" />
+    <Compile Include="Map\Id\Generator\IIdentifierGenerator.cs" />
     <Compile Include="Map\Id\IIdMap.cs" />
     <Compile Include="Map\IPropertyMap.cs" />
     <Compile Include="Map\IResourceMap.cs" />
@@ -71,10 +72,10 @@
     <Compile Include="Map\ResourceMap.cs" />
     <Compile Include="Map\HasOne\HasOneMap.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Registry\IModelRegistry.cs" />
+    <Compile Include="Registry\ICacheProvider.cs" />
     <Compile Include="Session\ISession.cs" />
     <Compile Include="Session\ISessionFactory.cs" />
-    <Compile Include="Registry\DefaultModelRegistry.cs" />
+    <Compile Include="Registry\DefaultCacheProvider.cs" />
     <Compile Include="Session\Session.cs" />
     <Compile Include="Session\SessionFactory.cs" />
   </ItemGroup>

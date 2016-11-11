@@ -5,15 +5,14 @@ using RedArrow.Jsorm.Core.Map.Id;
 using RedArrow.Jsorm.Core.Session;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 
 namespace RedArrow.Jsorm.Core.Map
 {
     public class ResourceMap<TModel> : IResourceMap
-        where TModel : new()
+        where TModel : class, new()
     {
-        private IIdMap IdMap { get; set; }
+        private IIdMap<TModel> IdMap { get; set; }
 
         private readonly IDictionary<string, IPropertyMap> _attributeMaps = new Dictionary<string, IPropertyMap>();
 
@@ -31,16 +30,9 @@ namespace RedArrow.Jsorm.Core.Map
             _collectionMaps.Values.Each(x => x.Configure(factory));
         }
 
-        protected IdMap<TModel, string> Id(Expression<Func<TModel, string>> id)
+        protected IdMap<TModel> Id(Expression<Func<TModel, Guid>> id)
         {
-            var idMap = new IdMap<TModel, string>(id);
-            IdMap = idMap;
-            return idMap;
-        }
-
-        protected IdMap<TModel, Guid> Id(Expression<Func<TModel, Guid>> id)
-        {
-            var idMap = new IdMap<TModel, Guid>(id);
+            var idMap = new IdMap<TModel>(id);
             IdMap = idMap;
             return idMap;
         }

@@ -20,7 +20,7 @@ namespace RedArrow.Jsorm.Core.Extensions
 
             if (result == null)
             {
-                throw new JsormException($"A default (no-arg) constructor could not be found for: {type.FullName}");
+                throw new JsormException("A default (no-arg) constructor could not be found for: ", type);
             }
 
             return result;

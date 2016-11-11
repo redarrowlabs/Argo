@@ -2,10 +2,10 @@
 
 namespace RedArrow.Jsorm.Core.Registry
 {
-    internal interface IModelRegistry
+    public interface ICacheProvider
     {
         void Register(Type type);
 
-        T Resolve<T>();
+        T Get<T>(object id);
     }
 }

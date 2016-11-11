@@ -12,7 +12,6 @@ namespace RedArrow.Jsorm.Core.Map.HasMany
         ISortedHasManyMap<TModel, TElement>,
         ICascadeHasManyMap<TModel, TElement>,
         IHasManyMap<TModel, TElement> // for brevity
-        where TElement : new()
     {
         public HasManyMap(Expression<Func<TModel, IEnumerable<TElement>>> property, string attrName = null) :
             base(property, attrName)
