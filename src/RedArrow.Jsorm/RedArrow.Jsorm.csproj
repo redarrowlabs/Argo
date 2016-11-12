@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{F540B5CA-B7C2-4799-9EB2-B5401BD1F28C}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>RedArrow.Jsorm</RootNamespace>
+    <AssemblyName>RedArrow.Jsorm</AssemblyName>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;LIBLOG_PORTABLE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="project.json" />
+    <!-- A reference to the entire .NET Framework is automatically included -->
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="Config\SessionConfiguration.cs" />
+    <Compile Include="Config\Fluently.cs" />
+    <Compile Include="Config\FluentConfigurator.cs" />
+    <Compile Include="Config\ResourceMapsStore.cs" />
+    <Compile Include="Extensions\EnumerableExtensions.cs" />
+    <Compile Include="Extensions\ExpressionExtensions.cs" />
+    <Compile Include="Extensions\TypeExtensions.cs" />
+    <Compile Include="Infrastructure\JsormException.cs" />
+    <Compile Include="Infrastructure\ModelNotRegisteredException.cs" />
+    <Compile Include="Infrastructure\ModelTypeMismatchException.cs" />
+    <Compile Include="LibLog\LibLog.cs" />
+    <Compile Include="Map\AttributeMap.cs" />
+    <Compile Include="Map\MapAttributes\BatchSizeAttribute.cs" />
+    <Compile Include="Map\MapAttributes\CascadeStyleAttribute.cs" />
+    <Compile Include="Map\MapAttributes\FetchStrategyAttribute.cs" />
+    <Compile Include="Map\MapAttributes\IMapAttribute.cs" />
+    <Compile Include="Map\MapAttributes\SortOrderAttribute.cs" />
+    <Compile Include="Map\HasMany\HasManyMap.cs" />
+    <Compile Include="Map\HasMany\ICascadeHasManyMap.cs" />
+    <Compile Include="Map\HasMany\ISortedHasManyMap.cs" />
+    <Compile Include="Map\HasMany\IHasManyMap.cs" />
+    <Compile Include="Map\HasOne\IHasOneMap.cs" />
+    <Compile Include="Map\Id\IdMap.cs" />
+    <Compile Include="Map\Id\Generator\GuidCombGenerator.cs" />
+    <Compile Include="Map\Id\Generator\IIdentifierGenerator.cs" />
+    <Compile Include="Map\Id\IIdMap.cs" />
+    <Compile Include="Map\IPropertyMap.cs" />
+    <Compile Include="Map\IResourceMap.cs" />
+    <Compile Include="Config\MappingConfiguration.cs" />
+    <Compile Include="Map\PropertyMap.cs" />
+    <Compile Include="Map\ResourceMap.cs" />
+    <Compile Include="Map\HasOne\HasOneMap.cs" />
+    <Compile Include="Registry\ICacheProvider.cs" />
+    <Compile Include="Session\ISession.cs" />
+    <Compile Include="Session\ISessionFactory.cs" />
+    <Compile Include="Registry\DefaultCacheProvider.cs" />
+    <Compile Include="Session\Session.cs" />
+    <Compile Include="Session\SessionFactory.cs" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
