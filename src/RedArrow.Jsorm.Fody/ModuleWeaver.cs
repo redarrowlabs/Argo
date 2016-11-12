@@ -84,7 +84,6 @@ namespace RedArrow.Jsorm
             VerifyJsomReference();
             FindModels();
             AddModelCtors();
-            WeaveIdProperties();
         }
 
         // Will be called when a request to cancel the build occurs. OPTIONAL

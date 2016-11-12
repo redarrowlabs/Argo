@@ -1,4 +1,7 @@
-﻿using Mono.Cecil;
+﻿using System.Linq;
+using Mono.Cecil;
+using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
 
 namespace RedArrow.Jsorm
 {
@@ -6,27 +9,41 @@ namespace RedArrow.Jsorm
     {
         private void AddModelCtors()
         {
-            foreach (var model in _modelToMap.Keys)
+            foreach (var keyValuePair in _modelsToMaps)
             {
-                AddSessionField(model);
-                AddConstructor(model);
-            }
-        }
+	            var modelTypeDef = keyValuePair.Key;
+	            var mapTypeDef = keyValuePair.Value;
 
-        private void AddSessionField(TypeDefinition type)
-        {
-            ModuleDefinition.ImportReference(_sessionTypeRef);
-            var sessionField = new FieldDefinition(
-                "_jsorm_generated_session",
-                FieldAttributes.Private | FieldAttributes.NotSerialized,
-                _sessionTypeRef);
-            type.Fields.Add(sessionField);
-        }
+				var importedSessionTypeRef = modelTypeDef.Module.ImportReference(_sessionTypeRef);
+				
+				// add ISession field
+				var sessionField = new FieldDefinition(
+					"_jsorm_generated_session",
+					FieldAttributes.Private | FieldAttributes.NotSerialized | FieldAttributes.InitOnly,
+					importedSessionTypeRef);
+				modelTypeDef.Fields.Add(sessionField);
 
-        private void AddConstructor(TypeDefinition type)
-        {
-            var method = new MethodDefinition(".ctor", MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName, TypeSystem.Void);
-            method.Parameters.Add(new ParameterDefinition(JsormAssembly.MainModule.GetType("RedArrow.Jsorm.Session.ISession")));
+				// add Ctor(ISession session){_jsorm_generated_session = session;}
+				var ctor = new MethodDefinition(
+					".ctor",
+					MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
+					TypeSystem.Void);
+
+				ctor.Parameters.Add(new ParameterDefinition("session", ParameterAttributes.None, importedSessionTypeRef));
+				var objectCtor = modelTypeDef.Module.ImportReference(TypeSystem.Object.Resolve().GetConstructors().First());
+
+				var proc = ctor.Body.GetILProcessor();
+				proc.Emit(OpCodes.Ldarg_0);
+				proc.Emit(OpCodes.Call, objectCtor);
+				proc.Emit(OpCodes.Ldarg_0);
+				proc.Emit(OpCodes.Ldarg_1);
+				proc.Emit(OpCodes.Stfld, sessionField);
+				proc.Emit(OpCodes.Ret);
+
+				modelTypeDef.Methods.Add(ctor);
+				
+				WeaveAttributes(modelTypeDef, mapTypeDef, sessionField);
+			}
         }
     }
 }

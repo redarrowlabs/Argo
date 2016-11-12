@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using RedArrow.Jsorm.Logging.LogProviders;
+using RedArrow.Jsorm.Session;
 using Xunit;
 
 namespace RedArrow.Jsorm.Tests
@@ -14,18 +18,41 @@ namespace RedArrow.Jsorm.Tests
         }
 
         [Fact]
-        public void HelloWorld()
+        public void ModelsHavePrivateSessionField()
         {
-            var patientType = Fixture.WovenAssembly.GetType("AssemblyToWeave.Patient");
-            var ctor = patientType.GetConstructors()
-                .SingleOrDefault(x =>
-                {
-                    var ctorParams = x.GetParameters();
-                    return ctorParams.Length == 1 &&
-                           ctorParams[0].ParameterType.FullName == "RedArrow.Jsorm.Session.ISession";
-                });
+	        Assert.All(WovenTypes(), type =>
+			{
+				var field = type.GetFieldsPortable()
+					.Where(x => x.IsPrivate)
+					.Where(x => x.Name == "_jsorm_generated_session")
+					.Where(x => x.IsNotSerialized)
+					.SingleOrDefault(x => x.FieldType == typeof(ISession));
 
-            Assert.NotNull(ctor);
+				Assert.NotNull(field);
+			});
         }
+
+	    [Fact]
+	    public void ModelsHaveSessionArgCtor()
+	    {
+		    Assert.All(WovenTypes(), type =>
+		    {
+			    var ctor = type.GetTypeInfo().GetConstructors()
+				    .Where(x => x.IsPublic)
+				    .Where(x => x.GetParameters().Count() == 1)
+				    .SingleOrDefault(x => x.GetParameters()[0].ParameterType == typeof (ISession));
+
+				Assert.NotNull(ctor);
+		    });
+	    }
+
+	    private IEnumerable<Type> WovenTypes()
+	    {
+		    return new[]
+		    {
+				Fixture.WovenAssembly.GetType("AssemblyToWeave.Patient"),
+				Fixture.WovenAssembly.GetType("AssemblyToWeave.Provider")
+			};
+	    }
     }
 }

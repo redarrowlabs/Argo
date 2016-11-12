@@ -1,5 +1,5 @@
 ﻿using System;
-using RedArrow.Jsorm.Map.Id.Generator;
+using System.Reflection;
 
 namespace RedArrow.Jsorm.Session
 {
@@ -9,8 +9,10 @@ namespace RedArrow.Jsorm.Session
 
         void Register(Type modelType);
 
-        void Register<TModel>(Func<object, Guid> getId);
+        void RegisterIdAccessor<TModel>(MethodInfo getId);
 
-        void Register<TModel>(IIdentifierGenerator generator);
+		void RegisterIdMutator<TModel>(MethodInfo setId);
+
+		void RegisterIdGenerator<TModel>(Func<Guid> generator);
     }
 }

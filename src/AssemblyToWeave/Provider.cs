@@ -5,7 +5,7 @@ namespace AssemblyToWeave
 {
     public class Provider
     {
-        public Guid Id { get; set; }
+        public Guid Id { get; protected set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
 

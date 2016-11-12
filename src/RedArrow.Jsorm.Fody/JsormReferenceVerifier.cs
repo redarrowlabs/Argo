@@ -6,7 +6,7 @@ namespace RedArrow.Jsorm
 {
     public partial class ModuleWeaver
     {
-        private TypeReference _sessionTypeRef;
+        private TypeDefinition _sessionTypeRef;
 
         private void VerifyJsomReference()
         {

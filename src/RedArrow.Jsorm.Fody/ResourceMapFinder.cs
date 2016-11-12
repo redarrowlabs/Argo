@@ -7,11 +7,11 @@ namespace RedArrow.Jsorm
 {
     public partial class ModuleWeaver
     {
-        private IDictionary<TypeDefinition, TypeDefinition> _modelToMap;
+        private IDictionary<TypeDefinition, TypeDefinition> _modelsToMaps;
 
         private void FindModels()
         {
-            _modelToMap = ModuleDefinition.Types
+            _modelsToMaps = ModuleDefinition.Types
                 .Where(ExtendsResourceMap)
                 .ToDictionary(GetMapModel, x => x);
         }

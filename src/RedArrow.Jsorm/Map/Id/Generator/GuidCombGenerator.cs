@@ -2,36 +2,11 @@
 
 namespace RedArrow.Jsorm.Map.Id.Generator
 {
-    public class GuidCombGenerator : IIdentifierGenerator
+    public static class GuidCombGenerator
     {
-        private static volatile IIdentifierGenerator _instance;
-        private static readonly object SyncRoot = new object();
-
-        public static IIdentifierGenerator Instance
-        {
-            get
-            {
-                if (_instance == null)
-                {
-                    lock (SyncRoot)
-                    {
-                        if (_instance == null)
-                        {
-                            _instance = new GuidCombGenerator();
-                        }
-                    }
-                }
-                return _instance;
-            }
-        }
-
         private static readonly long BaseDateTicks = new DateTime(1900, 1, 1).Ticks;
-
-        protected GuidCombGenerator()
-        {
-        }
-
-        public Guid Generate()
+		
+        public static Guid Generate()
         {
             var guidArray = Guid.NewGuid().ToByteArray();
 

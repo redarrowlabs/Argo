@@ -8,5 +8,10 @@ namespace RedArrow.Jsorm.Session
         {
             throw new NotImplementedException();
         }
+
+	    public object GetAttribute()
+	    {
+		    return "Hello World";
+	    }
     }
 }
