@@ -58,9 +58,9 @@ namespace RedArrow.Jsorm.Tests
 
 				Assert.NotNull(ctor);
 		    });
-	    }
+		}
 
-	    private IEnumerable<Type> WovenTypes()
+		private IEnumerable<Type> WovenTypes()
 	    {
 		    return new[]
 		    {
