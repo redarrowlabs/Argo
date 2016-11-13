@@ -5,7 +5,7 @@
 		private void AddSessionField(ModelWeavingContext context)
 		{
 			// [NonSerialized]
-			// private readonly ISession _jsorm_generated_session
+			// private readonly ISession __jsorm_generated_session
 			context.AddSessionField(_sessionTypeDef);
 		}
 	}

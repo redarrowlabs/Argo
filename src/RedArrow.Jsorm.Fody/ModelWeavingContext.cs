@@ -64,7 +64,7 @@ namespace RedArrow.Jsorm
 			SessionTypeRef = ModelTypeDef.Module.ImportReference(sessionTypeDef);
 
 			SessionField = new FieldDefinition(
-					"_jsorm_generated_session",
+					"__jsorm_generated_session",
 					FieldAttributes.Private | FieldAttributes.NotSerialized | FieldAttributes.InitOnly,
 					SessionTypeRef);
 			
