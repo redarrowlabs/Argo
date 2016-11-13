@@ -2,7 +2,7 @@
 
 namespace RedArrow.Jsorm.Session
 {
-    public class Session : ISession
+    public class Session : IModelSession, ISession
     {
         public void Dispose()
         {

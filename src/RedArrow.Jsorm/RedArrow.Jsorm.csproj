@@ -52,6 +52,7 @@
     <Compile Include="Infrastructure\JsormException.cs" />
     <Compile Include="Infrastructure\ModelNotRegisteredException.cs" />
     <Compile Include="Infrastructure\ModelTypeMismatchException.cs" />
+    <Compile Include="Session\IModelSession.cs" />
     <Compile Include="LibLog\LibLog.cs" />
     <Compile Include="Map\AttributeMap.cs" />
     <Compile Include="Map\MapAttributes\BatchSizeAttribute.cs" />

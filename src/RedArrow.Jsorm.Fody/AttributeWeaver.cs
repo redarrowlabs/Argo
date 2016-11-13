@@ -21,7 +21,7 @@ namespace RedArrow.Jsorm
 
 			if (sessionGetAttrGeneric == null || sessionSetAttrGeneric == null)
 			{
-				throw new Exception("TODO");
+				throw new Exception("Jsorm attribute weaving failed unexpectedly");
 			}
 
 			foreach (var propAttrMap in context.MappedAttributes)
@@ -55,7 +55,7 @@ namespace RedArrow.Jsorm
 			//	  return this._jsorm_generated_session.GetAttribute<Patient, string>(this.Id, "[attrName]");
 			// }
 			proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-			proc.Emit(OpCodes.Ldfld, context.SessionField); // load _jsorm_generated_session field from 'this'
+			proc.Emit(OpCodes.Ldfld, context.SessionField); // load __jsorm__generated_session field from 'this'
 			proc.Emit(OpCodes.Ldarg_0); // load 'this'
 			proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
 			proc.Emit(OpCodes.Ldstr, propAttrMap.Value); // load attrName onto stack
@@ -70,7 +70,7 @@ namespace RedArrow.Jsorm
 			KeyValuePair<string, string> propAttrMap)
 		{
 			// supply generic type arguments to template
-			var sessionGetAttrTyped = SupplyGenericArgs(context, propertyDef, sessionSetAttrGeneric);
+			var sessionSetAttrTyped = SupplyGenericArgs(context, propertyDef, sessionSetAttrGeneric);
 			
 			propertyDef.SetMethod.Body.Instructions.Clear();
 			var proc = propertyDef.SetMethod.Body.GetILProcessor();
@@ -80,12 +80,12 @@ namespace RedArrow.Jsorm
 			//	  return this._jsorm_generated_session.SetAttribute<Patient, string>(this.Id, "[attrName]", value);
 			// }
 			proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-			proc.Emit(OpCodes.Ldfld, context.SessionField); // load _jsorm_generated_session field from 'this'
+			proc.Emit(OpCodes.Ldfld, context.SessionField); // load __jsorm__generated_session field from 'this'
 			proc.Emit(OpCodes.Ldarg_0); // load 'this'
 			proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
 			proc.Emit(OpCodes.Ldstr, propAttrMap.Value); // load attrName onto stack
 			proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
-			proc.Emit(OpCodes.Callvirt, context.ImportReference(sessionGetAttrTyped)); // invoke session.SetAttribute(...)
+			proc.Emit(OpCodes.Callvirt, context.ImportReference(sessionSetAttrTyped)); // invoke session.SetAttribute(...)
 			proc.Emit(OpCodes.Ret); // return
 		}
 
