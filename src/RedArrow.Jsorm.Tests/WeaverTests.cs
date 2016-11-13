@@ -52,8 +52,9 @@ namespace RedArrow.Jsorm.Tests
 		    {
 			    var ctor = type.GetTypeInfo().GetConstructors()
 				    .Where(x => x.IsPublic)
-				    .Where(x => x.GetParameters().Count() == 1)
-				    .SingleOrDefault(x => x.GetParameters()[0].ParameterType == typeof (ISession));
+				    .Where(x => x.GetParameters().Count() == 2)
+					.Where(x => x.GetParameters()[0].ParameterType == typeof(Guid))
+				    .SingleOrDefault(x => x.GetParameters()[1].ParameterType == typeof (ISession));
 
 				Assert.NotNull(ctor);
 		    });
