@@ -33,6 +33,19 @@ namespace RedArrow.Jsorm.Tests
         }
 
 	    [Fact]
+	    public void ModelsHaveNonPublicIdSetter()
+	    {
+		    Assert.All(WovenTypes(), type =>
+		    {
+			    var idProp = type.GetTypeInfo().GetProperties()
+				    .SingleOrDefault(x => x.Name == "Id");
+
+				Assert.NotNull(idProp.SetMethod);
+				Assert.False(idProp.SetMethod.IsPublic);
+		    });
+	    }
+
+	    [Fact]
 	    public void ModelsHaveSessionArgCtor()
 	    {
 		    Assert.All(WovenTypes(), type =>

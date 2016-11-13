@@ -9,8 +9,8 @@ namespace AssemblyToWeave
         {
             Id(x => x.Id);
 
-            Attribute(x => x.FirstName);
-            Attribute(x => x.LastName);
+            Attribute(x => x.FirstName, "providerFirstName");
+            Attribute(x => x.LastName, "providerLastName");
 
             HasMany(x => x.Patients);
         }

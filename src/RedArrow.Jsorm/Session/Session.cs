@@ -9,9 +9,14 @@ namespace RedArrow.Jsorm.Session
             throw new NotImplementedException();
         }
 
-	    public object GetAttribute()
+	    public TAttr GetAttribute<TModel, TAttr>(Guid id, string attrName)
 	    {
-		    return "Hello World";
+		    throw new NotImplementedException();
+	    }
+
+	    public void SetAttribute<TModel, TAttr>(Guid id, string attrName, TAttr value)
+	    {
+		    throw new NotImplementedException();
 	    }
     }
 }

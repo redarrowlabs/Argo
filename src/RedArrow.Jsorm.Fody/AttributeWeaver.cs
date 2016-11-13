@@ -1,69 +1,103 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Mono.Cecil.Rocks;
 
 namespace RedArrow.Jsorm
 {
 	public partial class ModuleWeaver
 	{
-		private void WeaveAttributes(TypeDefinition modelTypeDef, TypeDefinition mapTypeDef, FieldDefinition sessionFieldDef)
+		private void WeaveAttributes(ModelWeavingContext context)
 		{
-			var sessionGetAttr = _sessionTypeRef.Methods.First(x => x.Name == "GetAttribute");
-			
-			var mapType = Type.GetType($"{mapTypeDef.FullName}, {mapTypeDef.Module.Assembly.FullName}");
-			var mapBaseType = GetMapBaseType(mapType);
+			// get a generic method template from session type
+			var sessionGetAttrGeneric = _sessionTypeDef
+				.Methods
+				.SingleOrDefault(x => x.Name == "GetAttribute");
 
-			if (mapType == null)
+			var sessionSetAttrGeneric = _sessionTypeDef
+				.Methods
+				.SingleOrDefault(x => x.Name == "SetAttribute");
+
+			if (sessionGetAttrGeneric == null || sessionSetAttrGeneric == null)
 			{
-				LogError($"Jsorm failed to load {mapTypeDef.FullName} from assembly {mapTypeDef.Module.Assembly.FullName}");
-				return;
+				throw new Exception("TODO");
 			}
 
-			var map = Activator.CreateInstance(mapType);
-			var attributes = GetMappedAttributes(mapBaseType, map);
-
-			foreach (var attribute in attributes)
+			foreach (var propAttrMap in context.MappedAttributes)
 			{
-				var propertyDef = modelTypeDef.Properties.SingleOrDefault(x => x.Name == attribute);
+				// find the property
+				var propertyDef = context.Properties.SingleOrDefault(x => x.Name == propAttrMap.Key);
 				if (propertyDef == null)
 				{
-					LogError($"Jsorm failed to weave mapped property {attribute} on model {modelTypeDef.FullName}");
-					break;
+					throw new Exception($"Jsorm failed to weave mapped property {propAttrMap.Key} on model {context.ModelType.FullName}");
 				}
 
-				var instructions = propertyDef.GetMethod.Body.Instructions;
-				instructions.Insert(0, Instruction.Create(OpCodes.Ret));
-				instructions.Insert(0, Instruction.Create(OpCodes.Castclass, propertyDef.GetMethod.ReturnType));
-				instructions.Insert(0, Instruction.Create(OpCodes.Callvirt, modelTypeDef.Module.ImportReference(sessionGetAttr)));
-				instructions.Insert(0, Instruction.Create(OpCodes.Ldfld, sessionFieldDef));
-				instructions.Insert(0, Instruction.Create(OpCodes.Ldarg_0));
+				WeaveGetter(context, propertyDef, sessionGetAttrGeneric, propAttrMap);
+				WeaveSetter(context, propertyDef, sessionSetAttrGeneric, propAttrMap);
 			}
 		}
 
-		private IEnumerable<string> GetMappedAttributes(Type mapType, object map)
+		private void WeaveGetter(
+			ModelWeavingContext context,
+			PropertyDefinition propertyDef,
+			MethodReference sessionGetAttrGeneric,
+			KeyValuePair<string, string> propAttrMap)
 		{
-			var dictionary = mapType
-				.GetField("_attributeMaps", BindingFlags.NonPublic | BindingFlags.Instance)
-				?.GetValue(map); // IDictionary<string, IPropertymap>
+			// supply generic type arguments to template
+			var sessionGetAttrTyped = SupplyGenericArgs(context, propertyDef, sessionGetAttrGeneric);
 
-			return dictionary?.GetType()?.GetProperty("Keys", BindingFlags.Public | BindingFlags.Instance)
-				?.GetValue(dictionary) as IEnumerable<string>;
+			propertyDef.GetMethod.Body.Instructions.Clear();
+			var proc = propertyDef.GetMethod.Body.GetILProcessor();
+
+			// get
+			// {
+			//	  return this._jsorm_generated_session.GetAttribute<Patient, string>(this.Id, "[attrName]");
+			// }
+			proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+			proc.Emit(OpCodes.Ldfld, context.SessionField); // load _jsorm_generated_session field from 'this'
+			proc.Emit(OpCodes.Ldarg_0); // load 'this'
+			proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
+			proc.Emit(OpCodes.Ldstr, propAttrMap.Value); // load attrName onto stack
+			proc.Emit(OpCodes.Callvirt, context.ImportReference(sessionGetAttrTyped)); // invoke session.GetAttribute(..)
+			proc.Emit(OpCodes.Ret); // return
 		}
 
-		private Type GetMapBaseType(Type mapType)
+		private void WeaveSetter(
+			ModelWeavingContext context,
+			PropertyDefinition propertyDef,
+			MethodReference sessionSetAttrGeneric,
+			KeyValuePair<string, string> propAttrMap)
 		{
-			var ret = mapType.BaseType;
+			// supply generic type arguments to template
+			var sessionGetAttrTyped = SupplyGenericArgs(context, propertyDef, sessionSetAttrGeneric);
+			
+			propertyDef.SetMethod.Body.Instructions.Clear();
+			var proc = propertyDef.SetMethod.Body.GetILProcessor();
 
-			while (ret != null && !ret.FullName.StartsWith("RedArrow.Jsorm.Map.ResourceMap`1"))
-			{
-				ret = ret.BaseType;
-			}
+			// set
+			// {
+			//	  return this._jsorm_generated_session.SetAttribute<Patient, string>(this.Id, "[attrName]", value);
+			// }
+			proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+			proc.Emit(OpCodes.Ldfld, context.SessionField); // load _jsorm_generated_session field from 'this'
+			proc.Emit(OpCodes.Ldarg_0); // load 'this'
+			proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
+			proc.Emit(OpCodes.Ldstr, propAttrMap.Value); // load attrName onto stack
+			proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
+			proc.Emit(OpCodes.Callvirt, context.ImportReference(sessionGetAttrTyped)); // invoke session.SetAttribute(...)
+			proc.Emit(OpCodes.Ret); // return
+		}
 
-			return ret;
+		private GenericInstanceMethod SupplyGenericArgs(
+			ModelWeavingContext context,
+			PropertyDefinition propertyDef,
+			MethodReference methodRef)
+		{
+			var genericMethod = new GenericInstanceMethod(methodRef);
+			genericMethod.GenericArguments.Add(context.ModelTypeRef);
+			genericMethod.GenericArguments.Add(propertyDef.GetMethod.ReturnType);
+			return genericMethod;
 		}
 	}
 }

@@ -59,10 +59,14 @@
     </Compile>
     <Compile Include="AttributeWeaver.cs" />
     <Compile Include="CtorWeaver.cs" />
+    <Compile Include="ModelWeavingContext.cs" />
     <Compile Include="JsormReferenceVerifier.cs" />
+    <Compile Include="IdVerifier.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ModuleWeaver.cs" />
     <Compile Include="ResourceMapFinder.cs" />
+    <Compile Include="SessionFieldWeaver.cs" />
+    <Compile Include="TypeDefLoader.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

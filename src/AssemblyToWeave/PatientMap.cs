@@ -11,6 +11,9 @@ namespace AssemblyToWeave
             Attribute(x => x.FirstName);
             Attribute(x => x.LastName);
 
+	        Attribute(x => x.Age);
+	        Attribute(x => x.AccountBalance);
+
             HasOne(x => x.Provider);
         }
     }

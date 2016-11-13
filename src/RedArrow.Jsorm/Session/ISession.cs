@@ -4,8 +4,7 @@ namespace RedArrow.Jsorm.Session
 {
     public interface ISession : IDisposable
     {
-	    object GetAttribute();
-
-	    //TAttr GetAttribute<TModel, TAttr>(Guid id, string attrName);
-    }
+	    TAttr GetAttribute<TModel, TAttr>(Guid id, string attrName);
+		void SetAttribute<TModel, TAttr>(Guid id, string attrName, TAttr value);
+	}
 }

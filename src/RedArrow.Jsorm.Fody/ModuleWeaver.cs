@@ -82,8 +82,17 @@ namespace RedArrow.Jsorm
         public void Execute()
         {
             VerifyJsomReference();
-            FindModels();
-            AddModelCtors();
+	        LoadTypeDefinitions();
+			FindModels();
+
+	        foreach (var map in _modelsToMaps)
+	        {
+		        var context = new ModelWeavingContext(map.Key, map.Value);
+				VerifyIdProperty(context);
+				AddSessionField(context);
+				AddCtor(context);
+				WeaveAttributes(context);
+	        }
         }
 
         // Will be called when a request to cancel the build occurs. OPTIONAL
