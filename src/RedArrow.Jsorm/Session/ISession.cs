@@ -5,6 +5,6 @@ namespace RedArrow.Jsorm.Session
 {
     public interface ISession : IDisposable
     {
-	    Task<TModel> GetModel<TModel>(Guid id);
+	    Task<TModel> Get<TModel>(Guid id);
     }
 }

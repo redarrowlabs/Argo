@@ -34,7 +34,6 @@ namespace RedArrow.Jsorm
 
 				WeaveGetter(context, propertyDef, sessionGetAttrGeneric, attrName);
 				WeaveSetter(context, propertyDef, sessionSetAttrGeneric, attrName);
-				RemovePropertyAttribute(propertyDef);
 			}
 		}
 
@@ -87,12 +86,6 @@ namespace RedArrow.Jsorm
 			proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
 			proc.Emit(OpCodes.Callvirt, context.ImportReference(sessionSetAttrTyped)); // invoke session.SetAttribute(...)
 			proc.Emit(OpCodes.Ret); // return
-		}
-
-		private void RemovePropertyAttribute(PropertyDefinition propertyDef)
-		{
-			var attr = propertyDef.CustomAttributes.GetAttribute(Constants.Attributes.Property);
-			propertyDef.CustomAttributes.Remove(attr);
 		}
 
 		private GenericInstanceMethod SupplyGenericArgs(

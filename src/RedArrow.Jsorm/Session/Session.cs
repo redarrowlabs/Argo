@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using RedArrow.Jsorm.Cache;
 using RedArrow.Jsorm.JsonModels;
 
 namespace RedArrow.Jsorm.Session
@@ -12,12 +14,16 @@ namespace RedArrow.Jsorm.Session
     public class Session : IModelSession, ISession
     {
 		private HttpClient HttpClient { get; }
+		private IDictionary<Type, PropertyInfo> IdProperties { get; } 
+		
 		private SessionState State { get; }
 
-	    public Session(Action<HttpClient> httpClientFactory)
+	    public Session(
+			HttpClient httpClient,
+			IDictionary<Type, PropertyInfo> idProperties)
 	    {
-		    HttpClient = new HttpClient();
-		    httpClientFactory(HttpClient);
+		    HttpClient = httpClient;
+		    IdProperties = new ReadOnlyDictionary<Type, PropertyInfo>(idProperties);
 
 			State = new SessionState();
 	    }
@@ -25,18 +31,18 @@ namespace RedArrow.Jsorm.Session
 	    public void Dispose()
         {
 			HttpClient.Dispose();
-
 		}
 
-	    public async Task<TModel> GetModel<TModel>(Guid id)
+	    public async Task<TModel> Get<TModel>(Guid id)
 	    {
 			//TODO check cache?
-			var resource = State.Get<TModel>(id);
+			var resource = State.Get(id);
 		    if (resource == null)
 		    {
 			    await GetRemoteResource<TModel>(id);
 		    }
 
+			// TODO: cache these so we're not creating a new one on every get
 		    return CreateModel<TModel>(id);
 	    }
 
@@ -47,26 +53,32 @@ namespace RedArrow.Jsorm.Session
 		    var response = await HttpClient.GetAsync($"{resourceName}/{id}");
 		    var contentString = await response.Content.ReadAsStringAsync();
 		    var resourceRoot = JsonConvert.DeserializeObject<ResourceRoot>(contentString);
-
-		    var resource = resourceRoot.Data.ToObject<Resource>();
-		    State.Put(id, resource);
+		    State.Put(id, resourceRoot);
 	    }
 
 	    private TModel CreateModel<TModel>(Guid id)
-		{
-			//TODO Cache
-			var modelType = typeof(TModel);
-			var wovenCtor = modelType
-				.GetTypeInfo()
-				.DeclaredConstructors
-				.SingleOrDefault(t => t.GetParameters().Length == 2);
-
-			return (TModel)wovenCtor.Invoke(new object[] { id, this });
+	    {
+		    return (TModel) Activator.CreateInstance(typeof (TModel), id, this);
 		}
 
 	    public TAttr GetAttribute<TModel, TAttr>(Guid id, string attrName)
 	    {
-		    throw new NotImplementedException();
+		    var resourceRoot = State.Get(id);
+		    if (resourceRoot == null)
+		    {
+			    //TODO: something has gone wrong
+			    return default(TAttr);
+		    }
+
+			// this is probably much cheaper than converting to a Resource object
+		    var attrToken = resourceRoot.Data.SelectToken($"$.attributes.{attrName}");
+		    if (attrToken == null)
+		    {
+			    //TODO: something has probably gone wrong
+			    return default(TAttr);
+		    }
+
+		    return attrToken.ToObject<TAttr>();
 	    }
 
 	    public void SetAttribute<TModel, TAttr>(Guid id, string attrName, TAttr value)

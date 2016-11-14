@@ -8,7 +8,9 @@ namespace RedArrow.Jsorm.Config
 {
     public class FluentConfigurator
     {
-        private IList<Action<MappingConfiguration>> MapBuilders { get; }
+        private IList<Action<ModelConfiguration>> ModelBuilders { get; }
+		private IList<Action<HttpClient>>  ClientBuilders { get; }
+
         private Func<ICacheProvider> ModelRegistryBuilder { get; set; }
 
 		internal SessionConfiguration SessionConfiguration { get; }
@@ -18,40 +20,52 @@ namespace RedArrow.Jsorm.Config
 
         public FluentConfigurator(SessionConfiguration config)
         {
-            MapBuilders = new List<Action<MappingConfiguration>>();
+            ModelBuilders = new List<Action<ModelConfiguration>>();
+			ClientBuilders = new List<Action<HttpClient>>();
             SessionConfiguration = config;
         }
 
-        public FluentConfigurator Mappings(Action<MappingConfiguration> mappings)
+        public FluentConfigurator Models(Action<ModelConfiguration> mappings)
         {
-            MapBuilders.Add(mappings);
+            ModelBuilders.Add(mappings);
             return this;
         }
 
-        public FluentConfigurator Cache(Func<ICacheProvider> modelRegistry)
-        {
-            ModelRegistryBuilder = modelRegistry;
-            return this;
-        }
+        //public FluentConfigurator Cache(Func<ICacheProvider> modelRegistry)
+        //{
+        //    ModelRegistryBuilder = modelRegistry;
+        //    return this;
+        //}
 
-	    public FluentConfigurator Host(Action<HttpClient> httpClientFactory)
+	    public FluentConfigurator Host(Action<HttpClient> configureClient)
 	    {
-		    SessionConfiguration.HttpClientFactory = httpClientFactory;
+			ClientBuilders.Add(configureClient);
 		    return this;
 	    }
 
 	    public SessionConfiguration BuildConfiguration()
         {
-            var mapConfig = new MappingConfiguration();
-
-            foreach (var builder in MapBuilders)
+			// load all the models
+            var modelConfig = new ModelConfiguration();
+            foreach (var builder in ModelBuilders)
             {
-                builder(mapConfig);
+                builder(modelConfig);
             }
 
-            mapConfig.Configure(SessionConfiguration);
+			// translate model attributes to session config
+            modelConfig.Configure(SessionConfiguration);
 
-            SessionConfiguration.CacheProvider = ModelRegistryBuilder();
+			// build HttpClient factory
+		    SessionConfiguration.HttpClientFactory = () =>
+		    {
+				var client = new HttpClient();
+			    foreach (var clientBuilder in ClientBuilders)
+			    {
+				    clientBuilder(client);
+			    }
+				return client;
+		    };
+            //SessionConfiguration.CacheProvider = ModelRegistryBuilder();
 
             return SessionConfiguration;
         }

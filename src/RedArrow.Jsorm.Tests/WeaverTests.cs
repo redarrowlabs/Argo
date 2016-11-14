@@ -2,20 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using AssemblyToWeave;
 using RedArrow.Jsorm.Logging.LogProviders;
 using RedArrow.Jsorm.Session;
 using Xunit;
 
 namespace RedArrow.Jsorm.Tests
 {
-    public class WeaverTests : IClassFixture<WeaverTestFixture>
+    public class WeaverTests// : IClassFixture<WeaverTestFixture>
     {
-        private WeaverTestFixture Fixture { get; }
+        //private WeaverTestFixture Fixture { get; }
 
-        public WeaverTests(WeaverTestFixture fixture)
-        {
-            Fixture = fixture;
-        }
+        //public WeaverTests(WeaverTestFixture fixture)
+        //{
+        //    Fixture = fixture;
+        //}
 
         [Fact]
         public void ModelsHavePrivateSessionField()
@@ -62,10 +63,16 @@ namespace RedArrow.Jsorm.Tests
 
 		private IEnumerable<Type> WovenTypes()
 	    {
-		    return new[]
-		    {
-				Fixture.WovenAssembly.GetType("AssemblyToWeave.Patient"),
-				Fixture.WovenAssembly.GetType("AssemblyToWeave.Provider")
+		 //   return new[]
+		 //   {
+			//	Fixture.WovenAssembly.GetType("AssemblyToWeave.Patient"),
+			//	Fixture.WovenAssembly.GetType("AssemblyToWeave.Provider")
+			//};
+
+			return new[]
+			{
+				typeof (Patient),
+				typeof (Provider)
 			};
 	    }
     }

@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Mono.Cecil;
 using Mono.Collections.Generic;
-using FieldAttributes = Mono.Cecil.FieldAttributes;
-using ICustomAttributeProvider = Mono.Cecil.ICustomAttributeProvider;
 
 namespace RedArrow.Jsorm
 {
@@ -55,8 +52,6 @@ namespace RedArrow.Jsorm
 		private void GetMappedIdProperty()
 		{
 			IdPropDef = Properties.SingleOrDefault(x => x.CustomAttributes.ContainsAttribute(Constants.Attributes.Id));
-			var idAttr = IdPropDef.CustomAttributes.GetAttribute(Constants.Attributes.Id);
-			IdPropDef.CustomAttributes.Remove(idAttr);
 
 			if (IdPropDef == null)
 			{
@@ -65,7 +60,7 @@ namespace RedArrow.Jsorm
 
 			if (IdPropDef.GetMethod?.ReturnType.FullName != "System.Guid")
 			{
-				throw new Exception($"{ModelTypeDef} id property must be System.Guid getter");
+				throw new Exception($"{ModelTypeDef} id property must have a System.Guid getter");
 			}
 		}
 
