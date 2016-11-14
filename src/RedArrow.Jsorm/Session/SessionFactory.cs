@@ -1,23 +1,27 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Reflection;
+using RedArrow.Jsorm.Cache;
 using RedArrow.Jsorm.Map.Id.Generator;
-using RedArrow.Jsorm.Registry;
 
 namespace RedArrow.Jsorm.Session
 {
     public class SessionFactory : ISessionFactory
     {
         private IDictionary<Type, Func<Guid>> IdGenerators { get; }
-        public IDictionary<Type, MethodInfo> IdAccessors { get; }
-		public IDictionary<Type, MethodInfo> IdMutators { get; }
+        internal IDictionary<Type, MethodInfo> IdAccessors { get; }
+		internal IDictionary<Type, MethodInfo> IdMutators { get; }
 
 		private ICacheProvider CacheProvider { get; }
 
-        internal SessionFactory(ICacheProvider cacheProvider)
+		private Action<HttpClient> HttpClientFactory { get; }
+
+        internal SessionFactory(ICacheProvider cacheProvider, Action<HttpClient> httpClientFactory)
         {
             CacheProvider = cacheProvider;
+			HttpClientFactory = httpClientFactory;
 
 			IdGenerators = new ConcurrentDictionary<Type, Func<Guid>>();
 			IdAccessors = new ConcurrentDictionary<Type, MethodInfo>();
@@ -47,7 +51,7 @@ namespace RedArrow.Jsorm.Session
 	    public ISession CreateSession()
         {
             //TODO
-            return new Session();
+            return new Session(HttpClientFactory);
         }
     }
 }

@@ -13,7 +13,7 @@ namespace RedArrow.Jsorm
 	{
 		private void AddCtor(ModelWeavingContext context)
 		{
-			// Ctor(Guid id, ISession session)
+			// Ctor(Guid id, IModelSession session)
 			// {
 			//   Id = id;
 			//   _jsorm_generated_session = session;
@@ -38,20 +38,20 @@ namespace RedArrow.Jsorm
 
 			var proc = ctor.Body.GetILProcessor();
 
-			// public Patient(Guid id, ISession session)
+			// public Patient(Guid id, IModelSession session)
 			// {
 			//	this._jsorm_generated_session = session;
 			// }
-			proc.Emit(OpCodes.Ldarg_0);
-			proc.Emit(OpCodes.Call, objectCtor);
-			proc.Emit(OpCodes.Ldarg_0);
-			proc.Emit(OpCodes.Ldarg_1);
-			proc.Emit(OpCodes.Callvirt, context.IdPropDef.SetMethod);
-			proc.Emit(OpCodes.Ldarg_0);
-			proc.Emit(OpCodes.Ldarg_2);
-			proc.Emit(OpCodes.Stfld, context.SessionField);
-			proc.Emit(OpCodes.Ret);
-
+			proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+			proc.Emit(OpCodes.Call, objectCtor); // call base ctor on 'this'
+			proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+			proc.Emit(OpCodes.Ldarg_1); // load 'id' onto stack
+			proc.Emit(OpCodes.Callvirt, context.IdPropDef.SetMethod); // this.Id = id;
+			proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+			proc.Emit(OpCodes.Ldarg_2); // load 'session' onto stack
+			proc.Emit(OpCodes.Stfld, context.SessionField); // this.__jsorm__generated_session = session;
+			proc.Emit(OpCodes.Ret); // return
+			
 			context.Methods.Add(ctor);
 		}
 	}

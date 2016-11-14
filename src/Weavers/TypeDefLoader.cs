@@ -10,7 +10,8 @@ namespace RedArrow.Jsorm
 
 		private void LoadTypeDefinitions()
 		{
-			_sessionTypeDef = JsormAssembly.MainModule.GetType("RedArrow.Jsorm.Session.IModelSession");
+			var jsormAssemblyDef = AssemblyResolver.Resolve("RedArrow.Jsorm");
+			_sessionTypeDef = jsormAssemblyDef.MainModule.GetType("RedArrow.Jsorm.Session.IModelSession");
 
 			var msCoreAssemblyDef = AssemblyResolver.Resolve("mscorlib");
 			_guidTypeDef = msCoreAssemblyDef.MainModule.Types.First(x => x.Name == "Guid");

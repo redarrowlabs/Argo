@@ -4,19 +4,20 @@ using System.Collections.Generic;
 using System.Reflection;
 using RedArrow.Jsorm.Extensions;
 using RedArrow.Jsorm.Infrastructure;
+using RedArrow.Jsorm.JsonModels;
 
-namespace RedArrow.Jsorm.Registry
+namespace RedArrow.Jsorm.Cache
 {
     internal class DefaultCacheProvider : ICacheProvider
     {
         private ISet<Type> Container { get; }
 
-        private IDictionary<object, object> PoorMansCache { get; }
+        private IDictionary<Guid, Resource> PoorMansCache { get; }
 
         internal DefaultCacheProvider()
         {
             Container = new HashSet<Type>();
-            PoorMansCache = new ConcurrentDictionary<object, object>();
+            PoorMansCache = new ConcurrentDictionary<Guid, Resource>();
         }
 
         public void Register(Type type)
@@ -38,19 +39,11 @@ namespace RedArrow.Jsorm.Registry
             return (T)model;
         }
 
-        public T Get<T>(object id)
+        public Resource Get(Guid id)
         {
-            object ret;
-            if (PoorMansCache.TryGetValue(id, out ret))
-            {
-                if (ret.GetType().GetTypeInfo().IsSubclassOf(typeof(T)))
-                {
-                    return (T)ret;
-                }
-
-                throw new ModelTypeMismatchException(typeof(T), ret.GetType());
-            }
-            return default(T);
+			Resource ret;
+	        PoorMansCache.TryGetValue(id, out ret);
+            return ret;
         }
     }
 }

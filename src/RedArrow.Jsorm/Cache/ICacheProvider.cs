@@ -1,11 +1,12 @@
 ﻿using System;
+using RedArrow.Jsorm.JsonModels;
 
-namespace RedArrow.Jsorm.Registry
+namespace RedArrow.Jsorm.Cache
 {
     public interface ICacheProvider
     {
         void Register(Type type);
 
-        T Get<T>(object id);
+		Resource Get(Guid id);
     }
 }

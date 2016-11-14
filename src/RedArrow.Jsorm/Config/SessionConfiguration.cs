@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
+using RedArrow.Jsorm.Cache;
 using RedArrow.Jsorm.Extensions;
 using RedArrow.Jsorm.Map;
-using RedArrow.Jsorm.Registry;
 using RedArrow.Jsorm.Session;
 
 namespace RedArrow.Jsorm.Config
@@ -13,8 +14,9 @@ namespace RedArrow.Jsorm.Config
     {
         internal IList<IResourceMap> Maps { get; }
         internal ICacheProvider CacheProvider { get; set; }
+	    internal Action<HttpClient> HttpClientFactory { get; set; }
 
-        internal SessionConfiguration()
+	    internal SessionConfiguration()
         {
             Maps = new List<IResourceMap>();
             CacheProvider = new DefaultCacheProvider();
@@ -22,7 +24,7 @@ namespace RedArrow.Jsorm.Config
 
         public ISessionFactory BuildSessionFactory()
         {
-            var factory = new SessionFactory(CacheProvider);
+            var factory = new SessionFactory(CacheProvider, HttpClientFactory);
 
             foreach (var map in Maps)
             {

@@ -4,6 +4,6 @@ namespace RedArrow.Jsorm.Map
 {
     public interface IPropertyMap
     {
-        void Configure(ISessionFactory factory);
+        void Configure(SessionFactory factory);
     }
 }

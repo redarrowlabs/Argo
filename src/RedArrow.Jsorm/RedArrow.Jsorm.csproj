@@ -42,6 +42,8 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Attributes\PropertyAttribute.cs" />
+    <Compile Include="Attributes\IdAttribute.cs" />
     <Compile Include="Config\SessionConfiguration.cs" />
     <Compile Include="Config\Fluently.cs" />
     <Compile Include="Config\FluentConfigurator.cs" />
@@ -52,9 +54,19 @@
     <Compile Include="Infrastructure\JsormException.cs" />
     <Compile Include="Infrastructure\ModelNotRegisteredException.cs" />
     <Compile Include="Infrastructure\ModelTypeMismatchException.cs" />
+    <Compile Include="JsonModels\Error.cs" />
+    <Compile Include="JsonModels\ErrorLink.cs" />
+    <Compile Include="JsonModels\ErrorSource.cs" />
+    <Compile Include="JsonModels\IMetaDecorated.cs" />
+    <Compile Include="JsonModels\JModel.cs" />
+    <Compile Include="JsonModels\Link.cs" />
+    <Compile Include="JsonModels\Relationship.cs" />
+    <Compile Include="JsonModels\Resource.cs" />
+    <Compile Include="JsonModels\ResourceIdentifier.cs" />
+    <Compile Include="JsonModels\ResourceRoot.cs" />
     <Compile Include="Session\IModelSession.cs" />
     <Compile Include="LibLog\LibLog.cs" />
-    <Compile Include="Map\AttributeMap.cs" />
+    <Compile Include="Map\Attribute\AttributeMap.cs" />
     <Compile Include="Map\MapAttributes\BatchSizeAttribute.cs" />
     <Compile Include="Map\MapAttributes\CascadeStyleAttribute.cs" />
     <Compile Include="Map\MapAttributes\FetchStrategyAttribute.cs" />
@@ -74,10 +86,11 @@
     <Compile Include="Map\PropertyMap.cs" />
     <Compile Include="Map\ResourceMap.cs" />
     <Compile Include="Map\HasOne\HasOneMap.cs" />
-    <Compile Include="Registry\ICacheProvider.cs" />
+    <Compile Include="Cache\ICacheProvider.cs" />
     <Compile Include="Session\ISession.cs" />
     <Compile Include="Session\ISessionFactory.cs" />
-    <Compile Include="Registry\DefaultCacheProvider.cs" />
+    <Compile Include="Cache\DefaultCacheProvider.cs" />
+    <Compile Include="Session\ISessionState.cs" />
     <Compile Include="Session\Session.cs" />
     <Compile Include="Session\SessionFactory.cs" />
   </ItemGroup>

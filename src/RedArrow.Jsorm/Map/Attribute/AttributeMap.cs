@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using RedArrow.Jsorm.Session;
 
-namespace RedArrow.Jsorm.Map
+namespace RedArrow.Jsorm.Map.Attribute
 {
     public class AttributeMap<TModel, TProp> : PropertyMap<TModel, TProp>
     {
@@ -10,7 +10,7 @@ namespace RedArrow.Jsorm.Map
         {
         }
 
-        public override void Configure(ISessionFactory factory)
+        public override void Configure(SessionFactory factory)
         {
             throw new NotImplementedException();
         }

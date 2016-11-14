@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using RedArrow.Jsorm.Registry;
+using System.Net.Http;
+using RedArrow.Jsorm.Cache;
 using RedArrow.Jsorm.Session;
 
 namespace RedArrow.Jsorm.Config
@@ -10,7 +11,7 @@ namespace RedArrow.Jsorm.Config
         private IList<Action<MappingConfiguration>> MapBuilders { get; }
         private Func<ICacheProvider> ModelRegistryBuilder { get; set; }
 
-        internal SessionConfiguration SessionConfiguration { get; }
+		internal SessionConfiguration SessionConfiguration { get; }
 
         public FluentConfigurator()
             : this(new SessionConfiguration()) { }
@@ -33,7 +34,13 @@ namespace RedArrow.Jsorm.Config
             return this;
         }
 
-        public SessionConfiguration BuildConfiguration()
+	    public FluentConfigurator Host(Action<HttpClient> httpClientFactory)
+	    {
+		    SessionConfiguration.HttpClientFactory = httpClientFactory;
+		    return this;
+	    }
+
+	    public SessionConfiguration BuildConfiguration()
         {
             var mapConfig = new MappingConfiguration();
 

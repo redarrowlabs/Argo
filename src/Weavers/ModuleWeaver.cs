@@ -66,8 +66,6 @@ namespace RedArrow.Jsorm
 
         private TypeSystem TypeSystem => ModuleDefinition.TypeSystem;
 
-        private AssemblyDefinition JsormAssembly => AssemblyResolver.Resolve("RedArrow.Jsorm");
-
         // Init logging delegates to make testing easier
         public ModuleWeaver()
         {
@@ -81,13 +79,13 @@ namespace RedArrow.Jsorm
 
         public void Execute()
         {
-            VerifyJsomReference();
 	        LoadTypeDefinitions();
 			FindModels();
 
-	        foreach (var map in _modelsToMaps)
+	        foreach (var modelTypeDef in _modelTypeDefs)
 	        {
-		        var context = new ModelWeavingContext(map.Key, map.Value);
+		        LogInfo($"Weaving type {modelTypeDef.FullName}...");
+		        var context = new ModelWeavingContext(modelTypeDef);
 				VerifyIdProperty(context);
 				AddSessionField(context);
 				AddCtor(context);

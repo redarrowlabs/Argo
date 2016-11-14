@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>RedArrow.Jsorm</RootNamespace>
-    <AssemblyName>RedArrow.Jsorm.Fody</AssemblyName>
+    <AssemblyName>Weavers</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -57,14 +57,15 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Constants.cs" />
     <Compile Include="AttributeWeaver.cs" />
+    <Compile Include="CecilExtensions.cs" />
     <Compile Include="CtorWeaver.cs" />
     <Compile Include="ModelWeavingContext.cs" />
-    <Compile Include="JsormReferenceVerifier.cs" />
     <Compile Include="IdVerifier.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ModuleWeaver.cs" />
-    <Compile Include="ResourceMapFinder.cs" />
+    <Compile Include="ModelFinder.cs" />
     <Compile Include="SessionFieldWeaver.cs" />
     <Compile Include="TypeDefLoader.cs" />
   </ItemGroup>

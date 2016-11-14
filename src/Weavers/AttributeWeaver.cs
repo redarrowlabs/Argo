@@ -24,17 +24,17 @@ namespace RedArrow.Jsorm
 				throw new Exception("Jsorm attribute weaving failed unexpectedly");
 			}
 
-			foreach (var propAttrMap in context.MappedAttributes)
+			foreach (var propertyDef in context.MappedAttributes)
 			{
-				// find the property
-				var propertyDef = context.Properties.SingleOrDefault(x => x.Name == propAttrMap.Key);
-				if (propertyDef == null)
-				{
-					throw new Exception($"Jsorm failed to weave mapped property {propAttrMap.Key} on model {context.ModelType.FullName}");
-				}
+				LogInfo($"\tWeaving {propertyDef.Name}");
 
-				WeaveGetter(context, propertyDef, sessionGetAttrGeneric, propAttrMap);
-				WeaveSetter(context, propertyDef, sessionSetAttrGeneric, propAttrMap);
+				// find the attrName, if there is one
+				var propAttr = propertyDef.CustomAttributes.GetAttribute(Constants.Attributes.Property);
+				var attrName = propAttr.ConstructorArguments.SingleOrDefault().Value as string ?? propertyDef.Name;
+
+				WeaveGetter(context, propertyDef, sessionGetAttrGeneric, attrName);
+				WeaveSetter(context, propertyDef, sessionSetAttrGeneric, attrName);
+				RemovePropertyAttribute(propertyDef);
 			}
 		}
 
@@ -42,7 +42,7 @@ namespace RedArrow.Jsorm
 			ModelWeavingContext context,
 			PropertyDefinition propertyDef,
 			MethodReference sessionGetAttrGeneric,
-			KeyValuePair<string, string> propAttrMap)
+			string attrName)
 		{
 			// supply generic type arguments to template
 			var sessionGetAttrTyped = SupplyGenericArgs(context, propertyDef, sessionGetAttrGeneric);
@@ -58,7 +58,7 @@ namespace RedArrow.Jsorm
 			proc.Emit(OpCodes.Ldfld, context.SessionField); // load __jsorm__generated_session field from 'this'
 			proc.Emit(OpCodes.Ldarg_0); // load 'this'
 			proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
-			proc.Emit(OpCodes.Ldstr, propAttrMap.Value); // load attrName onto stack
+			proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack
 			proc.Emit(OpCodes.Callvirt, context.ImportReference(sessionGetAttrTyped)); // invoke session.GetAttribute(..)
 			proc.Emit(OpCodes.Ret); // return
 		}
@@ -67,7 +67,7 @@ namespace RedArrow.Jsorm
 			ModelWeavingContext context,
 			PropertyDefinition propertyDef,
 			MethodReference sessionSetAttrGeneric,
-			KeyValuePair<string, string> propAttrMap)
+			string attrName)
 		{
 			// supply generic type arguments to template
 			var sessionSetAttrTyped = SupplyGenericArgs(context, propertyDef, sessionSetAttrGeneric);
@@ -83,10 +83,16 @@ namespace RedArrow.Jsorm
 			proc.Emit(OpCodes.Ldfld, context.SessionField); // load __jsorm__generated_session field from 'this'
 			proc.Emit(OpCodes.Ldarg_0); // load 'this'
 			proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
-			proc.Emit(OpCodes.Ldstr, propAttrMap.Value); // load attrName onto stack
+			proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack
 			proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
 			proc.Emit(OpCodes.Callvirt, context.ImportReference(sessionSetAttrTyped)); // invoke session.SetAttribute(...)
 			proc.Emit(OpCodes.Ret); // return
+		}
+
+		private void RemovePropertyAttribute(PropertyDefinition propertyDef)
+		{
+			var attr = propertyDef.CustomAttributes.GetAttribute(Constants.Attributes.Property);
+			propertyDef.CustomAttributes.Remove(attr);
 		}
 
 		private GenericInstanceMethod SupplyGenericArgs(

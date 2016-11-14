@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using RedArrow.Jsorm.Extensions;
+using RedArrow.Jsorm.Map.Attribute;
 using RedArrow.Jsorm.Map.HasMany;
 using RedArrow.Jsorm.Map.HasOne;
 using RedArrow.Jsorm.Map.Id;
@@ -20,7 +21,7 @@ namespace RedArrow.Jsorm.Map
 
         private readonly IDictionary<string, IPropertyMap> _collectionMaps = new Dictionary<string, IPropertyMap>();
 
-        public void Configure(ISessionFactory factory)
+        public void Configure(SessionFactory factory)
         {
             factory.Register(typeof(TModel));
 

@@ -26,6 +26,6 @@ namespace RedArrow.Jsorm.Map
             MapAttributes = new Dictionary<string, IMapAttribute>();
         }
 
-        public abstract void Configure(ISessionFactory factory);
+        public abstract void Configure(SessionFactory factory);
     }
 }

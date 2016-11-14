@@ -18,7 +18,7 @@ namespace RedArrow.Jsorm.Map.HasMany
         {
         }
 
-        public override void Configure(ISessionFactory factory)
+        public override void Configure(SessionFactory factory)
         {
             throw new NotImplementedException();
         }

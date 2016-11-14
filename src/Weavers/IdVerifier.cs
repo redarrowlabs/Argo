@@ -9,15 +9,12 @@ namespace RedArrow.Jsorm
 	{
 		private void VerifyIdProperty(ModelWeavingContext context)
 		{
-			// if id property wasn't mapped...
-			if (context.IdPropDef == null)
-			{
-				throw new Exception($"Model {context.ModelType.FullName} does not have an id property mapped");
-			}
-
 			// if id property doesn't have a setter, try to add one
-			if (context.IdPropDef != null && context.IdPropDef.SetMethod == null)
+			if (context.IdPropDef != null
+				&& (context.IdPropDef.SetMethod == null || context.IdPropDef.SetMethod.IsPublic))
 			{
+				LogWarning($"{context.ModelTypeRef.FullName} either has no setter, or a public setter.  Attempting to resolve...");
+
 				var getterBackingField = context
 					.IdPropDef
 					?.GetMethod
@@ -41,10 +38,10 @@ namespace RedArrow.Jsorm
 					setter.SemanticsAttributes = MethodSemanticsAttributes.Setter;
 
 					var proc = setter.Body.GetILProcessor();
-					proc.Emit(OpCodes.Ldarg_0);
-					proc.Emit(OpCodes.Ldarg_1);
-					proc.Emit(OpCodes.Stfld, getterBackingField);
-					proc.Emit(OpCodes.Ret);
+					proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+					proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
+					proc.Emit(OpCodes.Stfld, getterBackingField); // this.backingField = value;
+					proc.Emit(OpCodes.Ret); // return
 
 					context.Methods.Add(setter);
 
@@ -52,14 +49,10 @@ namespace RedArrow.Jsorm
 				}
 				else
 				{
-					throw new Exception($"Model {context.ModelType.FullName} id property '{context.IdPropDef?.Name}' has no setter. This property must have a private or protected setter");
+					throw new Exception($"Model {context.ModelTypeRef.FullName} id property '{context.IdPropDef?.Name}' has no setter. This property must have a private or protected setter");
 				}
-			}
 
-			// if id property setter was defined public - denied!
-			if (context.IdPropDef != null && context.IdPropDef.SetMethod.IsPublic)
-			{
-				throw new Exception($"Model {context.ModelType.FullName} id property '{context.IdPropDef?.Name}' is public. This property must have a private or protected setter");
+				LogInfo($"Successfully added private setter to {context.IdPropDef.FullName}");
 			}
 		}
 	}

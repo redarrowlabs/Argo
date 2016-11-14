@@ -1,20 +1,15 @@
 ﻿using System;
-using RedArrow.Jsorm.Attributes;
 
-namespace AssemblyToWeave
+namespace RedArrow.Jsorm.Sample.Models
 {
     public class Patient
     {
-		[Id]
         public Guid Id { get; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
 
-		[Property]
-		public string FirstName { get; set; }
-		[Property]
-		public string LastName { get; set; }
-		[Property]
 	    public int Age { get; set; }
-		[Property]
+
 	    public decimal AccountBalance { get; set; }
 
         public Provider Provider { get; set; }
