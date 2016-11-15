@@ -58,9 +58,9 @@ Yuck.
 jsorm takes advantage of [Fody](https://github.com/Fody/Fody) to weave code into your POCO at compile time in order to bridge the gap between the POCO semantics developers expect and the JSON API json structure.
 
 Advantages:
-1. Cross Platform!
-2. Most expensive reflection-based mapping logic is executed at compile time and not at runtime.
-3. Simple.  jsorm targets netstandard 1.3
+ 1. Cross Platform!
+ 2. Most expensive reflection-based mapping logic is executed at compile time and not at runtime.
+ 3. Simple.  jsorm targets netstandard 1.3
 
 Most all ORMs leverage proxies to abstract your POCO from your database.  Unfortunately, the most popular .net proxy implementation, [Castle DynamicProxy](https://github.com/castleproject/Core/blob/master/docs/dynamicproxy.md), will not play nice with Xamarin iOS projects due to its use of `Reflection.Emit` apis, which are not permitted on iOS.  We get around this by modifying the POCO itself at compile time instead of proxying it at runtime.
 
