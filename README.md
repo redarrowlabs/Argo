@@ -70,30 +70,31 @@ Your POCO might look something like this.  We'll need to add some attributes to 
 ```csharp
 // identifies a jsorm model
 // all attributed classes/properties/etc are mapped to camel case json attributes to follow json conventions
-// Person => "type": "person", FirstName => "attributes": { "firstName" : <value> }, etc.
-// however, you may override the type mapping via [Model("your-override-type-name")]
+// Person => "type": "person"
+// FirstName => "attributes": { "firstName" : <value> }, etc.
+// however, you may override these conventions - ex: [Model("your-override-type-name")]
 [Model]
 public class Person
 {
-	// the id property, jsorm requires Ids be Guids.  it's for your own good
+	// the id property. jsorm requires Ids to be Guids.  it's for your own good!
 	// id properties shouldn't have a public setter.  the id should be managed by jsorm
 	// however, let's see what happens if we forget this, and add one...
-    [Id]
-    public Guid PersonId { get; set; }
+	[Id]
+	public Guid PersonId { get; set; }
 
-    // identifies properties to be mapped to the "attributes" section.
+	// identifies properties to be mapped to the "attributes" section in JSON API resource.
 	// note: I wish I could call this [Attribute] but that has unfortunate .net api type/namespace collisions
 	[Property]
-    public string FirstName { get; set; }
+	public string FirstName { get; set; }
 
 	// you may override default naming conventions on anything
 	[Property("lName")]
-    public string LastName { get; set; }
+	public string LastName { get; set; }
 
-    // I haven't implemented relationships yet...
+	// I haven't implemented relationships yet...
 }
 ```
-jsorm runs as a Fody weaver as part of the compile process.  You'll see msbuild output, telling you what models jsorm found, and what properties it mapped.  To those new to concepts like code weaving.  Your assembly is built with your code, and then modified/woven during a later step in the build pipeline.  Anywhere you reference that compiled assembly, it will contain the additional woven code, and thus the additional behavior.  This saves you from writing that code yourself or executing expensive reflection operations at runtime to conventionally (or otherwise) map POCO properties to JSON API attributes!
+jsorm runs as a Fody weaver during the compile process.  You'll see MSBUILD output informing you what models jsorm found and what properties it mapped.  To those new to concepts like code weaving, your assembly is built with your code and then modified/woven during a later step in the build pipeline.  Anywhere you reference that compiled assembly, it will contain the additional code woven in by jsorm and thus the additional behavior.  This saves you from writing that code yourself or executing expensive reflection operations at runtime to map POCO properties to JSON API attributes!
 ```
 3>    Fody: Fody (version 1.29.4.0) Executing
 3>      Fody/Weavers:   Jsorm scanner discovered model types:
@@ -105,7 +106,7 @@ jsorm runs as a Fody weaver as part of the compile process.  You'll see msbuild 
 3>      Fody/Weavers:   	Weaving System.String AssemblyToWeave.Person::LastName() => lName
 3>    Fody:   Finished Fody 747ms.
 ```
-You'll see above that jsorm found our `Person` model and made some changes to it.  The `PersonId` property marked as the `Id` had a public setter.  jsorm should be managing ids like any other traditional ORM, so some liberties are taken here to correct this.  As an MSBUILD warning, this will show up in your Visual Studio errors list.  If we were to now decompile AssemblyToWeave, we would find our Person class modified as shown below:
+You'll see above that jsorm found our `Person` model and made some changes to it.  The `PersonId` property marked as the `Id` had a public setter.  For now, jsorm should be managing ids like any other traditional ORM, so some liberties are taken here to enforce this.  As an MSBUILD warning, this will show up in your Visual Studio errors list to hopefully draw attention to this issue.  If we were to now decompile the assembly built above, we would find our Person class modified as shown below:
 ```csharp
 // a post jsorm woven Person, decompiled (with my added comments)
 [Model]
@@ -115,7 +116,7 @@ public class Person
 	[NonSerialized]
 	private IModelSession _session;
 
-    // the setter is made private, as ids should be managed by the ORM
+	// the setter is made private, as ids should be managed by the ORM
 	// a compiler warning notifies you to remove your public setter, if you have one
 	[Id]
 	public Guid PersonId { get; private set; }
@@ -125,10 +126,10 @@ public class Person
 	{
 		get
 		{
-		    // if this model is managed by the session, delegate
+			// if this model is managed by the session, delegate
 			if (this._session != null)
 			{
-			    // property 'FirstName' => attribute 'firstName' per convention
+				// property 'FirstName' => attribute 'firstName' per convention
 				this.<FirstName>k__BackingField = this._session.GetAttribute<Person, string>(this.PersonId, "firstName"); 
 			}
 			return this.<FirstName>k__BackingField;
@@ -151,7 +152,7 @@ public class Person
 		{
 			if (this._session != null)
 			{
-			    // property 'LastName' => attribute 'lName' per override
+				// property 'LastName' => attribute 'lName' per override
 				this.<LastName>k__BackingField = this._session.GetAttribute<Person, string>(this.PersonId, "lName"); 
 			}
 			return this.<LastName>k__BackingField;
@@ -178,21 +179,31 @@ public class Person
 	}
 }
 ```
-With the model delegating to the session, the session can track property changes for building `PATCH` requests, manage lazy-loading relationships via session-managed collections returned in place of `IEnumerable<T>` and a linq provider to allow session-managed sorting, paging, and filtering on collections.  These are all familiar concepts if you're used to working with a modern ORM.
+With the model delegating to the session, the session can do a lot of cool stuff for us.
+ - track property changes for building `PATCH` requests
+ - manage lazy-loading relationships via session-managed collections in place of `IEnumerable<T>`
+ - linq provider to allow session-managed sorting, paging, and filtering on collections
+
 ### Configuring
-jsorm gives you a pleasent, easy-to-discover configuration api.  If you've worked with [Fluent NHibernate](https://github.com/jagregory/fluent-nhibernate), this should look a little familiar.
+jsorm gives you a pleasent, easy-to-understand configuration api.  If you've worked with [Fluent NHibernate](https://github.com/jagregory/fluent-nhibernate), this should look a little familiar.
 ```csharp
-// the ISessionFactory is the long-lived object you would register in your IoC container
+// the ISessionFactory is the long-lived object you would (ideally) register in your IoC container
 var sessionFactory = Fluently.Configure()
 	.Remote()
-		// jsorm will run these HttpClient configuration actions for each session
-		.Configure(x => x.BaseAddress = new Uri("http://json.host/api"))
+		// optionally, if you really want to control how the HttpClient is created each session, you can
+		.Create(() => new HttpClient())
+		// jsorm will run these configuration actions on the HttpClient for each session
+		// don't forget to [add a trailing slash](http://stackoverflow.com/questions/23438416/why-is-httpclient-baseaddress-not-working?answertab=active#tab-top)!
+		.Configure(x => x.BaseAddress = new Uri("http://json.host/api/"))
+		// it's up to you to decide how you want to manage authentication
 		.Configure(x => x.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token))
 	.Models()
 		// tell jsorm where your models are
 		.Configure(x => x.AddFromAssemblyOf<Person>())
 		// and/or
-		.Configure(x => x.AddAssembly(Assembly.GetExecutingAssembly()))
+		.Configure(x => x.AddFromAssembly(Assembly.GetExecutingAssembly()))
+		// and/or
+		.Configure(x => x.Add<Person>())
 	.BuildSessionFactory();
 ```
 ### Using
@@ -206,12 +217,13 @@ using (var session = sessionFactory.CreateSession())
 		FirstName = "Justin",
 		LastName = "Case"
 	};
-	
-	// sends a POST to the server and returns session-managed Person
+
+	// sends a POST to the server and returns a session-managed Person
 	person = await session.Create(person);
-    // Id was created by the server and populated by the session
-    crossSessionPersonId = person.Id;
-    Assert.NotNull(crossSessionPersonId);
+	// Id was created by the server and populated by the session
+	crossSessionPersonId = person.PersonId;
+	Assert.NotNull(crossSessionPersonId);
+	Assert.NotEqual(Guid.Empty, crossSessionPersonId);
 }
 // later that day...
 using (var session = sessionFactory.CreateSession())
@@ -220,12 +232,12 @@ using (var session = sessionFactory.CreateSession())
 	Assert.Equal("Justin", person.FirstName);
 	Assert.Equal("Case", person.LastName);
 	
-	// session receives this setter and builds a patch context for this model
+	// session receives this setter value and builds a patch context for this model
 	person.FirstName = "Charity";
 	// sends a PATCH to the server
 	await session.Update(person);
 }
-// and theeeenn.....
+// cleaning up...
 using (var session = sessionFactory.CreateSession())
 {
     // sends a DELETE to the server
@@ -234,10 +246,10 @@ using (var session = sessionFactory.CreateSession())
 ```
 ### The Future
 We're still evaluating the long-term roadmap for this project, but initial, tentative ideas:
-- Linq support
+- Linq provider
   - sorting via OrderBy
   - paging via Take
   - filtering via Where
 - Cache provider plugins with initial support for [Akavache](https://github.com/akavache/Akavache)
-- server => client eventing/sync via [Rx.NET](https://github.com/Reactive-Extensions/Rx.NET)
+- server to client eventing/sync push via [Rx.NET](https://github.com/Reactive-Extensions/Rx.NET)
 - your idea could go here...
