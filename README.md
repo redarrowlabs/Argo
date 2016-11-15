@@ -193,7 +193,7 @@ var sessionFactory = Fluently.Configure()
 		// optionally, if you really want to control how the HttpClient is created each session, you can
 		.Create(() => new HttpClient())
 		// jsorm will run these configuration actions on the HttpClient for each session
-		// don't forget to [add a trailing slash](http://stackoverflow.com/questions/23438416/why-is-httpclient-baseaddress-not-working?answertab=active#tab-top)!
+		// don't forget to add a trailing slash!
 		.Configure(x => x.BaseAddress = new Uri("http://json.host/api/"))
 		// it's up to you to decide how you want to manage authentication
 		.Configure(x => x.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token))
