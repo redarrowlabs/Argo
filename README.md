@@ -180,7 +180,7 @@ public class Person
 ```
 With the model delegating to the session, the session can track property changes for building `PATCH` requests, manage lazy-loading relationships via session-managed collections returned in place of `IEnumerable<T>` and a linq provider to allow session-managed sorting, paging, and filtering on collections.  These are all familiar concepts if you're used to working with a modern ORM.
 ### Configuring
-jsorm gives you a plesent, easy-to-discover configuration api.  If you've worked with [Fluent NHibernate](https://github.com/jagregory/fluent-nhibernate), this should look a little familiar.
+jsorm gives you a pleasent, easy-to-discover configuration api.  If you've worked with [Fluent NHibernate](https://github.com/jagregory/fluent-nhibernate), this should look a little familiar.
 ```csharp
 // the ISessionFactory is the long-lived object you would register in your IoC container
 var sessionFactory = Fluently.Configure()
