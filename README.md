@@ -3,10 +3,10 @@ A JSON API C# ORM client to abstract a JSON API 1.0 spec web api with familiar, 
 
 [![GitHub license](https://img.shields.io/github/license/redarrowlabs/jsorm.svg)](https://raw.githubusercontent.com/redarrowlabs/jsorm/development/LICENSE)
 
-| Branch | Nuget | Build | Test Coverage | Static Analysis |
-| ------ | ----- | ----- | ------------- | --------------- |
-| master | N/A | N/A | N/A | N/A |
-| development | N/A | N/A | N/A | N/A |
+| Branch | Nuget | Build |
+| ------ | ----- | ----- |
+| master | N/A | N/A |
+| development | N/A | [![VSTS](https://img.shields.io/vso/build/redarrowlabs/23bc67da-86b0-4d8a-8b5b-8e999658a24f/117.svg)](https://redarrowlabs.visualstudio.com/Titan/Titan%20Team/_build/index?definitionId=117) |
 
 ## What
 With the advent of NoSQL databases, we all need to decide how to relate these schemaless resources over web apis.  This often introduces new challenges, like how to model relationships bewteen resources.  These challenges compound when you introduce filtering or paging and sorting features to your api. [JSON API](http://jsonapi.org/) is a specification to define a common approach to overcoming these challenges.  However, additional challenges arise when you realize you need to somehow map a JSON API resource to a POCO.  The goal of jsorm is to solve all of these challenges (and then some!) for you.
