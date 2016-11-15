@@ -51,6 +51,10 @@
     <None Include="uninstall.ps1" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\RedArrow.Jsorm.Fody\RedArrow.Jsorm.Fody.csproj">
+      <Project>{bd5259a0-0735-456a-9b93-c665aa0a3353}</Project>
+      <Name>RedArrow.Jsorm.Fody</Name>
+    </ProjectReference>
     <ProjectReference Include="..\RedArrow.Jsorm\RedArrow.Jsorm.csproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <Project>{F540B5CA-B7C2-4799-9EB2-B5401BD1F28C}</Project>
