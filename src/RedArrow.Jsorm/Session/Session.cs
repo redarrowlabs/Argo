@@ -1,89 +1,136 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using RedArrow.Jsorm.Attributes;
+using RedArrow.Jsorm.Config;
+using RedArrow.Jsorm.JsonModels;
+using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using RedArrow.Jsorm.JsonModels;
 
 namespace RedArrow.Jsorm.Session
 {
     public class Session : IModelSession, ISession
     {
-		private HttpClient HttpClient { get; }
-		private IDictionary<Type, PropertyInfo> IdProperties { get; } 
-		
-		private SessionState State { get; }
+        private HttpClient HttpClient { get; }
 
-	    public Session(
-			HttpClient httpClient,
-			IDictionary<Type, PropertyInfo> idProperties)
-	    {
-		    HttpClient = httpClient;
-		    IdProperties = new ReadOnlyDictionary<Type, PropertyInfo>(idProperties);
+        private IDictionary<Type, string> TypeLookup { get; }
+        private IDictionary<Type, PropertyInfo> IdLookup { get; }
+        private ILookup<Type, PropertyConfiguration> AttributeLookup { get; }
 
-			State = new SessionState();
-	    }
+        private SessionState State { get; }
 
-	    public void Dispose()
+        internal Session(
+            Func<HttpClient> httpClientFactory,
+            IDictionary<Type, string> typeLookup,
+            IDictionary<Type, PropertyInfo> idLookup,
+            ILookup<Type, PropertyConfiguration> attributeLookup)
         {
-			HttpClient.Dispose();
-		}
+            HttpClient = httpClientFactory();
+            TypeLookup = typeLookup;
+            IdLookup = idLookup;
+            AttributeLookup = attributeLookup;
 
-	    public async Task<TModel> Get<TModel>(Guid id)
-	    {
-			//TODO check cache?
-			var resource = State.Get(id);
-		    if (resource == null)
-		    {
-			    await GetRemoteResource<TModel>(id);
-		    }
+            State = new SessionState();
+        }
 
-			// TODO: cache these so we're not creating a new one on every get
-		    return CreateModel<TModel>(id);
-	    }
+        public void Dispose()
+        {
+            HttpClient.Dispose();
+        }
 
-	    private async Task GetRemoteResource<TModel>(Guid id)
-	    {
-		    var modelType = typeof (TModel);
-		    var resourceName = modelType.Name;
-		    var response = await HttpClient.GetAsync($"{resourceName}/{id}");
-		    var contentString = await response.Content.ReadAsStringAsync();
-		    var resourceRoot = JsonConvert.DeserializeObject<ResourceRoot>(contentString);
-		    State.Put(id, resourceRoot);
-	    }
+        public async Task<TModel> Create<TModel>(TModel model)
+        {
+            PropertyInfo idPropInfo;
+            if (!IdLookup.TryGetValue(typeof(TModel), out idPropInfo))
+            {
+                throw new Exception($"{typeof(TModel).FullName} is not a manged model");
+            }
 
-	    private TModel CreateModel<TModel>(Guid id)
-	    {
-		    return (TModel) Activator.CreateInstance(typeof (TModel), id, this);
-		}
+            var idVal = idPropInfo.GetValue(model);
+            if (!Guid.Empty.Equals(idVal))
+            {
+                throw new Exception($"Model {typeof(TModel)} [{idVal}] has already been created");
+            }
 
-	    public TAttr GetAttribute<TModel, TAttr>(Guid id, string attrName)
-	    {
-		    var resourceRoot = State.Get(id);
-		    if (resourceRoot == null)
-		    {
-			    //TODO: something has gone wrong
-			    return default(TAttr);
-		    }
+            var id = await CreateRemoteResource(model);
+            return CreateModel<TModel>(id);
+        }
 
-			// this is probably much cheaper than converting to a Resource object
-		    var attrToken = resourceRoot.Data.SelectToken($"$.attributes.{attrName}");
-		    if (attrToken == null)
-		    {
-			    //TODO: something has probably gone wrong
-			    return default(TAttr);
-		    }
+        private async Task<Guid> CreateRemoteResource<TModel>(TModel model)
+        {
+            var resourceRequest = new ResourceRootSingle
+            {
+                Data = new Resource
+                {
+                    Attributes = JObject.FromObject(AttributeLookup[typeof(TModel)]
+                        .ToDictionary(
+                            x => x.AttributeName,
+                            x => x.PropertyInfo.GetValue(model)),
+                        JsonSerializer.CreateDefault(new JsonSerializerSettings
+                        {
+                            NullValueHandling = NullValueHandling.Ignore
+                        }))
+                }
+            };
 
-		    return attrToken.ToObject<TAttr>();
-	    }
+            var resourceType = TypeLookup[typeof(TModel)];
+            var body = new StringContent(resourceRequest.ToJson(), Encoding.UTF8, "application/vnd.api+json");
+            var response = await HttpClient.PostAsync(resourceType, body);
+            var idStr = response.Headers.Location.Segments.Last();
+            return Guid.Parse(idStr);
+        }
 
-	    public void SetAttribute<TModel, TAttr>(Guid id, string attrName, TAttr value)
-	    {
-		    throw new NotImplementedException();
-	    }
+        public async Task<TModel> Get<TModel>(Guid id)
+        {
+            //TODO check cache?
+            var resource = State.Get(id);
+            if (resource == null)
+            {
+                await GetRemoteResource<TModel>(id);
+            }
+
+            // TODO: cache these so we're not creating a new one on every get
+            return CreateModel<TModel>(id);
+        }
+
+        private async Task GetRemoteResource<TModel>(Guid id)
+        {
+            var resourceType = TypeLookup[typeof(TModel)];
+            var response = await HttpClient.GetAsync($"{resourceType}/{id}");
+            var contentString = await response.Content.ReadAsStringAsync();
+            var resourceRoot = JsonConvert.DeserializeObject<ResourceRootSingle>(contentString);
+            State.Put(id, resourceRoot.Data);
+        }
+
+        private TModel CreateModel<TModel>(Guid id)
+        {
+            return (TModel)Activator.CreateInstance(typeof(TModel), id, this);
+        }
+
+        public TAttr GetAttribute<TModel, TAttr>(Guid id, string attrName)
+        {
+            var resource = State.Get(id);
+            if (resource == null)
+            {
+                //TODO: something has gone wrong
+                return default(TAttr);
+            }
+
+            JToken valueToken;
+            if (resource.Attributes.TryGetValue(attrName, out valueToken))
+            {
+                return valueToken.Value<TAttr>();
+            }
+            return default(TAttr);
+        }
+
+        public void SetAttribute<TModel, TAttr>(Guid id, string attrName, TAttr value)
+        {
+            //TODO
+        }
     }
 }

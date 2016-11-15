@@ -10,8 +10,13 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RedArrow.Jsorm.Tests", "RedArrow.Jsorm.Tests\RedArrow.Jsorm.Tests.csproj", "{48B4F3A3-FA21-432A-A8D3-97FD964E0061}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AssemblyToWeave", "AssemblyToWeave\AssemblyToWeave.csproj", "{2AA3DFDF-F71D-4ACE-BFD5-0100EC753BC8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BD5259A0-0735-456A-9B93-C665AA0A3353} = {BD5259A0-0735-456A-9B93-C665AA0A3353}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RedArrow.Jsorm.Fody", "Weavers\RedArrow.Jsorm.Fody.csproj", "{BD5259A0-0735-456A-9B93-C665AA0A3353}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RedArrow.Jsorm.Sample", "RedArrow.Jsorm.Sample\RedArrow.Jsorm.Sample.csproj", "{C30CF711-FA9E-4117-9759-12FE27D6F05B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,6 +40,10 @@ Global
 		{BD5259A0-0735-456A-9B93-C665AA0A3353}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BD5259A0-0735-456A-9B93-C665AA0A3353}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BD5259A0-0735-456A-9B93-C665AA0A3353}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C30CF711-FA9E-4117-9759-12FE27D6F05B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C30CF711-FA9E-4117-9759-12FE27D6F05B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C30CF711-FA9E-4117-9759-12FE27D6F05B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C30CF711-FA9E-4117-9759-12FE27D6F05B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -42,5 +51,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{48B4F3A3-FA21-432A-A8D3-97FD964E0061} = {38A57A5C-EF3C-423E-A33E-5796E03760AD}
 		{2AA3DFDF-F71D-4ACE-BFD5-0100EC753BC8} = {38A57A5C-EF3C-423E-A33E-5796E03760AD}
+		{C30CF711-FA9E-4117-9759-12FE27D6F05B} = {38A57A5C-EF3C-423E-A33E-5796E03760AD}
 	EndGlobalSection
 EndGlobal

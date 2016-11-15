@@ -10,22 +10,16 @@ namespace RedArrow.Jsorm
 
         private void FindModels()
         {
-	        _modelTypeDefs = ModuleDefinition.Types
-		        .Where(HasIdAttribute)
-		        .ToArray();
+            _modelTypeDefs = ModuleDefinition.Types
+                .Where(x => x.HasCustomAttributes)
+                .Where(x => x.CustomAttributes.ContainsAttribute(Constants.Attributes.Model))
+                .ToArray();
 
-	        LogInfo("Jsorm scanner discovered model types:");
-	        foreach (var model in _modelTypeDefs)
-	        {
-		        LogInfo($"\t{model.FullName}");
-	        }
-        }
-
-        private bool HasIdAttribute(TypeDefinition type)
-        {
-	        return type.Properties
-		        .Any(t => t.CustomAttributes
-			        .Any(a => a.Constructor.DeclaringType.FullName == "RedArrow.Jsorm.Attributes.IdAttribute"));
+            LogInfo("Jsorm scanner discovered model types:");
+            foreach (var model in _modelTypeDefs)
+            {
+                LogInfo($"\t{model.FullName}");
+            }
         }
     }
 }

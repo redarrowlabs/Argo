@@ -1,35 +1,40 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
-using AssemblyToWeave;
-using Ploeh.AutoFixture.Xunit2;
+﻿using AssemblyToWeave;
 using RedArrow.Jsorm.Config;
+using System;
+using System.ComponentModel;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace RedArrow.Jsorm.Sample
 {
-	public class SessionTests
-	{
-		public async Task GetPatient
-			(Guid patientId)
-		{
-			var sessionFactory = Fluently.Configure()
-				.Host(ConfigureHttpClient)
-				.Mappings(x => x.ResourceMaps.AddFromAssemblyOf<PatientMap>())
-				.BuildSessionFactory();
+    public class SessionTests
+    {
+        [Fact, Category("Integration")]
+        public async Task GetPatient()
+        {
+            var token = "13f131e74cf3e1c579b38011b091c3fc";
 
-			using (var session = sessionFactory.CreateSession())
-			{
-				var patient = await session.GetModel<Patient>(patientId);
-			}
-		}
+            var sessionFactory = Fluently.Configure()
+                .Remote()
+                    .Configure(x => x.BaseAddress = new Uri("http://titan-test.centralus.cloudapp.azure.com/resources/write/api"))
+                    .Configure(x => x.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token))
+                .Models(x => x.AddFromAssemblyOf<Patient>())
+                .BuildSessionFactory();
 
-		private void ConfigureHttpClient(HttpClient client)
-		{
-			
-		}
-	}
+            using (var session = sessionFactory.CreateSession())
+            {
+                var test = new Patient();
+                var patient = new Patient
+                {
+                    FirstName = "Brian",
+                    LastName = "Engen"
+                };
+
+                patient = await session.Create(patient);
+
+                Assert.NotEqual(Guid.Empty, patient.Id);
+            }
+        }
+    }
 }

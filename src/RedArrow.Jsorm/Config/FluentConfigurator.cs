@@ -1,19 +1,25 @@
-﻿using System;
+﻿using RedArrow.Jsorm.Cache;
+using RedArrow.Jsorm.Session;
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using RedArrow.Jsorm.Cache;
-using RedArrow.Jsorm.Session;
+using System.Net.Http.Headers;
 
 namespace RedArrow.Jsorm.Config
 {
-    public class FluentConfigurator
+    public class FluentConfigurator :
+        IFluentConfigurator,
+        IRemoteCreator,
+        IRemoteConfigure
     {
         private IList<Action<ModelConfiguration>> ModelBuilders { get; }
-		private IList<Action<HttpClient>>  ClientBuilders { get; }
+
+        private Func<HttpClient> ClientCreator { get; set; }
+        private IList<Action<HttpClient>> ClientConfigurators { get; }
 
         private Func<ICacheProvider> ModelRegistryBuilder { get; set; }
 
-		internal SessionConfiguration SessionConfiguration { get; }
+        internal SessionConfiguration SessionConfiguration { get; }
 
         public FluentConfigurator()
             : this(new SessionConfiguration()) { }
@@ -21,11 +27,13 @@ namespace RedArrow.Jsorm.Config
         public FluentConfigurator(SessionConfiguration config)
         {
             ModelBuilders = new List<Action<ModelConfiguration>>();
-			ClientBuilders = new List<Action<HttpClient>>();
+
+            ClientConfigurators = new List<Action<HttpClient>>();
+
             SessionConfiguration = config;
         }
 
-        public FluentConfigurator Models(Action<ModelConfiguration> mappings)
+        public IFluentConfigurator Models(Action<ModelConfiguration> mappings)
         {
             ModelBuilders.Add(mappings);
             return this;
@@ -37,34 +45,49 @@ namespace RedArrow.Jsorm.Config
         //    return this;
         //}
 
-	    public FluentConfigurator Host(Action<HttpClient> configureClient)
-	    {
-			ClientBuilders.Add(configureClient);
-		    return this;
-	    }
-
-	    public SessionConfiguration BuildConfiguration()
+        public IRemoteCreator Remote()
         {
-			// load all the models
+            return this;
+        }
+
+        public IRemoteConfigure Create(Func<HttpClient> createClient)
+        {
+            ClientCreator = createClient;
+            return this;
+        }
+
+        public IRemoteConfigure Configure(Action<HttpClient> configureClient)
+        {
+            ClientConfigurators.Add(configureClient);
+            return this;
+        }
+
+        public SessionConfiguration BuildConfiguration()
+        {
+            // load all the models
             var modelConfig = new ModelConfiguration();
             foreach (var builder in ModelBuilders)
             {
                 builder(modelConfig);
             }
 
-			// translate model attributes to session config
+            // translate model attributes to session config
             modelConfig.Configure(SessionConfiguration);
 
-			// build HttpClient factory
-		    SessionConfiguration.HttpClientFactory = () =>
-		    {
-				var client = new HttpClient();
-			    foreach (var clientBuilder in ClientBuilders)
-			    {
-				    clientBuilder(client);
-			    }
-				return client;
-		    };
+            // build HttpClient factory
+            SessionConfiguration.HttpClientFactory = () =>
+            {
+                var client = (ClientCreator ?? (() => new HttpClient()))();
+                client.DefaultRequestHeaders
+                    .Accept
+                    .Add(MediaTypeWithQualityHeaderValue
+                        .Parse("application/vnd.api+json"));
+                foreach (var configure in ClientConfigurators)
+                {
+                    configure(client);
+                }
+                return client;
+            };
             //SessionConfiguration.CacheProvider = ModelRegistryBuilder();
 
             return SessionConfiguration;

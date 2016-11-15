@@ -42,6 +42,14 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Config\IFluentConfigurator.cs" />
+    <Compile Include="Config\IRemoteConfigurator.cs" />
+    <Compile Include="Config\PropertyConfiguration.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
+    <Compile Include="JsonModels\BaseResourceRoot.cs" />
+    <Compile Include="JsonModels\ResourceRootCollection.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Attributes\ModelAttribute.cs" />
     <Compile Include="Attributes\PropertyAttribute.cs" />
     <Compile Include="Attributes\IdAttribute.cs" />
     <Compile Include="Config\SessionConfiguration.cs" />
@@ -63,7 +71,7 @@
     <Compile Include="JsonModels\Relationship.cs" />
     <Compile Include="JsonModels\Resource.cs" />
     <Compile Include="JsonModels\ResourceIdentifier.cs" />
-    <Compile Include="JsonModels\ResourceRoot.cs" />
+    <Compile Include="JsonModels\ResourceRootSingle.cs" />
     <Compile Include="Session\IModelSession.cs" />
     <Compile Include="LibLog\LibLog.cs" />
     <Compile Include="Cache\ICacheProvider.cs" />

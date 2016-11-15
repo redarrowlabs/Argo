@@ -67,6 +67,7 @@
     <Compile Include="ModuleWeaver.cs" />
     <Compile Include="ModelFinder.cs" />
     <Compile Include="SessionFieldWeaver.cs" />
+    <Compile Include="StringExtensions.cs" />
     <Compile Include="TypeDefLoader.cs" />
   </ItemGroup>
   <ItemGroup>

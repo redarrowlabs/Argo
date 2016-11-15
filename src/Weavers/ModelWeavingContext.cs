@@ -1,95 +1,95 @@
-﻿using System;
+﻿using Mono.Cecil;
+using Mono.Collections.Generic;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Mono.Cecil;
-using Mono.Collections.Generic;
 
 namespace RedArrow.Jsorm
 {
-	public class ModelWeavingContext
-	{
-		public PropertyDefinition IdPropDef { get; private set;}
-		
-		public IEnumerable<PropertyDefinition> MappedAttributes { get; }
-		public IEnumerable<PropertyDefinition> MappedHasOne { get; }
-		public IEnumerable<PropertyDefinition> MappedHasMany { get; }
-		
-		private TypeDefinition ModelTypeDef { get; }
-		public TypeReference ModelTypeRef => ModelTypeDef;
+    public class ModelWeavingContext
+    {
+        public PropertyDefinition IdPropDef { get; private set; }
 
-		public Collection<FieldDefinition> Fields => ModelTypeDef.Fields;
-		public Collection<MethodDefinition> Methods => ModelTypeDef.Methods;
-		public Collection<PropertyDefinition> Properties => ModelTypeDef.Properties;  
+        public IEnumerable<PropertyDefinition> MappedAttributes { get; }
+        public IEnumerable<PropertyDefinition> MappedHasOne { get; }
+        public IEnumerable<PropertyDefinition> MappedHasMany { get; }
 
-		public TypeReference SessionTypeRef { get; private set; }
-		public FieldDefinition SessionField { get; private set; }
+        private TypeDefinition ModelTypeDef { get; }
+        public TypeReference ModelTypeRef => ModelTypeDef;
 
-		public ModelWeavingContext(TypeDefinition modelTypeDef)
-		{
-			ModelTypeDef = modelTypeDef;
+        public Collection<FieldDefinition> Fields => ModelTypeDef.Fields;
+        public Collection<MethodDefinition> Methods => ModelTypeDef.Methods;
+        public Collection<PropertyDefinition> Properties => ModelTypeDef.Properties;
 
-			GetMappedIdProperty();
+        public TypeReference SessionTypeRef { get; private set; }
+        public FieldDefinition SessionField { get; private set; }
 
-			MappedAttributes = GetMappedProperties(Constants.Attributes.Property);
-			//MappedHasOne = GetMappedProperties(Map, "_referenceMaps");
-			//MappedHasMany = GetMappedProperties(Map, "_collectionMaps");
-		}
+        public ModelWeavingContext(TypeDefinition modelTypeDef)
+        {
+            ModelTypeDef = modelTypeDef;
 
-		public void AddSessionField(TypeDefinition sessionTypeDef)
-		{
-			if (SessionField != null) return;
+            GetMappedIdProperty();
 
-			SessionTypeRef = ModelTypeDef.Module.ImportReference(sessionTypeDef);
+            MappedAttributes = GetMappedProperties(Constants.Attributes.Property);
+            //MappedHasOne = GetMappedProperties(Map, "_referenceMaps");
+            //MappedHasMany = GetMappedProperties(Map, "_collectionMaps");
+        }
 
-			SessionField = new FieldDefinition(
-					"__jsorm__generated_session",
-					FieldAttributes.Private | FieldAttributes.NotSerialized | FieldAttributes.InitOnly,
-					SessionTypeRef);
-			
-			Fields.Add(SessionField);
-		}
+        public void AddSessionField(TypeDefinition sessionTypeDef)
+        {
+            if (SessionField != null) return;
 
-		private void GetMappedIdProperty()
-		{
-			IdPropDef = Properties.SingleOrDefault(x => x.CustomAttributes.ContainsAttribute(Constants.Attributes.Id));
+            SessionTypeRef = ModelTypeDef.Module.ImportReference(sessionTypeDef);
 
-			if (IdPropDef == null)
-			{
-				throw new Exception($"{ModelTypeDef.FullName} does not have an id property mapped");
-			}
+            SessionField = new FieldDefinition(
+                    "__jsorm__generated_session",
+                    FieldAttributes.Private | FieldAttributes.NotSerialized,
+                    SessionTypeRef);
 
-			if (IdPropDef.GetMethod?.ReturnType.FullName != "System.Guid")
-			{
-				throw new Exception($"{ModelTypeDef} id property must have a System.Guid getter");
-			}
-		}
+            Fields.Add(SessionField);
+        }
 
-		private IEnumerable<PropertyDefinition> GetMappedProperties(string attrFullName)
-		{
-			return ModelTypeDef.Properties
-				.Where(x => x.HasCustomAttributes)
-				.Where(p => p.CustomAttributes.ContainsAttribute(attrFullName))
-				.ToArray();
-		}
+        private void GetMappedIdProperty()
+        {
+            IdPropDef = Properties.SingleOrDefault(x => x.CustomAttributes.ContainsAttribute(Constants.Attributes.Id));
 
-		public TypeReference ImportReference(TypeDefinition typeDef)
-		{
-			return ModelTypeDef.Module.ImportReference(typeDef);
-		}
+            if (IdPropDef == null)
+            {
+                throw new Exception($"{ModelTypeDef.FullName} does not have an id property mapped");
+            }
 
-		public TypeReference ImportReference(TypeReference typeRef)
-		{
-			return ModelTypeDef.Module.ImportReference(typeRef);
-		}
+            if (IdPropDef.GetMethod?.ReturnType.FullName != "System.Guid")
+            {
+                throw new Exception($"{ModelTypeDef} id property must have a System.Guid getter");
+            }
+        }
 
-		public MethodReference ImportReference(MethodDefinition methDef)
-		{
-			return ModelTypeDef.Module.ImportReference(methDef);
-		}
+        private IEnumerable<PropertyDefinition> GetMappedProperties(string attrFullName)
+        {
+            return ModelTypeDef.Properties
+                .Where(x => x.HasCustomAttributes)
+                .Where(p => p.CustomAttributes.ContainsAttribute(attrFullName))
+                .ToArray();
+        }
 
-		public MethodReference ImportReference(GenericInstanceMethod genMethDef)
-		{
-			return ModelTypeDef.Module.ImportReference(genMethDef);
-		}
-	}
+        public TypeReference ImportReference(TypeDefinition typeDef)
+        {
+            return ModelTypeDef.Module.ImportReference(typeDef);
+        }
+
+        public TypeReference ImportReference(TypeReference typeRef)
+        {
+            return ModelTypeDef.Module.ImportReference(typeRef);
+        }
+
+        public MethodReference ImportReference(MethodDefinition methDef)
+        {
+            return ModelTypeDef.Module.ImportReference(methDef);
+        }
+
+        public MethodReference ImportReference(GenericInstanceMethod genMethDef)
+        {
+            return ModelTypeDef.Module.ImportReference(genMethDef);
+        }
+    }
 }
