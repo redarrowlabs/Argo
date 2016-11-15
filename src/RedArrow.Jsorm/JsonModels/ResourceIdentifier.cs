@@ -5,9 +5,9 @@ using Newtonsoft.Json.Linq;
 
 namespace RedArrow.Jsorm.JsonModels
 {
-    public class ResourceIdentifier : JModel, IMetaDecorated
+    internal class ResourceIdentifier : JModel, IMetaDecorated
     {
-        [JsonProperty("id")]
+        [JsonProperty("id", NullValueHandling = NullValueHandling.Ignore)]
         public Guid Id { get; set; }
 
         [JsonProperty("type", NullValueHandling = NullValueHandling.Ignore)]

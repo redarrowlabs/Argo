@@ -3,7 +3,7 @@ using System;
 
 namespace AssemblyToWeave
 {
-    [Model]
+    [Model("integration-test-patient")]
     public class Patient
     {
         [Id]

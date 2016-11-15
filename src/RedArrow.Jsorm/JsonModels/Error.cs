@@ -5,7 +5,7 @@ using Newtonsoft.Json.Linq;
 
 namespace RedArrow.Jsorm.JsonModels
 {
-    public class Error : JModel, IMetaDecorated
+    internal class Error : JModel, IMetaDecorated
     {
         [JsonProperty("id", NullValueHandling = NullValueHandling.Ignore)]
         public Guid? Id { get; set; }

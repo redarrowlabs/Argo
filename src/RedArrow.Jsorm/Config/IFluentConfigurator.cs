@@ -7,7 +7,7 @@ namespace RedArrow.Jsorm.Config
     {
         IRemoteCreator Remote();
 
-        IFluentConfigurator Models(Action<ModelConfiguration> mappings);
+        IModelConfigurator Models();
 
         SessionConfiguration BuildConfiguration();
 

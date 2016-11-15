@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace AssemblyToWeave
 {
-    [Model]
+    [Model("integration-test-provider")]
     public class Provider
     {
         [Id]

@@ -20,5 +20,13 @@ namespace RedArrow.Jsorm.Session
                 ? ret
                 : null;
         }
+
+	    public void Evict(Guid id)
+	    {
+		    if (State.ContainsKey(id))
+		    {
+			    State.Remove(id);
+		    }
+	    }
     }
 }

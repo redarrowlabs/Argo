@@ -24,7 +24,7 @@ namespace RedArrow.Jsorm.Tests.Config
 
             Assert.True(config.Types.ContainsKey(typeof(BasicModel)));
             Assert.True(config.Types.ContainsKey(typeof(OverriddenModel)));
-            Assert.Equal("BasicModel", config.Types[typeof(BasicModel)]);
+            Assert.Equal("basicModel", config.Types[typeof(BasicModel)]);
             Assert.Equal("model-overridden", config.Types[typeof(OverriddenModel)]);
 
             // ids

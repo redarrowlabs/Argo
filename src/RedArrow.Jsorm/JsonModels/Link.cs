@@ -5,7 +5,7 @@ using Newtonsoft.Json.Linq;
 
 namespace RedArrow.Jsorm.JsonModels
 {
-    public class Link : JModel, IMetaDecorated
+    internal class Link : JModel, IMetaDecorated
     {
         [JsonProperty("href", NullValueHandling = NullValueHandling.Ignore)]
         public Uri Href { get; set; }

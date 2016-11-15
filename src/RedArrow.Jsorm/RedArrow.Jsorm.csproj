@@ -43,11 +43,14 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Config\IFluentConfigurator.cs" />
+    <Compile Include="Config\IModelConfigurator.cs" />
     <Compile Include="Config\IRemoteConfigurator.cs" />
     <Compile Include="Config\PropertyConfiguration.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="JsonModels\BaseResourceRoot.cs" />
+    <Compile Include="JsonModels\ResourceCreate.cs" />
     <Compile Include="JsonModels\ResourceRootCollection.cs" />
+    <Compile Include="JsonModels\ResourceRootCreate.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Attributes\ModelAttribute.cs" />
     <Compile Include="Attributes\PropertyAttribute.cs" />

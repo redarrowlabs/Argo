@@ -4,7 +4,7 @@ using Newtonsoft.Json.Linq;
 
 namespace RedArrow.Jsorm.JsonModels
 {
-    public class Relationship : JModel, IMetaDecorated
+    internal class Relationship : JModel, IMetaDecorated
     {
         [JsonProperty("links", NullValueHandling = NullValueHandling.Ignore)]
         public IDictionary<string, JToken> Links { get; set; }

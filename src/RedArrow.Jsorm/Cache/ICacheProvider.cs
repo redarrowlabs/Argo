@@ -7,6 +7,6 @@ namespace RedArrow.Jsorm.Cache
     {
         void Register(Type type);
 
-		Resource Get(Guid id);
+		//Resource Get(Guid id);
     }
 }

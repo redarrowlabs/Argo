@@ -6,6 +6,7 @@ using RedArrow.Jsorm.JsonModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
@@ -62,26 +63,42 @@ namespace RedArrow.Jsorm.Session
 
         private async Task<Guid> CreateRemoteResource<TModel>(TModel model)
         {
-            var resourceRequest = new ResourceRootSingle
-            {
-                Data = new Resource
-                {
-                    Attributes = JObject.FromObject(AttributeLookup[typeof(TModel)]
-                        .ToDictionary(
-                            x => x.AttributeName,
-                            x => x.PropertyInfo.GetValue(model)),
-                        JsonSerializer.CreateDefault(new JsonSerializerSettings
-                        {
-                            NullValueHandling = NullValueHandling.Ignore
-                        }))
-                }
-            };
+	        var modelType = typeof (TModel);
+			var resourceType = TypeLookup[modelType];
 
-            var resourceType = TypeLookup[typeof(TModel)];
+	        var resourceCreate = new ResourceCreate
+	        {
+		        Type = resourceType,
+		        Attributes = JObject.FromObject(AttributeLookup[modelType]
+			        .ToDictionary(
+				        x => x.AttributeName,
+				        x => x.PropertyInfo.GetValue(model)),
+			        JsonSerializer.CreateDefault(new JsonSerializerSettings
+			        {
+				        NullValueHandling = NullValueHandling.Ignore
+			        }))
+	        };
+			var resourceRequest = new ResourceRootCreate
+            {
+                Data = resourceCreate
+			};
+
             var body = new StringContent(resourceRequest.ToJson(), Encoding.UTF8, "application/vnd.api+json");
             var response = await HttpClient.PostAsync(resourceType, body);
-            var idStr = response.Headers.Location.Segments.Last();
-            return Guid.Parse(idStr);
+
+			response.EnsureSuccessStatusCode(); //TODO
+
+			var locationHeader = response.Headers.Location.ToString();
+	        var idStr = locationHeader.Substring(locationHeader.Length - 36, 36);
+            var id = Guid.Parse(idStr);
+
+			State.Put(id, new Resource
+	        {
+		        Id = id,
+		        Type = resourceCreate.Type,
+		        Attributes = resourceCreate.Attributes
+	        });
+	        return id;
         }
 
         public async Task<TModel> Get<TModel>(Guid id)
@@ -89,22 +106,42 @@ namespace RedArrow.Jsorm.Session
             //TODO check cache?
             var resource = State.Get(id);
             if (resource == null)
-            {
-                await GetRemoteResource<TModel>(id);
-            }
+			{
+				var resourceType = TypeLookup[typeof(TModel)];
+				var response = await HttpClient.GetAsync($"{resourceType}/{id}");
+				if (response.StatusCode == HttpStatusCode.NotFound)
+				{
+					return default(TModel); // null
+				}
+				response.EnsureSuccessStatusCode();
+				var contentString = await response.Content.ReadAsStringAsync();
+				var resourceRoot = JsonConvert.DeserializeObject<ResourceRootSingle>(contentString);
+				State.Put(id, resourceRoot.Data);
+			}
 
             // TODO: cache these so we're not creating a new one on every get
             return CreateModel<TModel>(id);
         }
+		
+		public Task Delete<TModel>(TModel model)
+		{
+			PropertyInfo idPropInfo;
+			if (!IdLookup.TryGetValue(typeof(TModel), out idPropInfo))
+			{
+				throw new Exception($"{typeof(TModel).FullName} is not a manged model");
+			}
 
-        private async Task GetRemoteResource<TModel>(Guid id)
-        {
-            var resourceType = TypeLookup[typeof(TModel)];
-            var response = await HttpClient.GetAsync($"{resourceType}/{id}");
-            var contentString = await response.Content.ReadAsStringAsync();
-            var resourceRoot = JsonConvert.DeserializeObject<ResourceRootSingle>(contentString);
-            State.Put(id, resourceRoot.Data);
-        }
+			var idVal = (Guid)idPropInfo.GetValue(model);
+			return Delete<TModel>(idVal);
+		}
+
+		public async Task Delete<TModel>(Guid id)
+		{
+			var resourceType = TypeLookup[typeof (TModel)];
+			var response = await HttpClient.DeleteAsync($"{resourceType}/{id}");
+			response.EnsureSuccessStatusCode();
+			State.Evict(id);
+		}
 
         private TModel CreateModel<TModel>(Guid id)
         {

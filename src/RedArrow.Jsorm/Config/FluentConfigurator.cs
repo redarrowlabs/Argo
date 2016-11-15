@@ -9,10 +9,11 @@ namespace RedArrow.Jsorm.Config
 {
     public class FluentConfigurator :
         IFluentConfigurator,
+		IModelConfigurator,
         IRemoteCreator,
         IRemoteConfigure
     {
-        private IList<Action<ModelConfiguration>> ModelBuilders { get; }
+        private IList<Action<ModelConfiguration>> ModelConfigurators { get; }
 
         private Func<HttpClient> ClientCreator { get; set; }
         private IList<Action<HttpClient>> ClientConfigurators { get; }
@@ -26,26 +27,31 @@ namespace RedArrow.Jsorm.Config
 
         public FluentConfigurator(SessionConfiguration config)
         {
-            ModelBuilders = new List<Action<ModelConfiguration>>();
+            ModelConfigurators = new List<Action<ModelConfiguration>>();
 
             ClientConfigurators = new List<Action<HttpClient>>();
 
             SessionConfiguration = config;
         }
 
-        public IFluentConfigurator Models(Action<ModelConfiguration> mappings)
+        public IModelConfigurator Models()
         {
-            ModelBuilders.Add(mappings);
             return this;
-        }
+		}
 
-        //public FluentConfigurator Cache(Func<ICacheProvider> modelRegistry)
-        //{
-        //    ModelRegistryBuilder = modelRegistry;
-        //    return this;
-        //}
+		public IModelConfigurator Configure(Action<ModelConfiguration> configureModel)
+		{
+			ModelConfigurators.Add(configureModel);
+			return this;
+		}
 
-        public IRemoteCreator Remote()
+		//public FluentConfigurator Cache(Func<ICacheProvider> modelRegistry)
+		//{
+		//    ModelRegistryBuilder = modelRegistry;
+		//    return this;
+		//}
+
+		public IRemoteCreator Remote()
         {
             return this;
         }
@@ -66,7 +72,7 @@ namespace RedArrow.Jsorm.Config
         {
             // load all the models
             var modelConfig = new ModelConfiguration();
-            foreach (var builder in ModelBuilders)
+            foreach (var builder in ModelConfigurators)
             {
                 builder(modelConfig);
             }

@@ -1,13 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace RedArrow.Jsorm.JsonModels
 {
-    internal class Resource : ResourceIdentifier
-    {
-        [JsonProperty("attributes", NullValueHandling = NullValueHandling.Ignore)]
+    internal class ResourceCreate : JModel, IMetaDecorated
+	{
+		[JsonProperty("type", NullValueHandling = NullValueHandling.Ignore)]
+		public string Type { get; set; }
+
+		[JsonProperty("meta", NullValueHandling = NullValueHandling.Ignore)]
+		public IDictionary<string, JToken> Meta { get; set; }
+
+		[JsonProperty("attributes", NullValueHandling = NullValueHandling.Ignore)]
         public JObject Attributes { get; set; }
 
         [JsonProperty("relationships", NullValueHandling = NullValueHandling.Ignore)]

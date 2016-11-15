@@ -8,5 +8,8 @@ namespace RedArrow.Jsorm.Session
         Task<TModel> Create<TModel>(TModel model);
 
         Task<TModel> Get<TModel>(Guid id);
+
+	    Task Delete<TModel>(TModel model);
+	    Task Delete<TModel>(Guid id);
     }
 }

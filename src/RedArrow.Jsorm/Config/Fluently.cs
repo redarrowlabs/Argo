@@ -2,12 +2,12 @@
 {
     public static class Fluently
     {
-        public static FluentConfigurator Configure()
+        public static IFluentConfigurator Configure()
         {
             return new FluentConfigurator();
         }
 
-        public static FluentConfigurator Configure(SessionConfiguration configuration)
+        public static IFluentConfigurator Configure(SessionConfiguration configuration)
         {
             return new FluentConfigurator(configuration);
         }
