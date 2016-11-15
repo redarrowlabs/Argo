@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata minClientVersion="2.8">
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>RedArrow.Jsorm</title>
+    <authors>Red Arrow Labs</authors>
+    <owners>Red Arrow Labs</owners>
+    <licenseUrl>http://www.opensource.org/licenses/mit-license.php</licenseUrl>
+    <projectUrl>https://github.com/redarrowlabs/jsorm</projectUrl>
+    <iconUrl>https://lh4.googleusercontent.com/-IX4S3LmTNGk/VR8Y7WO8aVI/AAAAAAAAADs/jEsjdiuysxo/s32-no/ral-logo-32x32.png</iconUrl>
+    <description>$description$</description>
+    <copyright>Copyright 2016</copyright>
+    <tags>ILWeaving Fody Cecil jsorm</tags>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <developmentDependency>true</developmentDependency>
+    <dependencies>
+      <dependency id="Fody" version="[1.29.2, 2)" />
+    </dependencies>
+  </metadata>
+</package>

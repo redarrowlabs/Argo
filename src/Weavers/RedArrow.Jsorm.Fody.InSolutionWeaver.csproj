@@ -4,14 +4,13 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{BD5259A0-0735-456A-9B93-C665AA0A3353}</ProjectGuid>
+    <ProjectGuid>{E447B66C-DACE-41E3-97EE-2B4E02F3FE2F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RedArrow.Jsorm</RootNamespace>
+    <RootNamespace>RedArrow.Jsorm.Fody</RootNamespace>
     <AssemblyName>Weavers</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -50,28 +49,52 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\SharedAssemblyInfo.cs">
-      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    <Compile Include="..\RedArrow.Jsorm.Fody\AttributeWeaver.cs">
+      <Link>AttributeWeaver.cs</Link>
     </Compile>
-    <Compile Include="Constants.cs" />
-    <Compile Include="AttributeWeaver.cs" />
-    <Compile Include="CecilExtensions.cs" />
-    <Compile Include="CtorWeaver.cs" />
-    <Compile Include="ModelWeavingContext.cs" />
-    <Compile Include="IdVerifier.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ModuleWeaver.cs" />
-    <Compile Include="ModelFinder.cs" />
-    <Compile Include="SessionFieldWeaver.cs" />
-    <Compile Include="StringExtensions.cs" />
-    <Compile Include="TypeDefLoader.cs" />
+    <Compile Include="..\RedArrow.Jsorm.Fody\CecilExtensions.cs">
+      <Link>CecilExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\RedArrow.Jsorm.Fody\Constants.cs">
+      <Link>Constants.cs</Link>
+    </Compile>
+    <Compile Include="..\RedArrow.Jsorm.Fody\CtorWeaver.cs">
+      <Link>CtorWeaver.cs</Link>
+    </Compile>
+    <Compile Include="..\RedArrow.Jsorm.Fody\IdVerifier.cs">
+      <Link>IdVerifier.cs</Link>
+    </Compile>
+    <Compile Include="..\RedArrow.Jsorm.Fody\ModelFinder.cs">
+      <Link>ModelFinder.cs</Link>
+    </Compile>
+    <Compile Include="..\RedArrow.Jsorm.Fody\ModelWeavingContext.cs">
+      <Link>ModelWeavingContext.cs</Link>
+    </Compile>
+    <Compile Include="..\RedArrow.Jsorm.Fody\ModuleWeaver.cs">
+      <Link>ModuleWeaver.cs</Link>
+    </Compile>
+    <Compile Include="..\RedArrow.Jsorm.Fody\SessionFieldWeaver.cs">
+      <Link>SessionFieldWeaver.cs</Link>
+    </Compile>
+    <Compile Include="..\RedArrow.Jsorm.Fody\StringExtensions.cs">
+      <Link>StringExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\RedArrow.Jsorm.Fody\TypeDefLoader.cs">
+      <Link>TypeDefLoader.cs</Link>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
