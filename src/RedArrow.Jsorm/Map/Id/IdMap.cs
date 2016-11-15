@@ -22,7 +22,7 @@ namespace RedArrow.Jsorm.Map.Id
 	        _getId = propInfo?.GetMethod;
         }
 
-        public override void Configure(ISessionFactory factory)
+        public override void Configure(SessionFactory factory)
         {
             factory.RegisterIdAccessor<TModel>(_getId);
 			factory.RegisterIdMutator<TModel>(_setId);
