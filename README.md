@@ -106,7 +106,7 @@ jsorm runs as a Fody weaver as part of the compile process.  You'll see msbuild 
 3>    Fody:   Finished Fody 747ms.
 ```
 You'll see above that jsorm found our `Person` model and made some changes to it.  The `PersonId` property marked as the `Id` had a public setter.  jsorm should be managing ids like any other traditional ORM, so some liberties are taken here to correct this.  As an MSBUILD warning, this will show up in your Visual Studio errors list.  If we were to now decompile AssemblyToWeave, we would find our Person class modified as shown below:
-```
+```csharp
 // a post jsorm woven Person, decompiled (with my added comments)
 [Model]
 public class Person
