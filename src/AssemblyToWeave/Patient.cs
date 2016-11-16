@@ -18,8 +18,8 @@ namespace AssemblyToWeave
         [Property]
         public int Age { get; set; }
 
-        //[Property]
-        //public decimal AccountBalance { get; set; }
+        [Property]
+        public decimal AccountBalance { get; set; }
 
         public Provider Provider { get; set; }
     }
