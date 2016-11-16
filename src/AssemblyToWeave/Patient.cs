@@ -15,11 +15,11 @@ namespace AssemblyToWeave
         [Property]
         public string LastName { get; set; }
 
-        //[Property]
-        //public int Age { get; set; }
+        [Property]
+        public int Age { get; set; }
 
-        //[Property]
-        //public decimal AccountBalance { get; set; }
+        [Property]
+        public decimal AccountBalance { get; set; }
 
         public Provider Provider { get; set; }
     }

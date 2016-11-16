@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RedArrow.Jsorm.Tests", "Red
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AssemblyToWeave", "AssemblyToWeave\AssemblyToWeave.csproj", "{2AA3DFDF-F71D-4ACE-BFD5-0100EC753BC8}"
 	ProjectSection(ProjectDependencies) = postProject
-		{BD5259A0-0735-456A-9B93-C665AA0A3353} = {BD5259A0-0735-456A-9B93-C665AA0A3353}
+		{E447B66C-DACE-41E3-97EE-2B4E02F3FE2F} = {E447B66C-DACE-41E3-97EE-2B4E02F3FE2F}
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RedArrow.Jsorm.Sample", "RedArrow.Jsorm.Sample\RedArrow.Jsorm.Sample.csproj", "{C30CF711-FA9E-4117-9759-12FE27D6F05B}"
