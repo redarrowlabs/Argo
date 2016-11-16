@@ -23,9 +23,6 @@ namespace AssemblyToWeave
 
 		[Property]
 		public string FavoriteFood { get; set; }
-		
-		[Property]
-		public string FavoriteSong { get; set; }
 
         public Provider Provider { get; set; }
     }
