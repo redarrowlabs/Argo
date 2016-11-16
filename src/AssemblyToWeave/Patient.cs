@@ -21,9 +21,6 @@ namespace AssemblyToWeave
         [Property]
         public decimal AccountBalance { get; set; }
 
-		[Property]
-		public string FavoriteFood { get; set; }
-
         public Provider Provider { get; set; }
     }
 }
