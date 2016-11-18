@@ -5,11 +5,16 @@ namespace RedArrow.Jsorm.Session
 {
     public interface ISession : IDisposable
     {
-        Task<TModel> Create<TModel>(TModel model);
+        Task<TModel> Create<TModel>(TModel model)
+            where TModel : class;
 
-        Task<TModel> Get<TModel>(Guid id);
+        Task<TModel> Get<TModel>(Guid id)
+            where TModel : class;
 
-	    Task Delete<TModel>(TModel model);
-	    Task Delete<TModel>(Guid id);
+        Task Delete<TModel>(TModel model)
+            where TModel : class;
+
+        Task Delete<TModel>(Guid id)
+            where TModel : class;
     }
 }

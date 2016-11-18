@@ -22,7 +22,10 @@ namespace RedArrow.Jsorm.Session
         private IDictionary<Type, PropertyInfo> IdLookup { get; }
         private ILookup<Type, PropertyConfiguration> AttributeLookup { get; }
 
-        private SessionState State { get; }
+        //private SessionState State { get; }
+        private IDictionary<Guid, object> ModelState { get; }
+
+        private IDictionary<Guid, Resource> ResourceState { get; }
 
         internal Session(
             Func<HttpClient> httpClientFactory,
@@ -35,7 +38,10 @@ namespace RedArrow.Jsorm.Session
             IdLookup = idLookup;
             AttributeLookup = attributeLookup;
 
-            State = new SessionState();
+            //State = new SessionState();
+
+            ModelState = new Dictionary<Guid, object>();
+            ResourceState = new Dictionary<Guid, Resource>();
         }
 
         public void Dispose()
@@ -44,6 +50,7 @@ namespace RedArrow.Jsorm.Session
         }
 
         public async Task<TModel> Create<TModel>(TModel model)
+            where TModel : class
         {
             PropertyInfo idPropInfo;
             if (!IdLookup.TryGetValue(typeof(TModel), out idPropInfo))
@@ -57,115 +64,129 @@ namespace RedArrow.Jsorm.Session
                 throw new Exception($"Model {typeof(TModel)} [{idVal}] has already been created");
             }
 
-            var id = await CreateRemoteResource(model);
-            return CreateModel<TModel>(id);
+            return await CreateRemoteResource(model);
         }
 
-        private async Task<Guid> CreateRemoteResource<TModel>(TModel model)
+        private async Task<TModel> CreateRemoteResource<TModel>(TModel model)
+            where TModel : class
         {
-	        var modelType = typeof (TModel);
-			var resourceType = TypeLookup[modelType];
+            var modelType = typeof(TModel);
+            var resourceType = TypeLookup[modelType];
 
-	        var resourceCreate = new ResourceCreate
-	        {
-		        Type = resourceType,
-		        Attributes = JObject.FromObject(AttributeLookup[modelType]
-			        .ToDictionary(
-				        x => x.AttributeName,
-				        x => x.PropertyInfo.GetValue(model)),
-			        JsonSerializer.CreateDefault(new JsonSerializerSettings
-			        {
-				        NullValueHandling = NullValueHandling.Ignore
-			        }))
-	        };
-			var resourceRequest = new ResourceRootCreate
+            var resourceCreate = new ResourceCreate
+            {
+                Type = resourceType,
+                Attributes = JObject.FromObject(AttributeLookup[modelType]
+                    .ToDictionary(
+                        x => x.AttributeName,
+                        x => x.PropertyInfo.GetValue(model)),
+                    JsonSerializer.CreateDefault(new JsonSerializerSettings
+                    {
+                        NullValueHandling = NullValueHandling.Ignore
+                    }))
+            };
+            var resourceRequest = new ResourceRootCreate
             {
                 Data = resourceCreate
-			};
+            };
 
             var body = new StringContent(resourceRequest.ToJson(), Encoding.UTF8, "application/vnd.api+json");
             var response = await HttpClient.PostAsync(resourceType, body);
 
-			response.EnsureSuccessStatusCode(); //TODO
+            response.EnsureSuccessStatusCode(); //TODO
 
-			var locationHeader = response.Headers.Location.ToString();
-	        var idStr = locationHeader.Substring(locationHeader.Length - 36, 36);
+            var locationHeader = response.Headers.Location.ToString();
+            var idStr = locationHeader.Substring(locationHeader.Length - 36, 36);
             var id = Guid.Parse(idStr);
 
-			State.Put(id, new Resource
-	        {
-		        Id = id,
-		        Type = resourceCreate.Type,
-		        Attributes = resourceCreate.Attributes
-	        });
-	        return id;
+            model = CreateModel<TModel>(id);
+            ModelState[id] = model;
+            //TODO
+            ResourceState[id] = new Resource
+            {
+                Id = id,
+                Type = resourceCreate.Type,
+                Attributes = resourceCreate.Attributes
+            };
+
+            return model;
         }
 
         public async Task<TModel> Get<TModel>(Guid id)
+            where TModel : class
         {
-            //TODO check cache?
-            var resource = State.Get(id);
-            if (resource == null)
-			{
-				var resourceType = TypeLookup[typeof(TModel)];
-				var response = await HttpClient.GetAsync($"{resourceType}/{id}");
-				if (response.StatusCode == HttpStatusCode.NotFound)
-				{
-					return default(TModel); // null
-				}
-				response.EnsureSuccessStatusCode();
-				var contentString = await response.Content.ReadAsStringAsync();
-				var resourceRoot = JsonConvert.DeserializeObject<ResourceRootSingle>(contentString);
-				State.Put(id, resourceRoot.Data);
-			}
+            // TODO: check cache?
+            // TODO: deal with having a resource, but no model?
+            // TOOD: deal with having a model, but no resource?
+            object model;
+            if (ModelState.TryGetValue(id, out model))
+            {
+                return (TModel)model;
+            }
 
-            // TODO: cache these so we're not creating a new one on every get
-            return CreateModel<TModel>(id);
+            var resourceType = TypeLookup[typeof(TModel)];
+            var response = await HttpClient.GetAsync($"{resourceType}/{id}");
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return default(TModel); // null
+            }
+            response.EnsureSuccessStatusCode();
+            var contentString = await response.Content.ReadAsStringAsync();
+            var resourceRoot = JsonConvert.DeserializeObject<ResourceRootSingle>(contentString);
+
+            model = CreateModel<TModel>(id);
+            ModelState[id] = model;
+            ResourceState[id] = resourceRoot.Data;
+
+            return (TModel)model;
         }
-		
-		public Task Delete<TModel>(TModel model)
-		{
-			PropertyInfo idPropInfo;
-			if (!IdLookup.TryGetValue(typeof(TModel), out idPropInfo))
-			{
-				throw new Exception($"{typeof(TModel).FullName} is not a manged model");
-			}
 
-			var idVal = (Guid)idPropInfo.GetValue(model);
-			return Delete<TModel>(idVal);
-		}
+        public Task Delete<TModel>(TModel model)
+            where TModel : class
+        {
+            PropertyInfo idPropInfo;
+            if (!IdLookup.TryGetValue(typeof(TModel), out idPropInfo))
+            {
+                throw new Exception($"{typeof(TModel).FullName} is not a manged model");
+            }
 
-		public async Task Delete<TModel>(Guid id)
-		{
-			var resourceType = TypeLookup[typeof (TModel)];
-			var response = await HttpClient.DeleteAsync($"{resourceType}/{id}");
-			response.EnsureSuccessStatusCode();
-			State.Evict(id);
-		}
+            var idVal = (Guid)idPropInfo.GetValue(model);
+            return Delete<TModel>(idVal);
+        }
+
+        public async Task Delete<TModel>(Guid id)
+            where TModel : class
+        {
+            var resourceType = TypeLookup[typeof(TModel)];
+            var response = await HttpClient.DeleteAsync($"{resourceType}/{id}");
+            response.EnsureSuccessStatusCode();
+            ModelState.Remove(id);
+            ResourceState.Remove(id);
+        }
 
         private TModel CreateModel<TModel>(Guid id)
+            where TModel : class
         {
             return (TModel)Activator.CreateInstance(typeof(TModel), id, this);
         }
 
         public TAttr GetAttribute<TModel, TAttr>(Guid id, string attrName)
+            where TModel : class
         {
-            var resource = State.Get(id);
-            if (resource == null)
+            Resource resource;
+            if (ResourceState.TryGetValue(id, out resource))
             {
-                //TODO: something has gone wrong
-                return default(TAttr);
-            }
-
-            JToken valueToken;
-            if (resource.Attributes.TryGetValue(attrName, out valueToken))
-            {
-                return valueToken.Value<TAttr>();
+                JToken valueToken;
+                if (resource.Attributes != null && resource.Attributes.TryGetValue(attrName, out valueToken))
+                {
+                    return valueToken.Value<TAttr>();
+                }
             }
             return default(TAttr);
         }
 
         public void SetAttribute<TModel, TAttr>(Guid id, string attrName, TAttr value)
+            where TModel : class
         {
             //TODO
         }

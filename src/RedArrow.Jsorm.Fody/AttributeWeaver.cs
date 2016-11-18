@@ -41,10 +41,9 @@ namespace RedArrow.Jsorm
 
                 // find the attrName, if there is one
                 var propAttr = propertyDef.CustomAttributes.GetAttribute(Constants.Attributes.Property);
-                var attrName = (propAttr.ConstructorArguments
+                var attrName = propAttr.ConstructorArguments
                     .Select(x => x.Value as string)
-                    .SingleOrDefault() ?? propertyDef.Name)
-                    .Camelize();
+                    .SingleOrDefault() ?? propertyDef.Name.Camelize();
 
                 LogInfo($"\tWeaving {propertyDef} => {attrName}");
 
@@ -81,6 +80,7 @@ namespace RedArrow.Jsorm
             proc.Emit(OpCodes.Brfalse, returnField); // if __jsorm__generated_session != null continue, else returnField
 
             proc.Emit(OpCodes.Ldarg_0); // load 'this' to reference backing field
+
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
             proc.Emit(OpCodes.Ldfld, context.SessionField); // load __jsorm__generated_session field from 'this'
             proc.Emit(OpCodes.Ldarg_0); // load 'this'

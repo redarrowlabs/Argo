@@ -8,65 +8,69 @@ using Xunit;
 
 namespace RedArrow.Jsorm.Sample
 {
-	public class IntegrationTests : IClassFixture<IntegrationTestFixture>
-	{
-		private IntegrationTestFixture Fixture { get; }
+    public class IntegrationTests : IClassFixture<IntegrationTestFixture>
+    {
+        private IntegrationTestFixture Fixture { get; }
 
-		public IntegrationTests(IntegrationTestFixture fixture)
-		{
-			Fixture = fixture;
-		}
+        public IntegrationTests(IntegrationTestFixture fixture)
+        {
+            Fixture = fixture;
+        }
 
-		[Fact(Skip = "need to combine read/write resource endpoints first"), Category("Integration")]
-		public async Task CreateGetDeletePatient()
-		{
-			var firstName = "Terry";
-			var lastName = "Achey";
+        [Fact, Category("Integration")]
+        public async Task CreateGetDeletePatient()
+        {
+            var firstName = "Terry";
+            var lastName = "Achey";
 
-			var sessionFactory = Fluently.Configure()
-				.Remote()
-					.Configure(x => x.BaseAddress = new Uri("http://titan-test.centralus.cloudapp.azure.com/resources/write/api/"))
-					.Configure(x => x.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken))
-				.Models()
-					.Configure(x => x.AddFromAssemblyOf<Patient>())
-				.BuildSessionFactory();
+            var sessionFactory = Fluently.Configure()
+                .Remote()
+                    .Configure(x => x.BaseAddress = new Uri("http://localhost:8082/data/api/"))
+                    .Configure(x => x.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken))
+                .Models()
+                    .Configure(x => x.AddFromAssemblyOf<Patient>())
+                .BuildSessionFactory();
 
-			Guid crossSessionId;
+            Guid crossSessionId;
 
-			using (var session = sessionFactory.CreateSession())
-			{
-				var patient = new Patient
-				{
-					FirstName = firstName,
-					LastName = lastName
-				};
+            using (var session = sessionFactory.CreateSession())
+            {
+                var patient = new Patient
+                {
+                    FirstName = firstName,
+                    LastName = lastName
+                };
 
-				patient = await session.Create(patient);
+                patient = await session.Create(patient);
 
-				Assert.NotEqual(Guid.Empty, patient.Id);
-				Assert.Equal(firstName, patient.FirstName);
-				Assert.Equal(lastName, lastName);
+                Assert.NotEqual(Guid.Empty, patient.Id);
+                Assert.Equal(firstName, patient.FirstName);
+                Assert.Equal(lastName, patient.LastName);
 
-				crossSessionId = patient.Id;
-			}
-			// dispose, clear state
-			using (var session = sessionFactory.CreateSession())
-			{
-				var patient = await session.Get<Patient>(crossSessionId);
+                crossSessionId = patient.Id;
 
-				Assert.Equal(crossSessionId, patient.Id);
-				Assert.Equal(firstName, patient.FirstName);
-				Assert.Equal(lastName, lastName);
-			}
-			// dispose, clear state
-			using (var session = sessionFactory.CreateSession())
-			{
-				await session.Delete<Patient>(crossSessionId);
+                var patientRef = await session.Get<Patient>(crossSessionId);
 
-				var patient = await session.Get<Patient>(crossSessionId);
+                Assert.Same(patient, patientRef);
+            }
+            // dispose, clear state
+            using (var session = sessionFactory.CreateSession())
+            {
+                var patient = await session.Get<Patient>(crossSessionId);
 
-				Assert.Null(patient);
-			}
-		}
-	}
+                Assert.Equal(crossSessionId, patient.Id);
+                Assert.Equal(firstName, patient.FirstName);
+                Assert.Equal(lastName, patient.LastName);
+            }
+            // dispose, clear state
+            using (var session = sessionFactory.CreateSession())
+            {
+                await session.Delete<Patient>(crossSessionId);
+
+                var patient = await session.Get<Patient>(crossSessionId);
+
+                Assert.Null(patient);
+            }
+        }
+    }
 }
