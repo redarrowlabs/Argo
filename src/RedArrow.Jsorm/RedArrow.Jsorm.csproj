@@ -42,6 +42,8 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Attributes\HasManyAttribute.cs" />
+    <Compile Include="Attributes\HasOneAttribute.cs" />
     <Compile Include="Config\IFluentConfigurator.cs" />
     <Compile Include="Config\IModelConfigurator.cs" />
     <Compile Include="Config\IRemoteConfigurator.cs" />

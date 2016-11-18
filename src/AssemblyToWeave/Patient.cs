@@ -21,6 +21,7 @@ namespace AssemblyToWeave
         [Property]
         public decimal AccountBalance { get; set; }
 
+		[HasOne]
         public Provider Provider { get; set; }
     }
 }

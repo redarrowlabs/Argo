@@ -90,6 +90,7 @@ namespace RedArrow.Jsorm
 				AddSessionField(context);
 				AddCtor(context);
 				WeaveAttributes(context);
+		        WeaveHasOnes(context);
 	        }
         }
 
@@ -101,6 +102,6 @@ namespace RedArrow.Jsorm
         // Will be called after all weaving has occurred and the module has been saved. OPTIONAL
         public void AfterWeaving()
         {
-        }
-    }
+		}
+	}
 }

@@ -47,12 +47,12 @@ namespace RedArrow.Jsorm
 
                 LogInfo($"\tWeaving {propertyDef} => {attrName}");
 
-                WeaveGetter(context, backingField, propertyDef, sessionGetAttrGeneric, attrName);
-                WeaveSetter(context, backingField, propertyDef, sessionSetAttrGeneric, attrName);
+                WeaveAttrGetter(context, backingField, propertyDef, sessionGetAttrGeneric, attrName);
+                WeaveAttrSetter(context, backingField, propertyDef, sessionSetAttrGeneric, attrName);
             }
         }
 
-        private void WeaveGetter(
+        private void WeaveAttrGetter(
             ModelWeavingContext context,
             FieldReference backingField,
             PropertyDefinition propertyDef,
@@ -60,13 +60,13 @@ namespace RedArrow.Jsorm
             string attrName)
         {
             // supply generic type arguments to template
-            var sessionGetAttrTyped = SupplyGenericArgs(context, propertyDef, sessionGetAttrGeneric);
+            var sessionGetRltnTyped = SupplyGenericArgs(context, propertyDef, sessionGetAttrGeneric);
 
             // get
             // {
             //   if (this.__jsorm__generated_session != null)
             //   {
-            //     this.<[PropName]>k__BackingField = this.__jsorm__generated_session.GetAttribute<[ModelType], [ReturnType]>(this.Id, "[AttrName]");
+            //     this.<[PropName]>k__BackingField = this.__jsorm__generated_session.GetRelationship<[ModelType], [ReturnType]>(this.Id, "[AttrName]");
             //   }
             //   return this.<[PropName]>k__BackingField;
             // }
@@ -86,7 +86,7 @@ namespace RedArrow.Jsorm
             proc.Emit(OpCodes.Ldarg_0); // load 'this'
             proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
             proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack
-            proc.Emit(OpCodes.Callvirt, context.ImportReference(sessionGetAttrTyped)); // invoke session.GetAttribute(..)
+            proc.Emit(OpCodes.Callvirt, context.ImportReference(sessionGetRltnTyped)); // invoke session.GetAttribute(..)
             proc.Emit(OpCodes.Stfld, backingField); // store return value in 'this'.<backing field>
 
             proc.Append(returnField); // load 'this' onto stack
@@ -94,7 +94,7 @@ namespace RedArrow.Jsorm
             proc.Emit(OpCodes.Ret); // return
         }
 
-        private void WeaveSetter(
+        private void WeaveAttrSetter(
             ModelWeavingContext context,
             FieldReference backingField,
             PropertyDefinition propertyDef,
@@ -102,7 +102,7 @@ namespace RedArrow.Jsorm
             string attrName)
         {
             // supply generic type arguments to template
-            var sessionSetAttrTyped = SupplyGenericArgs(context, propertyDef, sessionSetAttrGeneric);
+            var sessionSetRltnTyped = SupplyGenericArgs(context, propertyDef, sessionSetAttrGeneric);
 
             propertyDef.SetMethod.Body.Instructions.Clear();
 
@@ -111,7 +111,7 @@ namespace RedArrow.Jsorm
             //     this.<[PropName]>k__BackingField = value;
             //     if (this.__jsorm__generated_session != null)
             //     {
-            //         this.__jsorm__generated_session.SetAttribute<[ModelType], [ReturnType]>(this.Id, "[AttrName]", this.<[PropName]>k__BackingField);
+            //         this.__jsorm__generated_session.SetRelationship<[ModelType], [ReturnType]>(this.Id, "[AttrName]", this.<[PropName]>k__BackingField);
             //     }
             // }
             var proc = propertyDef.SetMethod.Body.GetILProcessor();
@@ -133,20 +133,9 @@ namespace RedArrow.Jsorm
             proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack
             proc.Emit(OpCodes.Ldarg_0); // load 'this'
             proc.Emit(OpCodes.Ldfld, backingField); // load backing field
-            proc.Emit(OpCodes.Callvirt, context.ImportReference(sessionSetAttrTyped)); // invoke session.SetAttribute(..)
+            proc.Emit(OpCodes.Callvirt, context.ImportReference(sessionSetRltnTyped)); // invoke session.SetAttribute(..)
 
             proc.Append(ret);
-        }
-
-        private GenericInstanceMethod SupplyGenericArgs(
-            ModelWeavingContext context,
-            PropertyDefinition propertyDef,
-            MethodReference methodRef)
-        {
-            var genericMethod = new GenericInstanceMethod(methodRef);
-            genericMethod.GenericArguments.Add(context.ModelTypeRef);
-            genericMethod.GenericArguments.Add(propertyDef.GetMethod.ReturnType);
-            return genericMethod;
         }
     }
 }

@@ -2,7 +2,8 @@
 
 namespace RedArrow.Jsorm.Attributes
 {
-    public class ModelAttribute : Attribute
+	[AttributeUsage(AttributeTargets.Class)]
+	public class ModelAttribute : Attribute
     {
         public ModelAttribute()
         {

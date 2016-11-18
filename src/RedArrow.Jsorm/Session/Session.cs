@@ -115,7 +115,7 @@ namespace RedArrow.Jsorm.Session
         public async Task<TModel> Get<TModel>(Guid id)
             where TModel : class
         {
-            // TODO: check cache?
+			TypeCheck<TModel>();
             // TODO: deal with having a resource, but no model?
             // TOOD: deal with having a model, but no resource?
             object model;
@@ -157,6 +157,7 @@ namespace RedArrow.Jsorm.Session
         public async Task Delete<TModel>(Guid id)
             where TModel : class
         {
+			TypeCheck<TModel>();
             var resourceType = TypeLookup[typeof(TModel)];
             var response = await HttpClient.DeleteAsync($"{resourceType}/{id}");
             response.EnsureSuccessStatusCode();
@@ -173,6 +174,9 @@ namespace RedArrow.Jsorm.Session
         public TAttr GetAttribute<TModel, TAttr>(Guid id, string attrName)
             where TModel : class
         {
+			TypeCheck<TModel>();
+			TypeCheck<TAttr>();
+
             Resource resource;
             if (ResourceState.TryGetValue(id, out resource))
             {
@@ -188,7 +192,51 @@ namespace RedArrow.Jsorm.Session
         public void SetAttribute<TModel, TAttr>(Guid id, string attrName, TAttr value)
             where TModel : class
         {
+			TypeCheck<TModel>();
             //TODO
         }
+
+	    public TRltn GetRelationship<TModel, TRltn>(Guid id, string attrName)
+			where TModel : class
+			where TRltn : class
+		{
+			TypeCheck<TModel>();
+			TypeCheck<TRltn>();
+
+			Resource resource;
+		    if (ResourceState.TryGetValue(id, out resource))
+		    {
+			    Relationship relationship;
+			    if (resource.Relationships != null && resource.Relationships.TryGetValue(attrName, out relationship))
+			    {
+				    var rltnData = relationship.Data;
+				    if (rltnData?.Type != JTokenType.Object)
+				    {
+					    throw new Exception();
+				    }
+
+				    var rltnId = rltnData.ToObject<ResourceIdentifier>();
+				    return Get<TRltn>(rltnId.Id).GetAwaiter().GetResult();
+				}
+
+				return default(TRltn);
+			}
+
+		    throw new Exception();
+		}
+
+	    public void SetRelationship<TModel, TRltn>(Guid id, string attrName, TRltn rltn) where TModel : class where TRltn : class
+	    {
+			//TODO
+	    }
+
+	    private void TypeCheck<T>()
+	    {
+		    var type = typeof (T);
+		    if(!TypeLookup.ContainsKey(type))
+		    {
+			    throw new Exception($"{type} is not manged by jsorm");
+		    }
+	    }
     }
 }
