@@ -1,7 +1,4 @@
-﻿using System;
-using System.Reflection;
-
-namespace RedArrow.Jsorm.Session
+﻿namespace RedArrow.Jsorm.Session
 {
     public interface ISessionFactory
     {

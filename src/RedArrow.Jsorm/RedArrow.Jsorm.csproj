@@ -48,6 +48,8 @@
     <Compile Include="Config\IModelConfigurator.cs" />
     <Compile Include="Config\IRemoteConfigurator.cs" />
     <Compile Include="Config\PropertyConfiguration.cs" />
+    <Compile Include="Extensions\HttpClientExtensions.cs" />
+    <Compile Include="Extensions\HttpResponseMessage.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="JsonModels\BaseResourceRoot.cs" />
     <Compile Include="JsonModels\ResourceCreate.cs" />

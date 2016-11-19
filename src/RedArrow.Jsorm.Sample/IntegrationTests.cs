@@ -20,8 +20,10 @@ namespace RedArrow.Jsorm.Sample
         [Fact, Category("Integration")]
         public async Task CreateGetDeletePatient()
         {
-            var firstName = "Terry";
-            var lastName = "Achey";
+            var initialFirstName = "Terry";
+            var initialLastName = "Achey";
+
+            var updatedLastName = "Bull";
 
             var sessionFactory = Fluently.Configure()
                 .Remote()
@@ -37,15 +39,15 @@ namespace RedArrow.Jsorm.Sample
             {
                 var patient = new Patient
                 {
-                    FirstName = firstName,
-                    LastName = lastName
+                    FirstName = initialFirstName,
+                    LastName = initialLastName
                 };
 
                 patient = await session.Create(patient);
 
                 Assert.NotEqual(Guid.Empty, patient.Id);
-                Assert.Equal(firstName, patient.FirstName);
-                Assert.Equal(lastName, patient.LastName);
+                Assert.Equal(initialFirstName, patient.FirstName);
+                Assert.Equal(initialLastName, patient.LastName);
 
                 crossSessionId = patient.Id;
 
@@ -53,16 +55,35 @@ namespace RedArrow.Jsorm.Sample
 
                 Assert.Same(patient, patientRef);
             }
-            // dispose, clear state
+            // update!
             using (var session = sessionFactory.CreateSession())
             {
                 var patient = await session.Get<Patient>(crossSessionId);
 
                 Assert.Equal(crossSessionId, patient.Id);
-                Assert.Equal(firstName, patient.FirstName);
-                Assert.Equal(lastName, patient.LastName);
+                Assert.Equal(initialFirstName, patient.FirstName);
+                Assert.Equal(initialLastName, patient.LastName);
+
+                patient.LastName = updatedLastName;
+
+                await session.Update(patient);
+                Assert.Equal(initialFirstName, patient.FirstName);
+                Assert.Equal(updatedLastName, patient.LastName);
+
+                var patient2 = await session.Get<Patient>(crossSessionId);
+
+                Assert.Same(patient, patient2);
             }
-            // dispose, clear state
+            // later that day...
+            using (var session = sessionFactory.CreateSession())
+            {
+                var patient = await session.Get<Patient>(crossSessionId);
+
+                Assert.Equal(crossSessionId, patient.Id);
+                Assert.Equal(initialFirstName, patient.FirstName);
+                Assert.Equal(updatedLastName, patient.LastName);
+            }
+            // cleanup
             using (var session = sessionFactory.CreateSession())
             {
                 await session.Delete<Patient>(crossSessionId);
@@ -72,5 +93,20 @@ namespace RedArrow.Jsorm.Sample
                 Assert.Null(patient);
             }
         }
+
+        [Fact, Category("Integration")]
+        public async Task UpdateHasOneRelationWithSessionAttached()
+        {
+            var sessionFactory = Fluently.Configure()
+                .Remote()
+                    .Configure(x => x.BaseAddress = new Uri("http://localhost:8082/data/api/"))
+                    .Configure(x => x.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken))
+                .Models()
+                    .Configure(x => x.AddFromAssemblyOf<Patient>())
+                .BuildSessionFactory();
+
+            using (var session = sessionFactory.CreateSession())
+            {
+            }
+        }
     }
-}

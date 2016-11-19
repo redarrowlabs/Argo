@@ -1,7 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
 
 namespace RedArrow.Jsorm.JsonModels
 {
@@ -19,6 +19,21 @@ namespace RedArrow.Jsorm.JsonModels
         public static Resource FromJson(string json)
         {
             return JsonConvert.DeserializeObject<Resource>(json);
+        }
+
+        public JObject GetAttributes()
+        {
+            return Attributes ?? (Attributes = new JObject());
+        }
+
+        public IDictionary<string, Relationship> GetRelationships()
+        {
+            return Relationships ?? (Relationships = new Dictionary<string, Relationship>());
+        }
+
+        public IDictionary<string, JToken> GetLinks()
+        {
+            return Links ?? (Links = new Dictionary<string, JToken>());
         }
     }
 }
