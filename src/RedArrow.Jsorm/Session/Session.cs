@@ -9,7 +9,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace RedArrow.Jsorm.Session
@@ -29,7 +28,7 @@ namespace RedArrow.Jsorm.Session
 
         private IDictionary<Guid, Resource> PatchContexts { get; }
 
-        private bool Disposed { get; set; }
+        internal bool Disposed { get; set; }
 
         internal Session(
             Func<HttpClient> httpClientFactory,
@@ -55,7 +54,8 @@ namespace RedArrow.Jsorm.Session
             Disposed = true;
         }
 
-        public async Task<TModel> Create<TModel>() where TModel : class
+        public async Task<TModel> Create<TModel>()
+			where TModel : class
         {
             DisposedCheck();
 
@@ -298,13 +298,13 @@ namespace RedArrow.Jsorm.Session
         internal Guid ModelId<TModel>(TModel model)
         {
             PropertyInfo idPropInfo;
-            if (!IdLookup.TryGetValue(typeof(TModel), out idPropInfo))
-            {
-                throw new Exception($"{typeof(TModel).FullName} is not a manged model");
-            }
+            if (IdLookup.TryGetValue(typeof(TModel), out idPropInfo))
+			{
+				return (Guid)idPropInfo.GetValue(model);
+			}
 
-            return (Guid)idPropInfo.GetValue(model);
-        }
+			throw new Exception($"{typeof(TModel).FullName} is not a manged model");
+		}
 
         internal void DisposedCheck()
         {
