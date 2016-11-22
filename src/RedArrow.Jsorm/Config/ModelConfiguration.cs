@@ -43,6 +43,12 @@ namespace RedArrow.Jsorm.Config
                     .DeclaredProperties.Where(p => p.IsDefined(typeof(PropertyAttribute))))
                 .Select(x => new PropertyConfiguration(x))
                 .ToArray();
+
+            config.HasOneProperties = modelsToConfigure
+                .SelectMany(x => x.GetTypeInfo()
+                    .DeclaredProperties.Where(p => p.IsDefined(typeof(HasOneAttribute))))
+                .Select(x => new HasOneConfiguration(x))
+                .ToArray();
         }
 
         private static bool IsJsormModel(Type modelType)

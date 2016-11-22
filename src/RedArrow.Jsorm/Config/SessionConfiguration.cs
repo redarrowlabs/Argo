@@ -16,6 +16,8 @@ namespace RedArrow.Jsorm.Config
         internal IDictionary<Type, string> Types { get; set; }
         internal IEnumerable<PropertyInfo> IdProperties { get; set; }
         internal IEnumerable<PropertyConfiguration> AttributeProperties { get; set; }
+        internal IEnumerable<HasOneConfiguration> HasOneProperties { get; set; }
+        internal IEnumerable<HasManyConfiguration> HasManyProperties { get; set; }
 
         internal SessionConfiguration()
         {
@@ -26,12 +28,16 @@ namespace RedArrow.Jsorm.Config
         {
             var idLookup = IdProperties.ToDictionary(x => x.DeclaringType, x => x);
             var attributeLookup = AttributeProperties.ToLookup(x => x.PropertyInfo.DeclaringType, x => x);
+            var hasOneLookup = HasOneProperties.ToLookup(x => x.PropertyInfo.DeclaringType, x => x);
+            var hasManyLookup = HasManyProperties.ToLookup(x => x.PropertyInfo.DeclaringType, x => x);
 
             return new SessionFactory(
                 HttpClientFactory,
                 Types,
                 idLookup,
-                attributeLookup);
+                attributeLookup,
+                hasOneLookup,
+                hasManyLookup);
         }
     }
 }

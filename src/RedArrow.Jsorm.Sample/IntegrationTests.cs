@@ -1,8 +1,6 @@
 ﻿using AssemblyToWeave;
-using RedArrow.Jsorm.Config;
 using System;
 using System.ComponentModel;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -25,12 +23,9 @@ namespace RedArrow.Jsorm.Sample
 
             var updatedLastName = "Bull";
 
-            var sessionFactory = Fluently.Configure()
-                .Remote()
-                    .Configure(x => x.BaseAddress = new Uri("http://localhost:8082/data/api/"))
-                    .Configure(x => x.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken))
+            var sessionFactory = Fixture.Configuration
                 .Models()
-                    .Configure(x => x.AddFromAssemblyOf<Patient>())
+                .Configure(x => x.AddFromAssemblyOf<Patient>())
                 .BuildSessionFactory();
 
             Guid crossSessionId;
@@ -66,6 +61,8 @@ namespace RedArrow.Jsorm.Sample
 
                 patient.LastName = updatedLastName;
 
+                Assert.Equal(updatedLastName, patient.LastName);
+
                 await session.Update(patient);
                 Assert.Equal(initialFirstName, patient.FirstName);
                 Assert.Equal(updatedLastName, patient.LastName);
@@ -97,16 +94,35 @@ namespace RedArrow.Jsorm.Sample
         [Fact, Category("Integration")]
         public async Task UpdateHasOneRelationWithSessionAttached()
         {
-            var sessionFactory = Fluently.Configure()
-                .Remote()
-                    .Configure(x => x.BaseAddress = new Uri("http://localhost:8082/data/api/"))
-                    .Configure(x => x.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken))
+            var sessionFactory = Fixture.Configuration
                 .Models()
-                    .Configure(x => x.AddFromAssemblyOf<Patient>())
+                .Configure(x => x.AddFromAssemblyOf<Patient>())
                 .BuildSessionFactory();
+
+            Guid crossSessionPatientId;
+            Guid crossSessionProviderId;
+            using (var session = sessionFactory.CreateSession())
+            {
+                var patient = await session.Create<Patient>();
+                crossSessionPatientId = patient.Id;
+
+                var provider = await session.Create<Provider>();
+                crossSessionProviderId = provider.Id;
+
+                patient.Provider = provider;
+
+                await session.Update(patient);
+            }
 
             using (var session = sessionFactory.CreateSession())
             {
+                var patient = await session.Get<Patient>(crossSessionPatientId);
+
+                var provider = patient.Provider;
+
+                Assert.Equal(crossSessionPatientId, patient.Id);
+                Assert.Equal(crossSessionProviderId, provider.Id);
             }
         }
     }
+}

@@ -13,12 +13,11 @@ namespace RedArrow.Jsorm.Config
         public PropertyConfiguration(PropertyInfo propInfo)
         {
             PropertyInfo = propInfo;
-            AttributeName = (PropertyInfo
+            AttributeName = PropertyInfo
                 .CustomAttributes
                 .Single(x => x.AttributeType == typeof(PropertyAttribute))
                 .ConstructorArguments.Select(x => x.Value as string)
-                .FirstOrDefault() ?? propInfo.Name)
-                .Camelize();
+                .FirstOrDefault() ?? propInfo.Name.Camelize();
         }
     }
 }

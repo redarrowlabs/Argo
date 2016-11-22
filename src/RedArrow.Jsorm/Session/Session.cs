@@ -21,6 +21,8 @@ namespace RedArrow.Jsorm.Session
         private IDictionary<Type, string> TypeLookup { get; }
         private IDictionary<Type, PropertyInfo> IdLookup { get; }
         private ILookup<Type, PropertyConfiguration> AttributeLookup { get; }
+        private ILookup<Type, HasOneConfiguration> HasOneLookup { get; }
+        private ILookup<Type, HasManyConfiguration> HasManyLookup { get; }
 
         //private SessionState State { get; }
         private IDictionary<Guid, object> ModelState { get; }
@@ -35,12 +37,16 @@ namespace RedArrow.Jsorm.Session
             Func<HttpClient> httpClientFactory,
             IDictionary<Type, string> typeLookup,
             IDictionary<Type, PropertyInfo> idLookup,
-            ILookup<Type, PropertyConfiguration> attributeLookup)
+            ILookup<Type, PropertyConfiguration> attributeLookup,
+            ILookup<Type, HasOneConfiguration> hasOneLookup,
+            ILookup<Type, HasManyConfiguration> hasManyLookup)
         {
             HttpClient = httpClientFactory();
             TypeLookup = typeLookup;
             IdLookup = idLookup;
             AttributeLookup = attributeLookup;
+            HasOneLookup = hasOneLookup;
+            HasManyLookup = hasManyLookup;
 
             //State = new SessionState();
 
@@ -167,6 +173,21 @@ namespace RedArrow.Jsorm.Session
 
             response.EnsureSuccessStatusCode();
 
+            Resource resource;
+            if (ResourceState.TryGetValue(id, out resource))
+            {
+                // this updateds the locally-cached resource
+                // TODO: I think we need a better solution here
+                if (context.Attributes != null)
+                {
+                    resource.Attributes.Merge(context.Attributes, new JsonMergeSettings
+                    {
+                        MergeNullValueHandling = MergeNullValueHandling.Merge,
+                        MergeArrayHandling = MergeArrayHandling.Replace
+                    });
+                }
+                context.Relationships?.Each(kvp => resource.GetRelationships()[kvp.Key] = kvp.Value);
+            }
             PatchContexts.Remove(id);
         }
 
@@ -200,14 +221,18 @@ namespace RedArrow.Jsorm.Session
             DisposedCheck();
             TypeCheck<TModel>();
 
+            // first check the patch contexts
+            JToken valueToken;
             Resource resource;
-            if (ResourceState.TryGetValue(id, out resource))
+            if (PatchContexts.TryGetValue(id, out resource) && resource.Attributes.TryGetValue(attrName, out valueToken))
             {
-                JToken valueToken;
-                if (resource.Attributes != null && resource.Attributes.TryGetValue(attrName, out valueToken))
-                {
-                    return valueToken.Value<TAttr>();
-                }
+                return valueToken.Value<TAttr>();
+            }
+
+            // then check cached resources
+            if (ResourceState.TryGetValue(id, out resource) && resource.Attributes.TryGetValue(attrName, out valueToken))
+            {
+                return valueToken.Value<TAttr>();
             }
             return default(TAttr);
         }
@@ -218,15 +243,8 @@ namespace RedArrow.Jsorm.Session
             DisposedCheck();
             TypeCheck<TModel>();
 
-            Resource context;
-            if (!PatchContexts.TryGetValue(id, out context))
-            {
-                var resourceType = TypeLookup[typeof(TModel)];
-                context = new Resource { Id = id, Type = resourceType };
-                PatchContexts[id] = context;
-            }
-
-            context.GetAttributes()[attrName] = JToken.FromObject(value);
+            GetPatchContext<TModel>(id)
+                .GetAttributes()[attrName] = JToken.FromObject(value);
         }
 
         public TRltn GetRelationship<TModel, TRltn>(Guid id, string attrName)
