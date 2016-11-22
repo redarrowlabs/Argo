@@ -5,20 +5,19 @@ using System.Reflection;
 
 namespace RedArrow.Jsorm.Config
 {
-    internal class PropertyConfiguration
+    public class PropertyConfiguration
     {
         public string AttributeName { get; }
         public PropertyInfo PropertyInfo { get; }
 
-        public PropertyConfiguration(PropertyInfo propInfo)
+        internal PropertyConfiguration(PropertyInfo propInfo)
         {
             PropertyInfo = propInfo;
-            AttributeName = (PropertyInfo
+            AttributeName = PropertyInfo
                 .CustomAttributes
                 .Single(x => x.AttributeType == typeof(PropertyAttribute))
-                .ConstructorArguments.Select(x => x.Value as string)
-                .FirstOrDefault() ?? propInfo.Name)
-                .Camelize();
+                .ConstructorArguments.Select(x => (string)x.Value)
+                .FirstOrDefault() ?? propInfo.Name.Camelize();
         }
     }
 }

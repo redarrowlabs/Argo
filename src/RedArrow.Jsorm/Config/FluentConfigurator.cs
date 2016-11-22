@@ -17,21 +17,19 @@ namespace RedArrow.Jsorm.Config
 
         private Func<HttpClient> ClientCreator { get; set; }
         private IList<Action<HttpClient>> ClientConfigurators { get; }
-
-        private Func<ICacheProvider> ModelRegistryBuilder { get; set; }
-
-        internal SessionConfiguration SessionConfiguration { get; }
+		
+        internal SessionFactoryConfiguration SessionFactoryConfiguration { get; }
 
         public FluentConfigurator()
-            : this(new SessionConfiguration()) { }
+            : this(new SessionFactoryConfiguration()) { }
 
-        public FluentConfigurator(SessionConfiguration config)
+        public FluentConfigurator(SessionFactoryConfiguration config)
         {
             ModelConfigurators = new List<Action<ModelConfiguration>>();
 
             ClientConfigurators = new List<Action<HttpClient>>();
 
-            SessionConfiguration = config;
+            SessionFactoryConfiguration = config;
         }
 
         public IModelConfigurator Models()
@@ -44,13 +42,7 @@ namespace RedArrow.Jsorm.Config
 			ModelConfigurators.Add(configureModel);
 			return this;
 		}
-
-		//public FluentConfigurator Cache(Func<ICacheProvider> modelRegistry)
-		//{
-		//    ModelRegistryBuilder = modelRegistry;
-		//    return this;
-		//}
-
+		
 		public IRemoteCreator Remote()
         {
             return this;
@@ -68,7 +60,7 @@ namespace RedArrow.Jsorm.Config
             return this;
         }
 
-        public SessionConfiguration BuildConfiguration()
+        public SessionFactoryConfiguration BuildFactoryConfiguration()
         {
             // load all the models
             var modelConfig = new ModelConfiguration();
@@ -78,10 +70,10 @@ namespace RedArrow.Jsorm.Config
             }
 
             // translate model attributes to session config
-            modelConfig.Configure(SessionConfiguration);
+            modelConfig.Configure(SessionFactoryConfiguration);
 
             // build HttpClient factory
-            SessionConfiguration.HttpClientFactory = () =>
+            SessionFactoryConfiguration.HttpClientFactory = () =>
             {
                 var client = (ClientCreator ?? (() => new HttpClient()))();
                 client.DefaultRequestHeaders
@@ -94,14 +86,14 @@ namespace RedArrow.Jsorm.Config
                 }
                 return client;
             };
-            //SessionConfiguration.CacheProvider = ModelRegistryBuilder();
+            //SessionFactoryConfiguration.CacheProvider = ModelRegistryBuilder();
 
-            return SessionConfiguration;
+            return SessionFactoryConfiguration;
         }
 
         public ISessionFactory BuildSessionFactory()
         {
-            return BuildConfiguration()
+            return BuildFactoryConfiguration()
                 .BuildSessionFactory();
         }
     }

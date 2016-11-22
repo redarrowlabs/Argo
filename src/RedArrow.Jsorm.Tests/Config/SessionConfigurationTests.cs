@@ -1,77 +1,61 @@
-﻿using RedArrow.Jsorm.Attributes;
+﻿using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using Ploeh.AutoFixture.Xunit2;
+using RedArrow.Jsorm.Attributes;
 using RedArrow.Jsorm.Config;
 using RedArrow.Jsorm.Session;
-using System;
-using System.Linq;
 using Xunit;
 
 namespace RedArrow.Jsorm.Tests.Config
 {
-    public class SessionConfigurationTests
-    {
-        [Fact]
-        public void BuildSessionFactory__Given_PreConfigured__Then_ReturnConfiguredSessionFactory()
-        {
-            var subject = new SessionConfiguration();
+	public class SessionConfigurationTests
+	{
+		[Theory, AutoData]
+		public void CreateGetRequest__Given_Configured__Then_CreateGet
+			(Guid patientId)
+		{
+			var subject = (Fluently.Configure()
+				.Models()
+				.Configure(x => x.Add<TestParent>())
+				.Configure(x => x.Add<TestChild>())
+				.BuildSessionFactory() as SessionFactory)
+				?.BuildConfiguration();
 
-            var configurator = new ModelConfiguration();
-            configurator.Add<BasicModel>();
-            configurator.Add<OverriddenModel>();
-            configurator.Configure(subject);
+			Assert.NotNull(subject);
 
-            var result = subject.BuildSessionFactory();
+			var result = subject.CreateGetRequest<TestParent>(patientId);
 
-            Assert.IsType<SessionFactory>(result);
+			Assert.NotNull(result);
+			Assert.Equal(HttpMethod.Get, result.Method);
+			Assert.Equal(
+				$"testParent/{patientId}?include=eagerChild",
+				result.RequestUri.ToString());
+		}
+	}
 
-            var castResult = result as SessionFactory;
+	[Model]
+	public class TestParent
+	{
+		[Id]
+		public Guid Id { get; set; }
 
-            // type lookup
-            Assert.Equal(2, castResult.TypeLookup.Count);
-            Assert.True(castResult.TypeLookup.ContainsKey(typeof(BasicModel)));
-            Assert.True(castResult.TypeLookup.ContainsKey(typeof(OverriddenModel)));
-            Assert.Equal("basicModel", castResult.TypeLookup[typeof(BasicModel)]);
-            Assert.Equal("model-overridden", castResult.TypeLookup[typeof(OverriddenModel)]);
+		[HasOne]
+		public TestChild LazyChild { get; set; }
+		[HasOne(LoadStrategy.Eager)]
+		public TestChild EagerChild { get; set; }
 
-            // attribute lookup
-            Assert.Equal(2, castResult.AttributeLookup.Count);
-            // basic model attributes
-            Assert.Equal(3, castResult.AttributeLookup[typeof(BasicModel)].Count());
-            Assert.NotNull(castResult.AttributeLookup[typeof(BasicModel)].SingleOrDefault(x => x.AttributeName == "propA"));
-            Assert.NotNull(castResult.AttributeLookup[typeof(BasicModel)].SingleOrDefault(x => x.PropertyInfo.Name == "PropA"));
-            Assert.NotNull(castResult.AttributeLookup[typeof(BasicModel)].SingleOrDefault(x => x.AttributeName == "propB"));
-            Assert.NotNull(castResult.AttributeLookup[typeof(BasicModel)].SingleOrDefault(x => x.PropertyInfo.Name == "PropB"));
-            Assert.NotNull(castResult.AttributeLookup[typeof(BasicModel)].SingleOrDefault(x => x.AttributeName == "propC"));
-            Assert.NotNull(castResult.AttributeLookup[typeof(BasicModel)].SingleOrDefault(x => x.PropertyInfo.Name == "PropC"));
-            // overridden model attributes
-            Assert.Equal(1, castResult.AttributeLookup[typeof(OverriddenModel)].Count());
-            Assert.NotNull(castResult.AttributeLookup[typeof(OverriddenModel)].SingleOrDefault(x => x.AttributeName == "name-overridden"));
-            Assert.NotNull(castResult.AttributeLookup[typeof(OverriddenModel)].SingleOrDefault(x => x.PropertyInfo.Name == "Name"));
-        }
+		[HasMany]
+		public IEnumerable<TestChild> Children { get; set; }
+	}
 
-        [Model]
-        public class BasicModel
-        {
-            [Id]
-            public Guid Id { get; }
+	[Model]
+	public class TestChild
+	{
+		[Id]
+		public Guid Id { get; set; }
 
-            [Property]
-            public string PropA { get; set; }
-
-            [Property]
-            public int PropB { get; set; }
-
-            [Property]
-            public string PropC { get; set; }
-        }
-
-        [Model("model-overridden")]
-        public class OverriddenModel
-        {
-            [Id]
-            public Guid OverriddenId { get; }
-
-            [Property("name-overridden")]
-            public string Name { get; set; }
-        }
-    }
+		[Property]
+		public string Name { get; set; }
+	}
 }

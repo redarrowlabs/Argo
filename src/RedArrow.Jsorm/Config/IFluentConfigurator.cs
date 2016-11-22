@@ -9,7 +9,7 @@ namespace RedArrow.Jsorm.Config
 
         IModelConfigurator Models();
 
-        SessionConfiguration BuildConfiguration();
+        SessionFactoryConfiguration BuildFactoryConfiguration();
 
         ISessionFactory BuildSessionFactory();
     }

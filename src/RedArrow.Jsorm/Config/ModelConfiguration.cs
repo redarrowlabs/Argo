@@ -9,8 +9,8 @@ namespace RedArrow.Jsorm.Config
 {
     public class ModelConfiguration
     {
-        internal ISet<Assembly> ScanAssemblies { get; }
-        internal ISet<Type> ModelTypes { get; }
+        public ISet<Assembly> ScanAssemblies { get; }
+		public ISet<Type> ModelTypes { get; }
 
         internal ModelConfiguration()
         {
@@ -18,7 +18,7 @@ namespace RedArrow.Jsorm.Config
             ModelTypes = new HashSet<Type>();
         }
 
-        internal void Configure(SessionConfiguration config)
+        internal void Configure(SessionFactoryConfiguration config)
         {
             var modelsToConfigure = ModelTypes.Concat(ScanAssemblies.SelectMany(x => x.ExportedTypes))
                 .Where(IsJsormModel)
@@ -43,7 +43,19 @@ namespace RedArrow.Jsorm.Config
                     .DeclaredProperties.Where(p => p.IsDefined(typeof(PropertyAttribute))))
                 .Select(x => new PropertyConfiguration(x))
                 .ToArray();
-        }
+
+            config.HasOneProperties = modelsToConfigure
+                .SelectMany(x => x.GetTypeInfo()
+                    .DeclaredProperties.Where(p => p.IsDefined(typeof(HasOneAttribute))))
+                .Select(x => new HasOneConfiguration(x))
+                .ToArray();
+
+			config.HasManyProperties = modelsToConfigure
+				.SelectMany(x => x.GetTypeInfo()
+					.DeclaredProperties.Where(p => p.IsDefined(typeof(HasManyAttribute))))
+				.Select(x => new HasManyConfiguration(x))
+				.ToArray();
+		}
 
         private static bool IsJsormModel(Type modelType)
         {

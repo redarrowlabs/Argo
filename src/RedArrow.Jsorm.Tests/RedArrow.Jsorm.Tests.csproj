@@ -131,6 +131,7 @@
   <ItemGroup>
     <Compile Include="Config\ModelConfigurationTests.cs" />
     <Compile Include="Config\SessionConfigurationTests.cs" />
+    <Compile Include="Config\SessionFactoryConfigurationTests.cs" />
     <Compile Include="FakeResponseHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Session\SessionTests.cs" />

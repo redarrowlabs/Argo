@@ -1,8 +1,6 @@
 ﻿using AssemblyToWeave;
-using RedArrow.Jsorm.Config;
 using System;
 using System.ComponentModel;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -25,13 +23,10 @@ namespace RedArrow.Jsorm.Sample
 
 			var updatedLastName = "Bull";
 
-			var sessionFactory = Fluently.Configure()
-				.Remote()
-				.Configure(x => x.BaseAddress = new Uri("http://localhost:8082/data/api/"))
-				.Configure(x => x.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken))
-				.Models()
-				.Configure(x => x.AddFromAssemblyOf<Patient>())
-				.BuildSessionFactory();
+            var sessionFactory = Fixture.Configuration
+                .Models()
+                .Configure(x => x.AddFromAssemblyOf<Patient>())
+                .BuildSessionFactory();
 
 			Guid crossSessionId;
 
@@ -66,9 +61,11 @@ namespace RedArrow.Jsorm.Sample
 
 				patient.LastName = updatedLastName;
 
-				await session.Update(patient);
-				Assert.Equal(initialFirstName, patient.FirstName);
-				Assert.Equal(updatedLastName, patient.LastName);
+                Assert.Equal(updatedLastName, patient.LastName);
+
+                await session.Update(patient);
+                Assert.Equal(initialFirstName, patient.FirstName);
+                Assert.Equal(updatedLastName, patient.LastName);
 
 				var patient2 = await session.Get<Patient>(crossSessionId);
 
@@ -94,20 +91,44 @@ namespace RedArrow.Jsorm.Sample
 			}
 		}
 
-		[Fact, Trait("Category", "Integration")]
-		public async Task UpdateHasOneRelationWithSessionAttached()
-		{
-			var sessionFactory = Fluently.Configure()
-				.Remote()
-				.Configure(x => x.BaseAddress = new Uri("http://localhost:8082/data/api/"))
-				.Configure(x => x.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken))
-				.Models()
-				.Configure(x => x.AddFromAssemblyOf<Patient>())
-				.BuildSessionFactory();
+        [Fact, Trait("Category", "Integration")]
+        public async Task UpdateHasOneRelationWithSessionAttached()
+        {
+            var sessionFactory = Fixture.Configuration
+                .Models()
+                .Configure(x => x.AddFromAssemblyOf<Patient>())
+                .BuildSessionFactory();
 
-			using (var session = sessionFactory.CreateSession())
-			{
-			}
-		}
-	}
+            Guid crossSessionPatientId;
+            Guid crossSessionProviderId;
+            using (var session = sessionFactory.CreateSession())
+            {
+                var patient = await session.Create<Patient>();
+                crossSessionPatientId = patient.Id;
+
+                var provider = await session.Create<Provider>();
+                crossSessionProviderId = provider.Id;
+
+                patient.Provider = provider;
+
+                await session.Update(patient);
+            }
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                var patient = await session.Get<Patient>(crossSessionPatientId);
+
+                var provider = patient.Provider;
+
+                Assert.Equal(crossSessionPatientId, patient.Id);
+                Assert.Equal(crossSessionProviderId, provider.Id);
+            }
+
+	        using (var session = sessionFactory.CreateSession())
+	        {
+		        await session.Delete<Patient>(crossSessionPatientId);
+		        await session.Delete<Provider>(crossSessionProviderId);
+	        }
+        }
+    }
 }

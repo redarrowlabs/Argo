@@ -1,20 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RedArrow.Jsorm.Attributes
 {
-	[AttributeUsage(AttributeTargets.Property)]
-	public class HasOneAttribute : Attribute
-	{
-		public HasOneAttribute()
-		{
-		}
+    [AttributeUsage(AttributeTargets.Property)]
+    public class HasOneAttribute : Attribute
+    {
+        public HasOneAttribute()
+        {
+        }
 
-		public HasOneAttribute(string type)
-		{
-		}
-	}
+        public HasOneAttribute(string attrName)
+        {
+        }
+
+		// lazy/eager config will be "made publich" later...
+        internal HasOneAttribute(LoadStrategy strategy)
+        {
+        }
+
+        internal HasOneAttribute(string attrName, LoadStrategy strategy)
+        {
+        }
+    }
 }

@@ -12,7 +12,8 @@ namespace RedArrow.Jsorm.Session
         internal IDictionary<Type, string> TypeLookup { get; }
         internal IDictionary<Type, PropertyInfo> IdLookup { get; }
         internal ILookup<Type, PropertyConfiguration> AttributeLookup { get; }
-        //private ICacheProvider CacheProvider { get; }
+        internal ILookup<Type, HasOneConfiguration> HasOneLookup { get; }
+        internal ILookup<Type, HasManyConfiguration> HasManyLookup { get; }
 
         private Func<HttpClient> HttpClientFactory { get; }
 
@@ -20,28 +21,33 @@ namespace RedArrow.Jsorm.Session
             Func<HttpClient> httpClientFactory,
             IDictionary<Type, string> typeLookup,
             IDictionary<Type, PropertyInfo> idLookup,
-            ILookup<Type, PropertyConfiguration> attributeLookup)
+            ILookup<Type, PropertyConfiguration> attributeLookup,
+            ILookup<Type, HasOneConfiguration> hasOneLookup,
+            ILookup<Type, HasManyConfiguration> hasManyLookup)
         {
             HttpClientFactory = httpClientFactory;
             TypeLookup = typeLookup;
             IdLookup = idLookup;
             AttributeLookup = attributeLookup;
-            //CacheProvider = cacheProvider;
+            HasOneLookup = hasOneLookup;
+            HasManyLookup = hasManyLookup;
         }
 
-        //public void Register(Type modelType)
-        //{
-        //    CacheProvider.Register(modelType);
-        //}
+	    internal SessionConfiguration BuildConfiguration()
+	    {
+			return new SessionConfiguration(
+			    TypeLookup,
+			    IdLookup,
+			    AttributeLookup,
+			    HasOneLookup,
+			    HasManyLookup);
+	    }
 
-        public ISession CreateSession()
+	    public ISession CreateSession()
         {
-            //TODO
-            return new Session(
-                HttpClientFactory,
-                TypeLookup,
-                IdLookup,
-                AttributeLookup);
+	        return new Session(
+		        HttpClientFactory,
+		        BuildConfiguration());
         }
     }
 }

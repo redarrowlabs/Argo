@@ -1,24 +1,29 @@
 ﻿using Newtonsoft.Json;
+using Ploeh.AutoFixture;
+using RedArrow.Jsorm.Config;
 using System;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 
 namespace RedArrow.Jsorm.Sample
 {
     public class IntegrationTestFixture : IDisposable
     {
-        public string AccessToken { get; }
+        public IFluentConfigurator Configuration { get; }
 
         public IntegrationTestFixture()
         {
-            using (var authClient = new HttpClient { BaseAddress = new Uri("http://localhost:8081/api/") })
+            var host = "http://titan-test.centralus.cloudapp.azure.com";
+            string accessToken;
+            using (var authClient = new HttpClient { BaseAddress = new Uri($"{host}/api/") })
             {
                 var reqBody = new StringContent(JsonConvert.SerializeObject(new
                 {
                     accountId = Guid.Parse("00000000-0000-0000-0000-000000000001"),
                     applicationId = Guid.Parse("00000000-0000-0000-0000-000000000006"),
-                    email = "bengen@redarrowlabs.com",
-                    password = "Bananaphone1"
+                    email = "ral.titan.shared@gmail.com",
+                    password = "Password$$11"
                 }), Encoding.UTF8, "application/json");
                 var response = authClient.PostAsync("auth/login", reqBody).GetAwaiter().GetResult();
 
@@ -26,8 +31,13 @@ namespace RedArrow.Jsorm.Sample
 
                 var responseContentStr = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                 dynamic resContent = JsonConvert.DeserializeObject(responseContentStr);
-                AccessToken = resContent.token;
+                accessToken = resContent.token;
             }
+
+            Configuration = Fluently.Configure()
+                .Remote()
+                .Configure(x => x.BaseAddress = new Uri($"{host}/data/api/"))
+                .Configure(x => x.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken));
         }
 
         public void Dispose()

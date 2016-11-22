@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Reflection;
 using System.Threading.Tasks;
 
 namespace RedArrow.Jsorm.Session
@@ -16,12 +15,9 @@ namespace RedArrow.Jsorm.Session
     public class Session : IModelSession, ISession
     {
         private HttpClient HttpClient { get; }
+		
+		private SessionConfiguration Configuration { get; }
 
-        private IDictionary<Type, string> TypeLookup { get; }
-        private IDictionary<Type, PropertyInfo> IdLookup { get; }
-        private ILookup<Type, PropertyConfiguration> AttributeLookup { get; }
-
-        //private SessionState State { get; }
         private IDictionary<Guid, object> ModelState { get; }
 
         private IDictionary<Guid, Resource> ResourceState { get; }
@@ -32,14 +28,10 @@ namespace RedArrow.Jsorm.Session
 
         internal Session(
             Func<HttpClient> httpClientFactory,
-            IDictionary<Type, string> typeLookup,
-            IDictionary<Type, PropertyInfo> idLookup,
-            ILookup<Type, PropertyConfiguration> attributeLookup)
+			SessionConfiguration configuration)
         {
             HttpClient = httpClientFactory();
-            TypeLookup = typeLookup;
-            IdLookup = idLookup;
-            AttributeLookup = attributeLookup;
+	        Configuration = configuration;
 
             //State = new SessionState();
 
@@ -58,9 +50,8 @@ namespace RedArrow.Jsorm.Session
 			where TModel : class
         {
             DisposedCheck();
-
-            var modelType = typeof(TModel);
-            var resourceType = TypeLookup[modelType];
+			
+	        var resourceType = Configuration.GetResourceType<TModel>();
 
             var root = ResourceRootCreate.FromAttributes(resourceType, null);
             var response = await HttpClient.PostAsync(resourceType, root.ToHttpContent());
@@ -84,15 +75,15 @@ namespace RedArrow.Jsorm.Session
         {
             DisposedCheck();
 
-            var id = ModelId(model);
+            var id = Configuration.GetId(model);
             if (!Guid.Empty.Equals(id))
             {
                 throw new Exception($"Model {typeof(TModel)} [{id}] has already been created");
             }
 
             var modelType = typeof(TModel);
-            var resourceType = TypeLookup[modelType];
-            var attributes = JObject.FromObject(AttributeLookup[modelType]
+            var resourceType = Configuration.GetResourceType(modelType);
+            var attributes = JObject.FromObject(Configuration.GetAttributes(modelType)
                 .ToDictionary(
                     x => x.AttributeName,
                     x => x.PropertyInfo.GetValue(model)));
@@ -119,7 +110,7 @@ namespace RedArrow.Jsorm.Session
             where TModel : class
         {
             DisposedCheck();
-            TypeCheck<TModel>();
+			Configuration.TypeCheck<TModel>();
 
             // TODO: deal with having a resource, but no model?
             // TODO: deal with having a model, but no resource?
@@ -129,7 +120,7 @@ namespace RedArrow.Jsorm.Session
                 return (TModel)model;
             }
 
-            var resourceType = TypeLookup[typeof(TModel)];
+	        var resourceType = Configuration.GetResourceType<TModel>();
             var response = await HttpClient.GetAsync($"{resourceType}/{id}");
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
@@ -150,9 +141,9 @@ namespace RedArrow.Jsorm.Session
         public async Task Update<TModel>(TModel model) where TModel : class
         {
             DisposedCheck();
-            TypeCheck<TModel>();
+			Configuration.TypeCheck<TModel>();
 
-            var id = ModelId(model);
+            var id = Configuration.GetId(model);
 
             Resource context;
             if (!PatchContexts.TryGetValue(id, out context))
@@ -160,13 +151,28 @@ namespace RedArrow.Jsorm.Session
                 return;
             }
 
-            var resourceType = TypeLookup[typeof(TModel)];
+	        var resourceType = Configuration.GetResourceType<TModel>();
 
             var root = ResourceRootSingle.FromResource(context);
             var response = await HttpClient.PatchAsync($"{resourceType}/{id}", root.ToHttpContent());
 
             response.EnsureSuccessStatusCode();
 
+            Resource resource;
+            if (ResourceState.TryGetValue(id, out resource))
+            {
+                // this updateds the locally-cached resource
+                // TODO: I think we need a better solution here
+                if (context.Attributes != null)
+                {
+                    resource.Attributes.Merge(context.Attributes, new JsonMergeSettings
+                    {
+                        MergeNullValueHandling = MergeNullValueHandling.Merge,
+                        MergeArrayHandling = MergeArrayHandling.Replace
+                    });
+                }
+                context.Relationships?.Each(kvp => resource.GetRelationships()[kvp.Key] = kvp.Value);
+            }
             PatchContexts.Remove(id);
         }
 
@@ -175,7 +181,7 @@ namespace RedArrow.Jsorm.Session
         {
             DisposedCheck();
 
-            var id = ModelId(model);
+            var id = Configuration.GetId(model);
             return Delete<TModel>(id);
         }
 
@@ -183,9 +189,9 @@ namespace RedArrow.Jsorm.Session
             where TModel : class
         {
             DisposedCheck();
-            TypeCheck<TModel>();
+			Configuration.TypeCheck<TModel>();
 
-            var resourceType = TypeLookup[typeof(TModel)];
+	        var resourceType = Configuration.GetResourceType<TModel>();
             var response = await HttpClient.DeleteAsync($"{resourceType}/{id}");
             response.EnsureSuccessStatusCode();
 
@@ -198,16 +204,20 @@ namespace RedArrow.Jsorm.Session
             where TModel : class
         {
             DisposedCheck();
-            TypeCheck<TModel>();
+			Configuration.TypeCheck<TModel>();
 
+            // first check the patch contexts
+            JToken valueToken;
             Resource resource;
-            if (ResourceState.TryGetValue(id, out resource))
+            if (PatchContexts.TryGetValue(id, out resource) && resource.Attributes.TryGetValue(attrName, out valueToken))
             {
-                JToken valueToken;
-                if (resource.Attributes != null && resource.Attributes.TryGetValue(attrName, out valueToken))
-                {
-                    return valueToken.Value<TAttr>();
-                }
+                return valueToken.Value<TAttr>();
+            }
+
+            // then check cached resources
+            if (ResourceState.TryGetValue(id, out resource) && resource.Attributes.TryGetValue(attrName, out valueToken))
+            {
+                return valueToken.Value<TAttr>();
             }
             return default(TAttr);
         }
@@ -216,17 +226,10 @@ namespace RedArrow.Jsorm.Session
             where TModel : class
         {
             DisposedCheck();
-            TypeCheck<TModel>();
+			Configuration.TypeCheck<TModel>();
 
-            Resource context;
-            if (!PatchContexts.TryGetValue(id, out context))
-            {
-                var resourceType = TypeLookup[typeof(TModel)];
-                context = new Resource { Id = id, Type = resourceType };
-                PatchContexts[id] = context;
-            }
-
-            context.GetAttributes()[attrName] = JToken.FromObject(value);
+            GetPatchContext<TModel>(id)
+                .GetAttributes()[attrName] = JToken.FromObject(value);
         }
 
         public TRltn GetRelationship<TModel, TRltn>(Guid id, string attrName)
@@ -234,8 +237,8 @@ namespace RedArrow.Jsorm.Session
             where TRltn : class
         {
             DisposedCheck();
-            TypeCheck<TModel>();
-            TypeCheck<TRltn>();
+			Configuration.TypeCheck<TModel>();
+			Configuration.TypeCheck<TRltn>();
 
             Resource resource;
             if (ResourceState.TryGetValue(id, out resource))
@@ -264,11 +267,11 @@ namespace RedArrow.Jsorm.Session
             where TRltn : class
         {
             DisposedCheck();
-            TypeCheck<TModel>();
-            TypeCheck<TRltn>();
+            Configuration.TypeCheck<TModel>();
+			Configuration.TypeCheck<TRltn>();
 
-            var rltnId = ModelId(rltn);
-            var rltnType = TypeLookup[typeof(TRltn)];
+            var rltnId = Configuration.GetId(rltn);
+	        var rltnType = Configuration.GetResourceType<TRltn>();
 
             GetPatchContext<TModel>(id)
                 .GetRelationships()[attrName] = new Relationship
@@ -288,38 +291,18 @@ namespace RedArrow.Jsorm.Session
             Resource context;
             if (!PatchContexts.TryGetValue(id, out context))
             {
-                var resourceType = TypeLookup[typeof(TModel)];
+	            var resourceType = Configuration.GetResourceType<TModel>();
                 context = new Resource { Id = id, Type = resourceType };
                 PatchContexts[id] = context;
             }
             return context;
         }
 
-        internal Guid ModelId<TModel>(TModel model)
-        {
-            PropertyInfo idPropInfo;
-            if (IdLookup.TryGetValue(typeof(TModel), out idPropInfo))
-			{
-				return (Guid)idPropInfo.GetValue(model);
-			}
-
-			throw new Exception($"{typeof(TModel).FullName} is not a manged model");
-		}
-
         internal void DisposedCheck()
         {
             if (Disposed)
             {
                 throw new Exception("Session disposed");
-            }
-        }
-
-        internal void TypeCheck<T>()
-        {
-            var type = typeof(T);
-            if (!TypeLookup.ContainsKey(type))
-            {
-                throw new Exception($"{type} is not manged by jsorm");
             }
         }
     }

@@ -11,7 +11,7 @@ namespace RedArrow.Jsorm.Tests.Config
         [Fact]
         public void Configure__Given_AttributedModels__Then_MapToSessionConfiguration()
         {
-            var config = new SessionConfiguration();
+            var config = new SessionFactoryConfiguration();
 
             var subject = new ModelConfiguration();
             subject.Add<BasicModel>();
@@ -43,7 +43,7 @@ namespace RedArrow.Jsorm.Tests.Config
         [Fact]
         public void Add__Given_AttributedModels__When_RedundantAdd__Then_SingleAddition()
         {
-            var config = new SessionConfiguration();
+            var config = new SessionFactoryConfiguration();
 
             var subject = new ModelConfiguration();
             subject.Add<BasicModel>();
