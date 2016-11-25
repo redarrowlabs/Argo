@@ -4,15 +4,14 @@ namespace RedArrow.Jsorm
 {
 	public partial class ModuleWeaver
 	{
-
-		private GenericInstanceMethod SupplyGenericArgs(
-			ModelWeavingContext context,
-			PropertyDefinition propertyDef,
-			MethodReference methodRef)
+		private static GenericInstanceMethod SupplyGenericArgs(MethodReference methodRef, params TypeReference[] types)
 		{
 			var genericMethod = new GenericInstanceMethod(methodRef);
-			genericMethod.GenericArguments.Add(context.ModelTypeRef);
-			genericMethod.GenericArguments.Add(propertyDef.GetMethod.ReturnType);
+            
+            foreach (var typeReference in types)
+            {
+                genericMethod.GenericArguments.Add(typeReference);
+            }
 			return genericMethod;
 		}
 	}

@@ -12,7 +12,7 @@ namespace RedArrow.Jsorm
 
         public IEnumerable<PropertyDefinition> MappedAttributes { get; }
         public IEnumerable<PropertyDefinition> MappedHasOnes { get; }
-        public IEnumerable<PropertyDefinition> MappedHasMany { get; }
+        public IEnumerable<PropertyDefinition> MappedHasManys { get; }
 
         private TypeDefinition ModelTypeDef { get; }
         public TypeReference ModelTypeRef => ModelTypeDef;
@@ -32,7 +32,7 @@ namespace RedArrow.Jsorm
 
             MappedAttributes = GetMappedProperties(Constants.Attributes.Property);
             MappedHasOnes = GetMappedProperties(Constants.Attributes.HasOne);
-            MappedHasMany = GetMappedProperties(Constants.Attributes.HasMany);
+            MappedHasManys = GetMappedProperties(Constants.Attributes.HasMany);
         }
 
         public void AddSessionField(TypeDefinition sessionTypeDef)

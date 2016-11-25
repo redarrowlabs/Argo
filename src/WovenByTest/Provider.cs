@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using RedArrow.Jsorm.Attributes;
 
-namespace WovenByFody
+namespace WovenByTest
 {
     [Model("integration-test-provider")]
     public class Provider

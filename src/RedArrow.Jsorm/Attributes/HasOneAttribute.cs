@@ -9,16 +9,16 @@ namespace RedArrow.Jsorm.Attributes
         {
         }
 
-        public HasOneAttribute(string attrName)
+        public HasOneAttribute(string rltnName)
         {
         }
 
-		// lazy/eager config will be "made publich" later...
+        // lazy/eager config will be "made publich" later...
         internal HasOneAttribute(LoadStrategy strategy)
         {
         }
 
-        internal HasOneAttribute(string attrName, LoadStrategy strategy)
+        internal HasOneAttribute(string rltnName, LoadStrategy strategy)
         {
         }
     }

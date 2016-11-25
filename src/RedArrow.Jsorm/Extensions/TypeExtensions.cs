@@ -1,13 +1,16 @@
-﻿using System;
+﻿using RedArrow.Jsorm.Attributes;
+using RedArrow.Jsorm.Config.Model;
+using RedArrow.Jsorm.Infrastructure;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using RedArrow.Jsorm.Infrastructure;
 
 namespace RedArrow.Jsorm.Extensions
 {
-    public static class TypeExtensions
+    internal static class TypeExtensions
     {
-        public static ConstructorInfo GetDefaultConstructor(this Type type)
+        internal static ConstructorInfo GetDefaultConstructor(this Type type)
         {
             if (type == null || type.GetTypeInfo().IsAbstract)
             {
@@ -24,6 +27,45 @@ namespace RedArrow.Jsorm.Extensions
             }
 
             return result;
+        }
+
+        internal static string GetModelResourceType(this Type type)
+        {
+            return type.GetTypeInfo()
+                .CustomAttributes
+                .Single(a => a.AttributeType == typeof(ModelAttribute))
+                .ConstructorArguments
+                .Select(arg => arg.Value as string)
+                .FirstOrDefault() ?? type.Name.Camelize();
+        }
+
+        internal static PropertyInfo GetModelIdProperty(this Type type)
+        {
+            return type.GetTypeInfo()
+                .DeclaredProperties
+                .SingleOrDefault(prop => prop.IsDefined(typeof(IdAttribute)));
+        }
+
+        internal static IDictionary<string, AttributeConfiguration> GetModelAttributeConfigurations(this Type type)
+        {
+            return type.GetTypeInfo()
+                .DeclaredProperties
+                .Where(prop => prop.IsDefined(typeof(PropertyAttribute)))
+                .Select(prop => new AttributeConfiguration(prop))
+                .ToDictionary(
+                    attrConfig => attrConfig.AttributeName,
+                    attrConfig => attrConfig);
+        }
+
+        internal static IDictionary<string, HasOneConfiguration> GetModelHasOneConfigurations(this Type type)
+        {
+            return type.GetTypeInfo()
+                .DeclaredProperties
+                .Where(prop => prop.IsDefined(typeof(HasOneAttribute)))
+                .Select(prop => new HasOneConfiguration(prop))
+                .ToDictionary(
+                    has1Cfg => has1Cfg.AttributeName,
+                    has1Cfg => has1Cfg);
         }
     }
 }

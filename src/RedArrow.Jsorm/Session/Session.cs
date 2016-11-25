@@ -1,9 +1,11 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RedArrow.Jsorm.Config;
+using RedArrow.Jsorm.Config.Model;
 using RedArrow.Jsorm.Extensions;
 using RedArrow.Jsorm.JsonModels;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -15,9 +17,10 @@ namespace RedArrow.Jsorm.Session
     public class Session : IModelSession, ISession
     {
         private HttpClient HttpClient { get; }
-		
-		private SessionConfiguration Configuration { get; }
 
+        private ModelRegistry ModelRegistry { get; }
+
+        //TODO: refactor these into class(es) that will manage these responsibilities
         private IDictionary<Guid, object> ModelState { get; }
 
         private IDictionary<Guid, Resource> ResourceState { get; }
@@ -28,12 +31,10 @@ namespace RedArrow.Jsorm.Session
 
         internal Session(
             Func<HttpClient> httpClientFactory,
-			SessionConfiguration configuration)
+            IEnumerable<ModelConfiguration> modelConfigs)
         {
             HttpClient = httpClientFactory();
-	        Configuration = configuration;
-
-            //State = new SessionState();
+            ModelRegistry = new ModelRegistry(modelConfigs);
 
             ModelState = new Dictionary<Guid, object>();
             ResourceState = new Dictionary<Guid, Resource>();
@@ -47,11 +48,11 @@ namespace RedArrow.Jsorm.Session
         }
 
         public async Task<TModel> Create<TModel>()
-			where TModel : class
+            where TModel : class
         {
-            DisposedCheck();
-			
-	        var resourceType = Configuration.GetResourceType<TModel>();
+            ThrowIfDisposed();
+
+            var resourceType = ModelRegistry.GetResourceType<TModel>();
 
             var root = ResourceRootCreate.FromAttributes(resourceType, null);
             var response = await HttpClient.PostAsync(resourceType, root.ToHttpContent());
@@ -73,20 +74,21 @@ namespace RedArrow.Jsorm.Session
         public async Task<TModel> Create<TModel>(TModel model)
             where TModel : class
         {
-            DisposedCheck();
+            ThrowIfDisposed();
 
-            var id = Configuration.GetId(model);
+            var id = ModelRegistry.GetModelId(model);
             if (!Guid.Empty.Equals(id))
             {
                 throw new Exception($"Model {typeof(TModel)} [{id}] has already been created");
             }
 
             var modelType = typeof(TModel);
-            var resourceType = Configuration.GetResourceType(modelType);
-            var attributes = JObject.FromObject(Configuration.GetAttributes(modelType)
+            var resourceType = ModelRegistry.GetResourceType(modelType);
+            var attributes = JObject.FromObject(ModelRegistry
+                .GetModelAttributes(modelType)
                 .ToDictionary(
                     x => x.AttributeName,
-                    x => x.PropertyInfo.GetValue(model)));
+                    x => x.Property.GetValue(model)));
 
             var root = ResourceRootCreate.FromAttributes(resourceType, attributes);
             var response = await HttpClient.PostAsync(resourceType, root.ToHttpContent());
@@ -109,19 +111,16 @@ namespace RedArrow.Jsorm.Session
         public async Task<TModel> Get<TModel>(Guid id)
             where TModel : class
         {
-            DisposedCheck();
-			Configuration.TypeCheck<TModel>();
+            ThrowIfDisposed();
 
-            // TODO: deal with having a resource, but no model?
-            // TODO: deal with having a model, but no resource?
             object model;
             if (ModelState.TryGetValue(id, out model))
             {
                 return (TModel)model;
             }
 
-	        var resourceType = Configuration.GetResourceType<TModel>();
-            var response = await HttpClient.GetAsync($"{resourceType}/{id}");
+            var request = ModelRegistry.CreateGetRequest<TModel>(id);
+            var response = await HttpClient.SendAsync(request);
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
                 return default(TModel); // null
@@ -140,10 +139,9 @@ namespace RedArrow.Jsorm.Session
 
         public async Task Update<TModel>(TModel model) where TModel : class
         {
-            DisposedCheck();
-			Configuration.TypeCheck<TModel>();
+            ThrowIfDisposed();
 
-            var id = Configuration.GetId(model);
+            var id = ModelRegistry.GetModelId(model);
 
             Resource context;
             if (!PatchContexts.TryGetValue(id, out context))
@@ -151,7 +149,7 @@ namespace RedArrow.Jsorm.Session
                 return;
             }
 
-	        var resourceType = Configuration.GetResourceType<TModel>();
+            var resourceType = ModelRegistry.GetResourceType<TModel>();
 
             var root = ResourceRootSingle.FromResource(context);
             var response = await HttpClient.PatchAsync($"{resourceType}/{id}", root.ToHttpContent());
@@ -179,19 +177,18 @@ namespace RedArrow.Jsorm.Session
         public Task Delete<TModel>(TModel model)
             where TModel : class
         {
-            DisposedCheck();
+            ThrowIfDisposed();
 
-            var id = Configuration.GetId(model);
+            var id = ModelRegistry.GetModelId(model);
             return Delete<TModel>(id);
         }
 
         public async Task Delete<TModel>(Guid id)
             where TModel : class
         {
-            DisposedCheck();
-			Configuration.TypeCheck<TModel>();
+            ThrowIfDisposed();
 
-	        var resourceType = Configuration.GetResourceType<TModel>();
+            var resourceType = ModelRegistry.GetResourceType<TModel>();
             var response = await HttpClient.DeleteAsync($"{resourceType}/{id}");
             response.EnsureSuccessStatusCode();
 
@@ -203,8 +200,7 @@ namespace RedArrow.Jsorm.Session
         public TAttr GetAttribute<TModel, TAttr>(Guid id, string attrName)
             where TModel : class
         {
-            DisposedCheck();
-			Configuration.TypeCheck<TModel>();
+            ThrowIfDisposed();
 
             // first check the patch contexts
             JToken valueToken;
@@ -225,20 +221,17 @@ namespace RedArrow.Jsorm.Session
         public void SetAttribute<TModel, TAttr>(Guid id, string attrName, TAttr value)
             where TModel : class
         {
-            DisposedCheck();
-			Configuration.TypeCheck<TModel>();
+            ThrowIfDisposed();
 
             GetPatchContext<TModel>(id)
                 .GetAttributes()[attrName] = JToken.FromObject(value);
         }
 
-        public TRltn GetRelationship<TModel, TRltn>(Guid id, string attrName)
+        public TRltn GetReference<TModel, TRltn>(Guid id, string attrName)
             where TModel : class
             where TRltn : class
         {
-            DisposedCheck();
-			Configuration.TypeCheck<TModel>();
-			Configuration.TypeCheck<TRltn>();
+            ThrowIfDisposed();
 
             Resource resource;
             if (ResourceState.TryGetValue(id, out resource))
@@ -262,16 +255,14 @@ namespace RedArrow.Jsorm.Session
             throw new Exception();
         }
 
-        public void SetRelationship<TModel, TRltn>(Guid id, string attrName, TRltn rltn)
+        public void SetReference<TModel, TRltn>(Guid id, string attrName, TRltn rltn)
             where TModel : class
             where TRltn : class
         {
-            DisposedCheck();
-            Configuration.TypeCheck<TModel>();
-			Configuration.TypeCheck<TRltn>();
+            ThrowIfDisposed();
 
-            var rltnId = Configuration.GetId(rltn);
-	        var rltnType = Configuration.GetResourceType<TRltn>();
+            var rltnId = ModelRegistry.GetModelId(rltn);
+            var rltnType = ModelRegistry.GetResourceType<TRltn>();
 
             GetPatchContext<TModel>(id)
                 .GetRelationships()[attrName] = new Relationship
@@ -280,25 +271,41 @@ namespace RedArrow.Jsorm.Session
                 };
         }
 
-        internal TModel CreateModel<TModel>(Guid id)
+        public TEnum GetEnumerable<TModel, TEnum, TRltn>(Guid id, string attrName)
+            where TModel : class
+            where TEnum : IEnumerable<TRltn>
+            where TRltn : class
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetEnumerable<TModel, TEnum, TRltn>(Guid id, string attrName, TEnum value)
+            where TModel : class
+            where TEnum : IEnumerable<TRltn>
+            where TRltn : class
+        {
+            throw new NotImplementedException();
+        }
+
+        private TModel CreateModel<TModel>(Guid id)
             where TModel : class
         {
             return (TModel)Activator.CreateInstance(typeof(TModel), id, this);
         }
 
-        internal Resource GetPatchContext<TModel>(Guid id)
+        private Resource GetPatchContext<TModel>(Guid id)
         {
             Resource context;
             if (!PatchContexts.TryGetValue(id, out context))
             {
-	            var resourceType = Configuration.GetResourceType<TModel>();
+                var resourceType = ModelRegistry.GetResourceType<TModel>();
                 context = new Resource { Id = id, Type = resourceType };
                 PatchContexts[id] = context;
             }
             return context;
         }
 
-        internal void DisposedCheck()
+        private void ThrowIfDisposed()
         {
             if (Disposed)
             {

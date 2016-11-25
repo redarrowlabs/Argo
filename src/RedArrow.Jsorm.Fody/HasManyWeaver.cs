@@ -1,29 +1,44 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace RedArrow.Jsorm
 {
     public partial class ModuleWeaver
     {
-        private void WeaveHasOnes(ModelWeavingContext context)
+        private void WeaveHasManys(ModelWeavingContext context)
         {
             var sessionGetRltnGeneric = _sessionTypeDef
                 .Methods
-                .SingleOrDefault(x => x.Name == "GetReference");
+                .SingleOrDefault(x => x.Name == "GetEnumerable");
 
             var sessionSetRltnGeneric = _sessionTypeDef
                 .Methods
-                .SingleOrDefault(x => x.Name == "SetReference");
+                .SingleOrDefault(x => x.Name == "SetEnumerable");
 
             if (sessionGetRltnGeneric == null || sessionSetRltnGeneric == null)
             {
                 throw new Exception("Jsorm relationship weaving failed unexpectedly");
             }
 
-            foreach (var propertyDef in context.MappedHasOnes)
+            foreach (var propertyDef in context.MappedHasManys)
             {
+                LogInfo($"==== property type interfaces for {propertyDef.PropertyType.FullName}");
+                foreach (var i in propertyDef.PropertyType.Resolve().Interfaces)
+                {
+                    LogInfo($"\t{i.FullName}");
+                }
+
+                var propertyTypeDef = propertyDef.PropertyType.Resolve();
+                if (!propertyTypeDef.Interfaces.Contains(_ienumerableTypeDef))
+                {
+                    throw new Exception($"Jsorm encountered a HasMany relationship on non-IEnumerable<T> property {propertyDef.FullName}");
+                }
+                
                 // get the backing field
                 var backingField = propertyDef
                     ?.GetMethod
@@ -38,34 +53,43 @@ namespace RedArrow.Jsorm
                 }
 
                 // find the attrName, if there is one
-                var propAttr = propertyDef.CustomAttributes.GetAttribute(Constants.Attributes.HasOne);
+                var propAttr = propertyDef.CustomAttributes.GetAttribute(Constants.Attributes.HasMany);
                 var attrName = propAttr.ConstructorArguments
                     .Where(x => x.Type == TypeSystem.String)
                     .Select(x => x.Value as string)
                     .SingleOrDefault() ?? propertyDef.Name.Camelize();
 
+                // find property generic element type
+                var elementTypeDef = TypeSystem.String.Resolve();//propertyDef.PropertyType.GenericParameters.First().Resolve();
+                LogInfo($"\tFound HasMany relationship with element type {elementTypeDef.FullName}");
+
                 LogInfo($"\tWeaving {propertyDef} => {attrName}");
 
-                WeaveReferenceGetter(context, backingField, propertyDef, sessionGetRltnGeneric, attrName);
-                WeaveReferenceSetter(context, backingField, propertyDef, sessionSetRltnGeneric, attrName);
+                WeaveEnumerableGetter(context, backingField, propertyDef, elementTypeDef, sessionGetRltnGeneric, attrName);
+                WeaveEnumerableSetter(context, backingField, propertyDef, elementTypeDef, sessionSetRltnGeneric, attrName);
             }
         }
 
-        private void WeaveReferenceGetter(
+        private void WeaveEnumerableGetter(
             ModelWeavingContext context,
             FieldReference backingField,
             PropertyDefinition propertyDef,
+            TypeDefinition elementTypeDef,
             MethodReference sessionGetAttrGeneric,
             string attrName)
         {
             // supply generic type arguments to template
-            var sessionGetAttrTyped = SupplyGenericArgs(sessionGetAttrGeneric, context.ModelTypeRef, propertyDef.GetMethod.ReturnType);
+            var sessionGetAttrTyped = SupplyGenericArgs(
+                sessionGetAttrGeneric,
+                context.ModelTypeRef,
+                propertyDef.GetMethod.ReturnType,
+                elementTypeDef);
 
             // get
             // {
             //   if (this.__jsorm__generated_session != null)
             //   {
-            //     this.<[PropName]>k__BackingField = this.__jsorm__generated_session.GetReference<[ModelType], [ReturnType]>(this.Id, "[AttrName]");
+            //     this.<[PropName]>k__BackingField = this.__jsorm__generated_session.GetEnumerable<[ModelType], [ReturnType]>(this.Id, "[AttrName]");
             //   }
             //   return this.<[PropName]>k__BackingField;
             // }
@@ -93,15 +117,20 @@ namespace RedArrow.Jsorm
             proc.Emit(OpCodes.Ret); // return
         }
 
-        private void WeaveReferenceSetter(
+        private void WeaveEnumerableSetter(
             ModelWeavingContext context,
             FieldReference backingField,
             PropertyDefinition propertyDef,
+            TypeDefinition elementTypeDef,
             MethodReference sessionSetAttrGeneric,
             string attrName)
         {
             // supply generic type arguments to template
-            var sessionSetAttrTyped = SupplyGenericArgs(sessionSetAttrGeneric, context.ModelTypeRef, propertyDef.GetMethod.ReturnType);
+            var sessionSetAttrTyped = SupplyGenericArgs(
+                sessionSetAttrGeneric,
+                context.ModelTypeRef,
+                propertyDef.GetMethod.ReturnType,
+                elementTypeDef);
 
             propertyDef.SetMethod.Body.Instructions.Clear();
 
@@ -110,7 +139,7 @@ namespace RedArrow.Jsorm
             //     this.<[PropName]>k__BackingField = value;
             //     if (this.__jsorm__generated_session != null)
             //     {
-            //         this.__jsorm__generated_session.SetReference<[ModelType], [ReturnType]>(this.Id, "[AttrName]", this.<[PropName]>k__BackingField);
+            //         this.__jsorm__generated_session.SetEnumerable<[ModelType], [ReturnType]>(this.Id, "[AttrName]", this.<[PropName]>k__BackingField);
             //     }
             // }
             var proc = propertyDef.SetMethod.Body.GetILProcessor();

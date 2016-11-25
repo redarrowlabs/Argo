@@ -1,9 +1,9 @@
-﻿using Mono.Cecil;
-using System;
+﻿using System;
 using System.IO;
 using System.Reflection;
+using Mono.Cecil;
 
-namespace RedArrow.Jsorm.Tests
+namespace RedArrow.Jsorm.Fody.Tests
 {
     public class WeaverTestFixture
     {
@@ -14,8 +14,8 @@ namespace RedArrow.Jsorm.Tests
 
         public WeaverTestFixture()
         {
-            var projectPath = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, @"..\..\..\AssemblyToWeave\AssemblyToWeave.csproj"));
-            AssemblyPath = Path.Combine(Path.GetDirectoryName(projectPath), @"bin\Debug\AssemblyToWeave.dll");
+            var projectPath = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, @"..\..\..\WovenByTest\WovenByTest.csproj"));
+            AssemblyPath = Path.Combine(Path.GetDirectoryName(projectPath), @"bin\Debug\WovenByTest.dll");
 
 #if (!DEBUG)
             AssemblyPath = AssemblyPath.Replace("Debug", "Release");

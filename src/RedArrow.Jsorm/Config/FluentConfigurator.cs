@@ -13,7 +13,7 @@ namespace RedArrow.Jsorm.Config
         IRemoteCreator,
         IRemoteConfigure
     {
-        private IList<Action<ModelConfiguration>> ModelConfigurators { get; }
+        private IList<Action<ModelLocator>> ModelConfigurators { get; }
 
         private Func<HttpClient> ClientCreator { get; set; }
         private IList<Action<HttpClient>> ClientConfigurators { get; }
@@ -25,7 +25,7 @@ namespace RedArrow.Jsorm.Config
 
         public FluentConfigurator(SessionFactoryConfiguration config)
         {
-            ModelConfigurators = new List<Action<ModelConfiguration>>();
+            ModelConfigurators = new List<Action<ModelLocator>>();
 
             ClientConfigurators = new List<Action<HttpClient>>();
 
@@ -37,7 +37,7 @@ namespace RedArrow.Jsorm.Config
             return this;
 		}
 
-		public IModelConfigurator Configure(Action<ModelConfiguration> configureModel)
+		public IModelConfigurator Configure(Action<ModelLocator> configureModel)
 		{
 			ModelConfigurators.Add(configureModel);
 			return this;
@@ -63,7 +63,7 @@ namespace RedArrow.Jsorm.Config
         public SessionFactoryConfiguration BuildFactoryConfiguration()
         {
             // load all the models
-            var modelConfig = new ModelConfiguration();
+            var modelConfig = new ModelLocator();
             foreach (var builder in ModelConfigurators)
             {
                 builder(modelConfig);

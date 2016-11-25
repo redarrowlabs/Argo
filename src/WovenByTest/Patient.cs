@@ -1,7 +1,7 @@
 ﻿using System;
 using RedArrow.Jsorm.Attributes;
 
-namespace WovenByFody
+namespace WovenByTest
 {
     [Model("integration-test-patient")]
     public class Patient

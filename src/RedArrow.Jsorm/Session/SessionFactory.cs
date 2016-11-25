@@ -1,53 +1,24 @@
-﻿using RedArrow.Jsorm.Config;
+﻿using RedArrow.Jsorm.Config.Model;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
-using System.Reflection;
 
 namespace RedArrow.Jsorm.Session
 {
     public class SessionFactory : ISessionFactory
     {
-        internal IDictionary<Type, string> TypeLookup { get; }
-        internal IDictionary<Type, PropertyInfo> IdLookup { get; }
-        internal ILookup<Type, PropertyConfiguration> AttributeLookup { get; }
-        internal ILookup<Type, HasOneConfiguration> HasOneLookup { get; }
-        internal ILookup<Type, HasManyConfiguration> HasManyLookup { get; }
-
         private Func<HttpClient> HttpClientFactory { get; }
+        private IEnumerable<ModelConfiguration> ModelConfigurations { get; }
 
-        internal SessionFactory(
-            Func<HttpClient> httpClientFactory,
-            IDictionary<Type, string> typeLookup,
-            IDictionary<Type, PropertyInfo> idLookup,
-            ILookup<Type, PropertyConfiguration> attributeLookup,
-            ILookup<Type, HasOneConfiguration> hasOneLookup,
-            ILookup<Type, HasManyConfiguration> hasManyLookup)
+        internal SessionFactory(Func<HttpClient> httpClientFactory, IEnumerable<ModelConfiguration> modelConfigurations)
         {
             HttpClientFactory = httpClientFactory;
-            TypeLookup = typeLookup;
-            IdLookup = idLookup;
-            AttributeLookup = attributeLookup;
-            HasOneLookup = hasOneLookup;
-            HasManyLookup = hasManyLookup;
+            ModelConfigurations = modelConfigurations;
         }
 
-	    internal SessionConfiguration BuildConfiguration()
-	    {
-			return new SessionConfiguration(
-			    TypeLookup,
-			    IdLookup,
-			    AttributeLookup,
-			    HasOneLookup,
-			    HasManyLookup);
-	    }
-
-	    public ISession CreateSession()
+        public ISession CreateSession()
         {
-	        return new Session(
-		        HttpClientFactory,
-		        BuildConfiguration());
+            return new Session(HttpClientFactory, ModelConfigurations);
         }
     }
 }

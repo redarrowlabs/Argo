@@ -1,7 +1,7 @@
-﻿using AssemblyToWeave;
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Threading.Tasks;
+using WovenByFody;
 using Xunit;
 
 namespace RedArrow.Jsorm.Sample

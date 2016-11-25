@@ -2,8 +2,6 @@
 using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Xml.Linq;
 
 namespace RedArrow.Jsorm
@@ -91,6 +89,7 @@ namespace RedArrow.Jsorm
 				AddCtor(context);
 				WeaveAttributes(context);
 		        WeaveHasOnes(context);
+                WeaveHasManys(context);
 	        }
         }
 

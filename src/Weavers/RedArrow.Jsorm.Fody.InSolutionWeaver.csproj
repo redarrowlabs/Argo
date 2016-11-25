@@ -68,6 +68,9 @@
     <Compile Include="..\RedArrow.Jsorm.Fody\CtorWeaver.cs">
       <Link>CtorWeaver.cs</Link>
     </Compile>
+    <Compile Include="..\RedArrow.Jsorm.Fody\HasManyWeaver.cs">
+      <Link>HasManyWeaver.cs</Link>
+    </Compile>
     <Compile Include="..\RedArrow.Jsorm.Fody\HasOneWeaver.cs">
       <Link>HasOneWeaver.cs</Link>
     </Compile>

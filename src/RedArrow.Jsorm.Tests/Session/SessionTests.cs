@@ -2,8 +2,8 @@
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using AssemblyToWeave;
 using RedArrow.Jsorm.Config;
+using WovenByFody;
 using Xunit;
 
 namespace RedArrow.Jsorm.Tests.Session

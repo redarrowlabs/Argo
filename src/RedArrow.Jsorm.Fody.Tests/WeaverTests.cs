@@ -2,28 +2,27 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using AssemblyToWeave;
-using RedArrow.Jsorm.Logging.LogProviders;
+using Castle.DynamicProxy.Internal;
 using RedArrow.Jsorm.Session;
 using Xunit;
 
-namespace RedArrow.Jsorm.Tests
+namespace RedArrow.Jsorm.Fody.Tests
 {
-    public class WeaverTests// : IClassFixture<WeaverTestFixture>
+    public class WeaverTests : IClassFixture<WeaverTestFixture>
     {
-        //private WeaverTestFixture Fixture { get; }
+        private WeaverTestFixture Fixture { get; }
 
-        //public WeaverTests(WeaverTestFixture fixture)
-        //{
-        //    Fixture = fixture;
-        //}
+        public WeaverTests(WeaverTestFixture fixture)
+        {
+            Fixture = fixture;
+        }
 
         [Fact]
         public void ModelsHavePrivateSessionField()
         {
 	        Assert.All(WovenTypes(), type =>
 			{
-				var field = type.GetFieldsPortable()
+				var field = type.GetAllFields()
 					.Where(x => x.IsPrivate)
 					.Where(x => x.Name == "__jsorm__generated_session")
 					.Where(x => x.IsNotSerialized)
@@ -63,17 +62,11 @@ namespace RedArrow.Jsorm.Tests
 
 		private IEnumerable<Type> WovenTypes()
 	    {
-		 //   return new[]
-		 //   {
-			//	Fixture.WovenAssembly.GetType("AssemblyToWeave.Patient"),
-			//	Fixture.WovenAssembly.GetType("AssemblyToWeave.Provider")
-			//};
-
-			return new[]
-			{
-				typeof (Patient),
-				typeof (Provider)
-			};
+            return new[]
+            {
+                Fixture.WovenAssembly.GetType("AssemblyToWeave.Patient"),
+                Fixture.WovenAssembly.GetType("AssemblyToWeave.Provider")
+            };
 	    }
     }
 }

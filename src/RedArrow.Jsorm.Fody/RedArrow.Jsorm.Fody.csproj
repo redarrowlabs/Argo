@@ -61,6 +61,7 @@
     <Compile Include="AttributeWeaver.cs" />
     <Compile Include="CecilExtensions.cs" />
     <Compile Include="CtorWeaver.cs" />
+    <Compile Include="HasManyWeaver.cs" />
     <Compile Include="HasOneWeaver.cs" />
     <Compile Include="MethodConfigurator.cs" />
     <Compile Include="ModelWeavingContext.cs" />

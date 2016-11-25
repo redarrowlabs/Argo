@@ -60,7 +60,7 @@ namespace RedArrow.Jsorm
             string attrName)
         {
             // supply generic type arguments to template
-            var sessionGetRltnTyped = SupplyGenericArgs(context, propertyDef, sessionGetAttrGeneric);
+            var sessionGetRltnTyped = SupplyGenericArgs(sessionGetAttrGeneric, context.ModelTypeRef, propertyDef.GetMethod.ReturnType);
 
             // get
             // {
@@ -102,7 +102,7 @@ namespace RedArrow.Jsorm
             string attrName)
         {
             // supply generic type arguments to template
-            var sessionSetRltnTyped = SupplyGenericArgs(context, propertyDef, sessionSetAttrGeneric);
+            var sessionSetRltnTyped = SupplyGenericArgs(sessionSetAttrGeneric, context.ModelTypeRef, propertyDef.GetMethod.ReturnType);
 
             propertyDef.SetMethod.Body.Instructions.Clear();
 

@@ -9,15 +9,15 @@ namespace RedArrow.Jsorm.Attributes
         {
         }
 
-        public HasManyAttribute(string type)
+        public HasManyAttribute(string rltnName)
         {
         }
 
-        public HasManyAttribute(LoadStrategy strategy)
+        internal HasManyAttribute(LoadStrategy strategy)
         {
         }
 
-        public HasManyAttribute(string type, LoadStrategy strategy)
+        internal HasManyAttribute(string rltnName, LoadStrategy strategy)
         {
         }
     }

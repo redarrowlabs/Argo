@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace RedArrow.Jsorm.Session
 {
@@ -10,12 +12,22 @@ namespace RedArrow.Jsorm.Session
         void SetAttribute<TModel, TAttr>(Guid id, string attrName, TAttr value)
             where TModel : class;
 
-		TRltn GetRelationship<TModel, TRltn>(Guid id, string attrName)
-			where TModel : class
-			where TRltn : class;
+        TRltn GetReference<TModel, TRltn>(Guid id, string attrName)
+            where TModel : class
+            where TRltn : class;
 
-		void SetRelationship<TModel, TRltn>(Guid id, string attrName, TRltn rltn)
-			where TModel : class
-			where TRltn : class;
-	}
+        void SetReference<TModel, TRltn>(Guid id, string attrName, TRltn value)
+            where TModel : class
+            where TRltn : class;
+
+        TEnum GetEnumerable<TModel, TEnum, TRltn>(Guid id, string attrName)
+            where TModel : class
+            where TEnum : IEnumerable<TRltn>
+            where TRltn : class;
+
+        void SetEnumerable<TModel, TEnum, TRltn>(Guid id, string attrName, TEnum value)
+            where TModel : class
+            where TEnum : IEnumerable<TRltn>
+            where TRltn : class;
+    }
 }
