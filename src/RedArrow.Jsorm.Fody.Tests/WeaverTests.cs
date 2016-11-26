@@ -64,8 +64,8 @@ namespace RedArrow.Jsorm.Fody.Tests
 	    {
             return new[]
             {
-                Fixture.WovenAssembly.GetType("AssemblyToWeave.Patient"),
-                Fixture.WovenAssembly.GetType("AssemblyToWeave.Provider")
+                Fixture.WovenAssembly.GetType("WovenByTest.Patient"),
+                Fixture.WovenAssembly.GetType("WovenByTest.Provider")
             };
 	    }
     }
