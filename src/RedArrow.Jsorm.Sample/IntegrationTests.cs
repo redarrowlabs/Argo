@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using RedArrow.Jsorm.Config;
 using WovenByFody;
 using Xunit;
 
@@ -23,12 +25,15 @@ namespace RedArrow.Jsorm.Sample
 
 			var updatedLastName = "Bull";
 
-            var sessionFactory = Fixture.Configuration
+            var sessionFactory = Fluently.Configure()
+                .Remote()
+                    .Configure(client => client.BaseAddress = new Uri($"{Fixture.Host}/data/"))
+                    .Configure(client => client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken))
                 .Models()
-                .Configure(x => x.AddFromAssemblyOf<Patient>())
+                    .Configure(x => x.AddFromAssemblyOf<Patient>())
                 .BuildSessionFactory();
 
-			Guid crossSessionId;
+            Guid crossSessionId;
 
 			using (var session = sessionFactory.CreateSession())
 			{
@@ -94,9 +99,12 @@ namespace RedArrow.Jsorm.Sample
         [Fact, Trait("Category", "Integration")]
         public async Task UpdateHasOneRelationWithSessionAttached()
         {
-            var sessionFactory = Fixture.Configuration
+            var sessionFactory = Fluently.Configure()
+                .Remote()
+                    .Configure(client => client.BaseAddress = new Uri($"{Fixture.Host}/data/"))
+                    .Configure(client => client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken))
                 .Models()
-                .Configure(x => x.AddFromAssemblyOf<Patient>())
+                    .Configure(x => x.AddFromAssemblyOf<Patient>())
                 .BuildSessionFactory();
 
             Guid crossSessionPatientId;
@@ -133,10 +141,13 @@ namespace RedArrow.Jsorm.Sample
 
 	    [Fact, Trait("Category", "Integration")]
 	    public async Task UpdateModelWithTransientReference()
-	    {
-            var sessionFactory = Fixture.Configuration
+        {
+            var sessionFactory = Fluently.Configure()
+                .Remote()
+                    .Configure(client => client.BaseAddress = new Uri($"{Fixture.Host}/data/"))
+                    .Configure(client => client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken))
                 .Models()
-                .Configure(x => x.AddFromAssemblyOf<Patient>())
+                    .Configure(x => x.AddFromAssemblyOf<Patient>())
                 .BuildSessionFactory();
 
             Guid crossSessionPatientId;

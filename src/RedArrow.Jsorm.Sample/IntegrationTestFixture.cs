@@ -9,13 +9,12 @@ namespace RedArrow.Jsorm.Sample
 {
     public class IntegrationTestFixture : IDisposable
     {
-        public IFluentConfigurator Configuration { get; }
+        public string Host = "http://titan-test.centralus.cloudapp.azure.com/api";
+        public string AccessToken { get; }
 
         public IntegrationTestFixture()
         {
-            var host = "http://titan-test.centralus.cloudapp.azure.com/api";
-            string accessToken;
-            using (var authClient = new HttpClient { BaseAddress = new Uri($"{host}/account/") })
+            using (var authClient = new HttpClient { BaseAddress = new Uri($"{Host}/account/") })
             {
                 var reqBody = new StringContent(JsonConvert.SerializeObject(new
                 {
@@ -30,13 +29,8 @@ namespace RedArrow.Jsorm.Sample
 
                 var responseContentStr = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                 dynamic resContent = JsonConvert.DeserializeObject(responseContentStr);
-                accessToken = resContent.token;
+                AccessToken = resContent.token;
             }
-
-            Configuration = Fluently.Configure()
-                .Remote()
-                .Configure(x => x.BaseAddress = new Uri($"{host}/data/"))
-                .Configure(x => x.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken));
         }
 
         public void Dispose()
