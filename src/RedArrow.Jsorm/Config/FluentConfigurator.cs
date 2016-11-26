@@ -1,5 +1,4 @@
-﻿using RedArrow.Jsorm.Cache;
-using RedArrow.Jsorm.Session;
+﻿using RedArrow.Jsorm.Session;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -18,17 +17,15 @@ namespace RedArrow.Jsorm.Config
         private Func<HttpClient> ClientCreator { get; set; }
         private IList<Action<HttpClient>> ClientConfigurators { get; }
 		
-        internal SessionFactoryConfiguration SessionFactoryConfiguration { get; }
+        private SessionFactoryConfiguration SessionFactoryConfiguration { get; }
 
-        public FluentConfigurator()
+        internal FluentConfigurator()
             : this(new SessionFactoryConfiguration()) { }
 
-        public FluentConfigurator(SessionFactoryConfiguration config)
+        internal FluentConfigurator(SessionFactoryConfiguration config)
         {
             ModelConfigurators = new List<Action<ModelLocator>>();
-
             ClientConfigurators = new List<Action<HttpClient>>();
-
             SessionFactoryConfiguration = config;
         }
 
@@ -86,7 +83,6 @@ namespace RedArrow.Jsorm.Config
                 }
                 return client;
             };
-            //SessionFactoryConfiguration.CacheProvider = ModelRegistryBuilder();
 
             return SessionFactoryConfiguration;
         }

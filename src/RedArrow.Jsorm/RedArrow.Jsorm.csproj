@@ -45,15 +45,18 @@
     <Compile Include="Attributes\HasManyAttribute.cs" />
     <Compile Include="Attributes\HasOneAttribute.cs" />
     <Compile Include="Attributes\LoadStrategy.cs" />
+    <Compile Include="Cache\BasicCacheProvider.cs" />
     <Compile Include="Config\Model\AttributeConfiguration.cs" />
     <Compile Include="Config\Model\HasManyConfiguration.cs" />
     <Compile Include="Config\Model\HasOneConfiguration.cs" />
     <Compile Include="Config\IFluentConfigurator.cs" />
     <Compile Include="Config\IModelConfigurator.cs" />
     <Compile Include="Config\IRemoteConfigurator.cs" />
-    <Compile Include="Config\Model\IModelPart.cs" />
     <Compile Include="Config\Model\ModelConfiguration.cs" />
-    <Compile Include="Config\Model\ModelRegistry.cs" />
+    <Compile Include="Cache\ICacheProvider.cs" />
+    <Compile Include="Session\Patch\PatchContext.cs" />
+    <Compile Include="Session\Registry\IModelRegistry.cs" />
+    <Compile Include="Session\Registry\ModelRegistry.cs" />
     <Compile Include="Extensions\HttpClientExtensions.cs" />
     <Compile Include="Extensions\HttpResponseMessage.cs" />
     <Compile Include="Extensions\ModelConfigurationExtensions.cs" />
@@ -88,11 +91,8 @@
     <Compile Include="JsonModels\ResourceRootSingle.cs" />
     <Compile Include="Session\IModelSession.cs" />
     <Compile Include="LibLog\LibLog.cs" />
-    <Compile Include="Cache\ICacheProvider.cs" />
     <Compile Include="Session\ISession.cs" />
     <Compile Include="Session\ISessionFactory.cs" />
-    <Compile Include="Cache\DefaultCacheProvider.cs" />
-    <Compile Include="Session\SessionState.cs" />
     <Compile Include="Session\Session.cs" />
     <Compile Include="Session\SessionFactory.cs" />
   </ItemGroup>

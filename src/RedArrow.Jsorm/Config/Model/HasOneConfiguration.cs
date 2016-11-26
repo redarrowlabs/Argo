@@ -5,13 +5,13 @@ using System.Reflection;
 
 namespace RedArrow.Jsorm.Config.Model
 {
-    internal class HasOneConfiguration
+    public class HasOneConfiguration
     {
         public string AttributeName { get; }
         public PropertyInfo PropertyInfo { get; }
         public bool Eager { get; }
 
-        public HasOneConfiguration(PropertyInfo propInfo)
+        internal HasOneConfiguration(PropertyInfo propInfo)
         {
             PropertyInfo = propInfo;
 

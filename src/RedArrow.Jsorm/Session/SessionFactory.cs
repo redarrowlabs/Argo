@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using RedArrow.Jsorm.Cache;
+using RedArrow.Jsorm.Session.Registry;
 
 namespace RedArrow.Jsorm.Session
 {
@@ -18,7 +20,10 @@ namespace RedArrow.Jsorm.Session
 
         public ISession CreateSession()
         {
-            return new Session(HttpClientFactory, ModelConfigurations);
+            return new Session(
+                HttpClientFactory,
+                new BasicCacheProvider(),
+                new ModelRegistry(ModelConfigurations));
         }
     }
 }

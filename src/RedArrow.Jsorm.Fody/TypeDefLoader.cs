@@ -6,7 +6,6 @@ namespace RedArrow.Jsorm
     {
         private TypeDefinition _sessionTypeDef;
         private TypeDefinition _guidTypeDef;
-        private TypeDefinition _ienumerableTypeDef;
 
         private void LoadTypeDefinitions()
         {
@@ -15,8 +14,6 @@ namespace RedArrow.Jsorm
 
             var msCoreAssemblyDef = AssemblyResolver.Resolve("mscorlib");
             _guidTypeDef = msCoreAssemblyDef.MainModule.GetType("System.Guid");
-
-            _ienumerableTypeDef = msCoreAssemblyDef.MainModule.GetType("System.Collections.IEnumerable");
         }
     }
 }

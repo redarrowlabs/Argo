@@ -5,12 +5,12 @@ using System.Reflection;
 
 namespace RedArrow.Jsorm.Config.Model
 {
-    internal class AttributeConfiguration
+    public class AttributeConfiguration
     {
         public string AttributeName { get; }
         public PropertyInfo Property { get; }
 
-        public AttributeConfiguration(PropertyInfo property)
+        internal AttributeConfiguration(PropertyInfo property)
         {
             Property = property;
             AttributeName = Property.CustomAttributes

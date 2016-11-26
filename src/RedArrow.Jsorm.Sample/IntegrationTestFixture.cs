@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using Ploeh.AutoFixture;
 using RedArrow.Jsorm.Config;
 using System;
 using System.Net.Http;
@@ -14,9 +13,9 @@ namespace RedArrow.Jsorm.Sample
 
         public IntegrationTestFixture()
         {
-            var host = "http://titan-test.centralus.cloudapp.azure.com";
+            var host = "http://titan-test.centralus.cloudapp.azure.com/api";
             string accessToken;
-            using (var authClient = new HttpClient { BaseAddress = new Uri($"{host}/api/") })
+            using (var authClient = new HttpClient { BaseAddress = new Uri($"{host}/account/") })
             {
                 var reqBody = new StringContent(JsonConvert.SerializeObject(new
                 {
@@ -36,7 +35,7 @@ namespace RedArrow.Jsorm.Sample
 
             Configuration = Fluently.Configure()
                 .Remote()
-                .Configure(x => x.BaseAddress = new Uri($"{host}/data/api/"))
+                .Configure(x => x.BaseAddress = new Uri($"{host}/data/"))
                 .Configure(x => x.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken));
         }
 

@@ -118,10 +118,6 @@
     <Compile Include="Session\SessionTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AssemblyToWeave\WovenByFody.csproj">
-      <Project>{2aa3dfdf-f71d-4ace-bfd5-0100ec753bc8}</Project>
-      <Name>WovenByFody</Name>
-    </ProjectReference>
     <ProjectReference Include="..\RedArrow.Jsorm.Fody\RedArrow.Jsorm.Fody.csproj">
       <Project>{bd5259a0-0735-456a-9b93-c665aa0a3353}</Project>
       <Name>RedArrow.Jsorm.Fody</Name>
@@ -129,6 +125,10 @@
     <ProjectReference Include="..\RedArrow.Jsorm\RedArrow.Jsorm.csproj">
       <Project>{f540b5ca-b7c2-4799-9eb2-b5401bd1f28c}</Project>
       <Name>RedArrow.Jsorm</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\WovenByFody\WovenByFody.csproj">
+      <Project>{2aa3dfdf-f71d-4ace-bfd5-0100ec753bc8}</Project>
+      <Name>WovenByFody</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

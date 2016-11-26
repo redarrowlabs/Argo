@@ -116,13 +116,13 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AssemblyToWeave\WovenByFody.csproj">
-      <Project>{2aa3dfdf-f71d-4ace-bfd5-0100ec753bc8}</Project>
-      <Name>WovenByFody</Name>
-    </ProjectReference>
     <ProjectReference Include="..\RedArrow.Jsorm\RedArrow.Jsorm.csproj">
       <Project>{F540B5CA-B7C2-4799-9EB2-B5401BD1F28C}</Project>
       <Name>RedArrow.Jsorm</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\WovenByFody\WovenByFody.csproj">
+      <Project>{2aa3dfdf-f71d-4ace-bfd5-0100ec753bc8}</Project>
+      <Name>WovenByFody</Name>
     </ProjectReference>
   </ItemGroup>
   <Choose>

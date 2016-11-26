@@ -27,14 +27,9 @@ namespace RedArrow.Jsorm
 
             foreach (var propertyDef in context.MappedHasManys)
             {
-                LogInfo($"==== property type interfaces for {propertyDef.PropertyType.FullName}");
-                foreach (var i in propertyDef.PropertyType.Resolve().Interfaces)
-                {
-                    LogInfo($"\t{i.FullName}");
-                }
-
-                var propertyTypeDef = propertyDef.PropertyType.Resolve();
-                if (!propertyTypeDef.Interfaces.Contains(_ienumerableTypeDef))
+                var propertyTypeRef = propertyDef.PropertyType;
+                var propertyTypeDef = propertyTypeRef.Resolve();
+                if (propertyTypeDef.Interfaces.All(x => x.FullName != "System.Collections.IEnumerable") && !propertyTypeRef.HasGenericParameters)
                 {
                     throw new Exception($"Jsorm encountered a HasMany relationship on non-IEnumerable<T> property {propertyDef.FullName}");
                 }
@@ -60,8 +55,7 @@ namespace RedArrow.Jsorm
                     .SingleOrDefault() ?? propertyDef.Name.Camelize();
 
                 // find property generic element type
-                var elementTypeDef = TypeSystem.String.Resolve();//propertyDef.PropertyType.GenericParameters.First().Resolve();
-                LogInfo($"\tFound HasMany relationship with element type {elementTypeDef.FullName}");
+                var elementTypeDef = ((GenericInstanceType) propertyTypeRef).GenericArguments.First().Resolve();
 
                 LogInfo($"\tWeaving {propertyDef} => {attrName}");
 

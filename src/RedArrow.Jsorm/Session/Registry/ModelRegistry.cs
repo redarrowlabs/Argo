@@ -1,12 +1,13 @@
-﻿using RedArrow.Jsorm.Extensions;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using RedArrow.Jsorm.Config.Model;
+using RedArrow.Jsorm.Extensions;
 
-namespace RedArrow.Jsorm.Config.Model
+namespace RedArrow.Jsorm.Session.Registry
 {
-    internal class ModelRegistry
+    internal class ModelRegistry : IModelRegistry
     {
         private IDictionary<Type, ModelConfiguration> Registry { get; }
 

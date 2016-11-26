@@ -130,5 +130,53 @@ namespace RedArrow.Jsorm.Sample
 		        await session.Delete<Provider>(crossSessionProviderId);
 	        }
         }
+
+	    [Fact, Trait("Category", "Integration")]
+	    public async Task UpdateModelWithTransientReference()
+	    {
+            var sessionFactory = Fixture.Configuration
+                .Models()
+                .Configure(x => x.AddFromAssemblyOf<Patient>())
+                .BuildSessionFactory();
+
+            Guid crossSessionPatientId;
+
+	        using (var session = sessionFactory.CreateSession())
+	        {
+	            var patient = new Patient
+	            {
+	                FirstName = "Marvin",
+	                LastName = "Engen"
+	            };
+
+	            patient = await session.Create(patient);
+	            crossSessionPatientId = patient.Id;
+	        }
+
+	        Guid crossSessionProviderId;
+
+	        using (var session = sessionFactory.CreateSession())
+	        {
+	            var patient = await session.Get<Patient>(crossSessionPatientId);
+
+	            patient.FirstName = "Marv";
+	            patient.Provider = new Provider
+	            {
+	                FirstName = "Peggy",
+	                LastName = "Engen"
+	            };
+
+	            await session.Update(patient);
+
+	            crossSessionProviderId = patient.Provider.Id;
+	        }
+
+	        using (var session = sessionFactory.CreateSession())
+	        {
+	            var patient = await session.Get<Patient>(crossSessionPatientId);
+
+                Assert.Equal(crossSessionProviderId, patient.Provider.Id);
+	        }
+        }
     }
 }

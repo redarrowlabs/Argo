@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace RedArrow.Jsorm.Config.Model
 {
-    internal class ModelConfiguration
+    public class ModelConfiguration
     {
         public Type ModelType { get; }
         public string ResourceType { get; }
@@ -18,7 +18,7 @@ namespace RedArrow.Jsorm.Config.Model
         // resource relationship name => model property
         public IDictionary<string, HasOneConfiguration> HasOneProperties { get; }
 
-        public ModelConfiguration(Type modelType)
+        internal ModelConfiguration(Type modelType)
         {
             ModelType = modelType;
             ResourceType = modelType.GetModelResourceType();
