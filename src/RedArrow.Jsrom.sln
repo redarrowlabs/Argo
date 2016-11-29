@@ -25,6 +25,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RedArrow.Jsorm.Fody.Tests",
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WovenByFody", "WovenByFody\WovenByFody.csproj", "{2AA3DFDF-F71D-4ACE-BFD5-0100EC753BC8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E447B66C-DACE-41E3-97EE-2B4E02F3FE2F} = {E447B66C-DACE-41E3-97EE-2B4E02F3FE2F}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
