@@ -68,8 +68,17 @@
     <Compile Include="..\RedArrow.Jsorm.Fody\CtorWeaver.cs">
       <Link>CtorWeaver.cs</Link>
     </Compile>
+    <Compile Include="..\RedArrow.Jsorm.Fody\HasManyWeaver.cs">
+      <Link>HasManyWeaver.cs</Link>
+    </Compile>
+    <Compile Include="..\RedArrow.Jsorm.Fody\HasOneWeaver.cs">
+      <Link>HasOneWeaver.cs</Link>
+    </Compile>
     <Compile Include="..\RedArrow.Jsorm.Fody\IdVerifier.cs">
       <Link>IdVerifier.cs</Link>
+    </Compile>
+    <Compile Include="..\RedArrow.Jsorm.Fody\MethodConfigurator.cs">
+      <Link>MethodConfigurator.cs</Link>
     </Compile>
     <Compile Include="..\RedArrow.Jsorm.Fody\ModelFinder.cs">
       <Link>ModelFinder.cs</Link>

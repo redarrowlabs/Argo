@@ -1,8 +1,8 @@
-﻿using RedArrow.Jsorm.Attributes;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using RedArrow.Jsorm.Attributes;
 
-namespace AssemblyToWeave
+namespace WovenByTest
 {
     [Model("integration-test-provider")]
     public class Provider
@@ -16,6 +16,7 @@ namespace AssemblyToWeave
         [Property("last-name")]
         public string LastName { get; set; }
 
+        [HasMany]
         public IEnumerable<Patient> Patients { get; set; }
     }
 }

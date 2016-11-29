@@ -2,8 +2,6 @@
 using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Xml.Linq;
 
 namespace RedArrow.Jsorm
@@ -90,6 +88,8 @@ namespace RedArrow.Jsorm
 				AddSessionField(context);
 				AddCtor(context);
 				WeaveAttributes(context);
+		        WeaveHasOnes(context);
+                WeaveHasManys(context);
 	        }
         }
 
@@ -101,6 +101,6 @@ namespace RedArrow.Jsorm
         // Will be called after all weaving has occurred and the module has been saved. OPTIONAL
         public void AfterWeaving()
         {
-        }
-    }
+		}
+	}
 }

@@ -42,10 +42,24 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Attributes\HasManyAttribute.cs" />
+    <Compile Include="Attributes\HasOneAttribute.cs" />
+    <Compile Include="Attributes\LoadStrategy.cs" />
+    <Compile Include="Cache\BasicCacheProvider.cs" />
+    <Compile Include="Config\Model\AttributeConfiguration.cs" />
+    <Compile Include="Config\Model\HasManyConfiguration.cs" />
+    <Compile Include="Config\Model\HasOneConfiguration.cs" />
     <Compile Include="Config\IFluentConfigurator.cs" />
     <Compile Include="Config\IModelConfigurator.cs" />
     <Compile Include="Config\IRemoteConfigurator.cs" />
-    <Compile Include="Config\PropertyConfiguration.cs" />
+    <Compile Include="Config\Model\ModelConfiguration.cs" />
+    <Compile Include="Cache\ICacheProvider.cs" />
+    <Compile Include="Session\Patch\PatchContext.cs" />
+    <Compile Include="Session\Registry\IModelRegistry.cs" />
+    <Compile Include="Session\Registry\ModelRegistry.cs" />
+    <Compile Include="Extensions\HttpClientExtensions.cs" />
+    <Compile Include="Extensions\HttpResponseMessage.cs" />
+    <Compile Include="Extensions\ModelConfigurationExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="JsonModels\BaseResourceRoot.cs" />
     <Compile Include="JsonModels\ResourceCreate.cs" />
@@ -55,10 +69,10 @@
     <Compile Include="Attributes\ModelAttribute.cs" />
     <Compile Include="Attributes\PropertyAttribute.cs" />
     <Compile Include="Attributes\IdAttribute.cs" />
-    <Compile Include="Config\SessionConfiguration.cs" />
+    <Compile Include="Config\SessionFactoryConfiguration.cs" />
     <Compile Include="Config\Fluently.cs" />
     <Compile Include="Config\FluentConfigurator.cs" />
-    <Compile Include="Config\ModelConfiguration.cs" />
+    <Compile Include="Config\ModelLocator.cs" />
     <Compile Include="Extensions\EnumerableExtensions.cs" />
     <Compile Include="Extensions\ExpressionExtensions.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
@@ -77,11 +91,8 @@
     <Compile Include="JsonModels\ResourceRootSingle.cs" />
     <Compile Include="Session\IModelSession.cs" />
     <Compile Include="LibLog\LibLog.cs" />
-    <Compile Include="Cache\ICacheProvider.cs" />
     <Compile Include="Session\ISession.cs" />
     <Compile Include="Session\ISessionFactory.cs" />
-    <Compile Include="Cache\DefaultCacheProvider.cs" />
-    <Compile Include="Session\SessionState.cs" />
     <Compile Include="Session\Session.cs" />
     <Compile Include="Session\SessionFactory.cs" />
   </ItemGroup>

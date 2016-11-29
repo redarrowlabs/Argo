@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
 
 namespace RedArrow.Jsorm.JsonModels
 {
     internal class ResourceIdentifier : JModel, IMetaDecorated
     {
-        [JsonProperty("id", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonProperty("id")]
         public Guid Id { get; set; }
 
         [JsonProperty("type", NullValueHandling = NullValueHandling.Ignore)]

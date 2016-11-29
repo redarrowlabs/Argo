@@ -1,173 +1,370 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using RedArrow.Jsorm.Attributes;
 using RedArrow.Jsorm.Config;
+using RedArrow.Jsorm.Config.Model;
+using RedArrow.Jsorm.Extensions;
 using RedArrow.Jsorm.JsonModels;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using RedArrow.Jsorm.Cache;
+using RedArrow.Jsorm.Session.Patch;
+using RedArrow.Jsorm.Session.Registry;
 
 namespace RedArrow.Jsorm.Session
 {
     public class Session : IModelSession, ISession
     {
         private HttpClient HttpClient { get; }
+        
+        private ICacheProvider Cache { get; }
 
-        private IDictionary<Type, string> TypeLookup { get; }
-        private IDictionary<Type, PropertyInfo> IdLookup { get; }
-        private ILookup<Type, PropertyConfiguration> AttributeLookup { get; }
+        private IModelRegistry ModelRegistry { get; }
+        
+        //TODO: combine these into ResourceRegistry
+        private IDictionary<Guid, Resource> ResourceState { get; }
+        private IDictionary<Guid, PatchContext> PatchContexts { get; }
 
-        private SessionState State { get; }
+        internal bool Disposed { get; set; }
 
         internal Session(
             Func<HttpClient> httpClientFactory,
-            IDictionary<Type, string> typeLookup,
-            IDictionary<Type, PropertyInfo> idLookup,
-            ILookup<Type, PropertyConfiguration> attributeLookup)
+            ICacheProvider cache,
+            IModelRegistry modelRegistry)
         {
             HttpClient = httpClientFactory();
-            TypeLookup = typeLookup;
-            IdLookup = idLookup;
-            AttributeLookup = attributeLookup;
-
-            State = new SessionState();
+            Cache = cache;
+            ModelRegistry = modelRegistry;
+            
+            ResourceState = new Dictionary<Guid, Resource>();
+            PatchContexts = new Dictionary<Guid, PatchContext>();
         }
 
         public void Dispose()
         {
             HttpClient.Dispose();
+            Disposed = true;
+        }
+
+        public async Task<TModel> Create<TModel>()
+            where TModel : class
+        {
+            ThrowIfDisposed();
+
+            var resourceType = ModelRegistry.GetResourceType<TModel>();
+
+            var requestContent = ResourceRootCreate
+                .FromAttributes(resourceType, null)
+                .ToHttpContent();
+            var response = await HttpClient.PostAsync(resourceType, requestContent);
+
+            response.EnsureSuccessStatusCode();
+            var id = response.GetResourceId();
+
+            var model = CreateModel<TModel>(id);
+            Cache.Update(id, model);
+            ResourceState[id] = new Resource
+            {
+                Id = id,
+                Type = resourceType
+            };
+
+            return model;
         }
 
         public async Task<TModel> Create<TModel>(TModel model)
+            where TModel : class
         {
-            PropertyInfo idPropInfo;
-            if (!IdLookup.TryGetValue(typeof(TModel), out idPropInfo))
-            {
-                throw new Exception($"{typeof(TModel).FullName} is not a manged model");
-            }
-
-            var idVal = idPropInfo.GetValue(model);
-            if (!Guid.Empty.Equals(idVal))
-            {
-                throw new Exception($"Model {typeof(TModel)} [{idVal}] has already been created");
-            }
-
-            var id = await CreateRemoteResource(model);
-            return CreateModel<TModel>(id);
+            return (TModel)await Create(typeof(TModel), model);
         }
 
-        private async Task<Guid> CreateRemoteResource<TModel>(TModel model)
+        public async Task<object> Create(Type modelType, object model)
         {
-	        var modelType = typeof (TModel);
-			var resourceType = TypeLookup[modelType];
+            ThrowIfDisposed();
 
-	        var resourceCreate = new ResourceCreate
-	        {
-		        Type = resourceType,
-		        Attributes = JObject.FromObject(AttributeLookup[modelType]
-			        .ToDictionary(
-				        x => x.AttributeName,
-				        x => x.PropertyInfo.GetValue(model)),
-			        JsonSerializer.CreateDefault(new JsonSerializerSettings
-			        {
-				        NullValueHandling = NullValueHandling.Ignore
-			        }))
-	        };
-			var resourceRequest = new ResourceRootCreate
+            var id = ModelRegistry.GetModelId(model);
+            if (id != Guid.Empty)
             {
-                Data = resourceCreate
-			};
+                throw new Exception($"Model {modelType} [{id}] has already been created");
+            }
+            
+            //TODO: check for transient relationships
 
-            var body = new StringContent(resourceRequest.ToJson(), Encoding.UTF8, "application/vnd.api+json");
-            var response = await HttpClient.PostAsync(resourceType, body);
+            var resourceType = ModelRegistry.GetResourceType(modelType);
+            var attributes = JObject.FromObject(ModelRegistry
+                .GetModelAttributes(modelType)
+                .ToDictionary(
+                    x => x.AttributeName,
+                    x => x.Property.GetValue(model)));
 
-			response.EnsureSuccessStatusCode(); //TODO
+            var requestContent = ResourceRootCreate
+                .FromAttributes(resourceType, attributes)
+                .ToHttpContent();
+            var response = await HttpClient.PostAsync(resourceType, requestContent);
 
-			var locationHeader = response.Headers.Location.ToString();
-	        var idStr = locationHeader.Substring(locationHeader.Length - 36, 36);
-            var id = Guid.Parse(idStr);
+            response.EnsureSuccessStatusCode();
+            id = response.GetResourceId();
 
-			State.Put(id, new Resource
-	        {
-		        Id = id,
-		        Type = resourceCreate.Type,
-		        Attributes = resourceCreate.Attributes
-	        });
-	        return id;
+            model = CreateModel(modelType, id);
+            Cache.Update(id, model);
+            ResourceState[id] = new Resource
+            {
+                Id = id,
+                Type = resourceType,
+                Attributes = attributes
+            };
+
+            return model;
         }
 
         public async Task<TModel> Get<TModel>(Guid id)
+            where TModel : class
         {
-            //TODO check cache?
-            var resource = State.Get(id);
-            if (resource == null)
-			{
-				var resourceType = TypeLookup[typeof(TModel)];
-				var response = await HttpClient.GetAsync($"{resourceType}/{id}");
-				if (response.StatusCode == HttpStatusCode.NotFound)
-				{
-					return default(TModel); // null
-				}
-				response.EnsureSuccessStatusCode();
-				var contentString = await response.Content.ReadAsStringAsync();
-				var resourceRoot = JsonConvert.DeserializeObject<ResourceRootSingle>(contentString);
-				State.Put(id, resourceRoot.Data);
-			}
+            ThrowIfDisposed();
 
-            // TODO: cache these so we're not creating a new one on every get
-            return CreateModel<TModel>(id);
+            var model = Cache.Retrieve(id);
+            if (model != null)
+            {
+                return (TModel)model;
+            }
+
+            var request = ModelRegistry.CreateGetRequest<TModel>(id);
+            var response = await HttpClient.SendAsync(request);
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return default(TModel); // null
+            }
+            response.EnsureSuccessStatusCode();
+
+            var contentString = await response.Content.ReadAsStringAsync();
+            var root = JsonConvert.DeserializeObject<ResourceRootSingle>(contentString);
+
+            model = CreateModel<TModel>(id);
+            Cache.Update(id, model);
+            ResourceState[id] = root.Data;
+
+            return (TModel)model;
         }
-		
-		public Task Delete<TModel>(TModel model)
-		{
-			PropertyInfo idPropInfo;
-			if (!IdLookup.TryGetValue(typeof(TModel), out idPropInfo))
-			{
-				throw new Exception($"{typeof(TModel).FullName} is not a manged model");
-			}
 
-			var idVal = (Guid)idPropInfo.GetValue(model);
-			return Delete<TModel>(idVal);
-		}
-
-		public async Task Delete<TModel>(Guid id)
-		{
-			var resourceType = TypeLookup[typeof (TModel)];
-			var response = await HttpClient.DeleteAsync($"{resourceType}/{id}");
-			response.EnsureSuccessStatusCode();
-			State.Evict(id);
-		}
-
-        private TModel CreateModel<TModel>(Guid id)
+        public async Task Update<TModel>(TModel model) where TModel : class
         {
-            return (TModel)Activator.CreateInstance(typeof(TModel), id, this);
+            ThrowIfDisposed();
+
+            var id = ModelRegistry.GetModelId(model);
+            var resourceType = ModelRegistry.GetResourceType<TModel>();
+
+            PatchContext context;
+            if (!PatchContexts.TryGetValue(id, out context))
+            {
+                return;
+            }
+
+            Task.WaitAll(context.GetTransientReferences().Select(async kvp =>
+            {
+                var rltnName = kvp.Key;
+                var rltnId = kvp.Value;
+
+                var transientModel = Cache.Retrieve(rltnId);
+
+                var transientModelType = transientModel.GetType();
+                transientModel = await Create(transientModelType, transientModel);
+                Cache.Remove(rltnId);
+                var transientModelId = ModelRegistry.GetModelId(transientModel);
+                var transientResourceType = ModelRegistry.GetResourceType(transientModelType);
+
+                context.SetReference(
+                    rltnName,
+                    transientModelId,
+                    transientResourceType,
+                    true);
+            }).ToArray());
+
+            var patchResource = context.Resource;
+            var request = new HttpRequestMessage(new HttpMethod("PATCH"), $"{resourceType}/{id}")
+            {
+                Content = ResourceRootSingle.FromResource(patchResource)
+                    .ToHttpContent()
+            };
+
+            var response = await HttpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            Resource resource;
+            if (ResourceState.TryGetValue(id, out resource))
+            {
+                // this updateds the locally-cached resource
+                // TODO: I think we need a better solution here
+                if (patchResource.Attributes != null)
+                {
+                    resource.Attributes.Merge(patchResource.Attributes, new JsonMergeSettings
+                    {
+                        MergeNullValueHandling = MergeNullValueHandling.Merge,
+                        MergeArrayHandling = MergeArrayHandling.Replace
+                    });
+                }
+                patchResource.Relationships?.Each(kvp => resource.GetRelationships()[kvp.Key] = kvp.Value);
+            }
+            PatchContexts.Remove(id);
+        }
+
+        public Task Delete<TModel>(TModel model)
+            where TModel : class
+        {
+            ThrowIfDisposed();
+
+            var id = ModelRegistry.GetModelId(model);
+            return Delete<TModel>(id);
+        }
+
+        public async Task Delete<TModel>(Guid id)
+            where TModel : class
+        {
+            ThrowIfDisposed();
+
+            var resourceType = ModelRegistry.GetResourceType<TModel>();
+            var response = await HttpClient.DeleteAsync($"{resourceType}/{id}");
+            response.EnsureSuccessStatusCode();
+
+            Cache.Remove(id);
+            ResourceState.Remove(id);
+            PatchContexts.Remove(id);
         }
 
         public TAttr GetAttribute<TModel, TAttr>(Guid id, string attrName)
+            where TModel : class
         {
-            var resource = State.Get(id);
-            if (resource == null)
+            ThrowIfDisposed();
+
+            // first check the patch context
+            PatchContext context;
+            if (PatchContexts.TryGetValue(id, out context) && context.ContainsAttribute(attrName))
             {
-                //TODO: something has gone wrong
-                return default(TAttr);
+                return context.GetAttribute<TAttr>(attrName);
             }
 
-            JToken valueToken;
-            if (resource.Attributes.TryGetValue(attrName, out valueToken))
+            // then check cached resources
+            JToken jValue;
+            Resource resource;
+            if (ResourceState.TryGetValue(id, out resource) && resource.Attributes.TryGetValue(attrName, out jValue))
             {
-                return valueToken.Value<TAttr>();
+                return jValue.Value<TAttr>();
             }
             return default(TAttr);
         }
 
         public void SetAttribute<TModel, TAttr>(Guid id, string attrName, TAttr value)
+            where TModel : class
         {
-            //TODO
+            ThrowIfDisposed();
+
+            GetPatchContext<TModel>(id).SetAttriute(attrName, value);
+        }
+
+        public TRltn GetReference<TModel, TRltn>(Guid id, string attrName)
+            where TModel : class
+            where TRltn : class
+        {
+            ThrowIfDisposed();
+
+            //TODO: check patch context for delta rltn
+
+            Resource resource;
+            if (ResourceState.TryGetValue(id, out resource))
+            {
+                Relationship relationship;
+                if (resource.Relationships != null && resource.Relationships.TryGetValue(attrName, out relationship))
+                {
+                    var rltnData = relationship.Data;
+                    if (rltnData?.Type != JTokenType.Object)
+                    {
+                        throw new Exception();
+                    }
+
+                    var rltnId = rltnData.ToObject<ResourceIdentifier>();
+                    return Get<TRltn>(rltnId.Id).GetAwaiter().GetResult();
+                }
+
+                return default(TRltn);
+            }
+
+            throw new Exception();
+        }
+
+        public void SetReference<TModel, TRltn>(Guid id, string attrName, TRltn rltn)
+            where TModel : class
+            where TRltn : class
+        {
+            ThrowIfDisposed();
+
+            var rltnId = ModelRegistry.GetModelId(rltn);
+            var rltnType = ModelRegistry.GetResourceType<TRltn>();
+
+            var context = GetPatchContext<TModel>(id);
+            var persisted = rltnId != Guid.Empty;
+            if (!persisted)
+            {
+                rltnId = context.GetReference(attrName) ?? Guid.NewGuid();
+            }
+
+            context.SetReference(
+                attrName,
+                rltnId,
+                rltnType,
+                persisted);
+            Cache.Update(rltnId, rltn);
+        }
+
+        public TEnum GetEnumerable<TModel, TEnum, TRltn>(Guid id, string attrName)
+            where TModel : class
+            where TEnum : IEnumerable<TRltn>
+            where TRltn : class
+        {
+            return default(TEnum);
+        }
+
+        public void SetEnumerable<TModel, TEnum, TRltn>(Guid id, string attrName, TEnum value)
+            where TModel : class
+            where TEnum : IEnumerable<TRltn>
+            where TRltn : class
+        {
+        } 
+
+        private TModel CreateModel<TModel>(Guid id)
+            where TModel : class
+        {
+            return (TModel) CreateModel(typeof(TModel), id);
+        }
+
+        private object CreateModel(Type type, Guid id)
+        {
+            return Activator.CreateInstance(type, id, this);
+        }
+
+        // wrap this in a PatchContext 
+        private PatchContext GetPatchContext<TModel>(Guid id)
+        {
+            PatchContext context;
+            if (!PatchContexts.TryGetValue(id, out context))
+            {
+                var resourceType = ModelRegistry.GetResourceType<TModel>();
+                var resource = new Resource { Id = id, Type = resourceType };
+                context = new PatchContext(resource);
+                PatchContexts[id] = context;
+            }
+            return context;
+        }
+
+        private void ThrowIfDisposed()
+        {
+            if (Disposed)
+            {
+                throw new Exception("Session disposed");
+            }
         }
     }
 }

@@ -11,8 +11,8 @@ namespace RedArrow.Jsorm
         public PropertyDefinition IdPropDef { get; private set; }
 
         public IEnumerable<PropertyDefinition> MappedAttributes { get; }
-        public IEnumerable<PropertyDefinition> MappedHasOne { get; }
-        public IEnumerable<PropertyDefinition> MappedHasMany { get; }
+        public IEnumerable<PropertyDefinition> MappedHasOnes { get; }
+        public IEnumerable<PropertyDefinition> MappedHasManys { get; }
 
         private TypeDefinition ModelTypeDef { get; }
         public TypeReference ModelTypeRef => ModelTypeDef;
@@ -31,8 +31,8 @@ namespace RedArrow.Jsorm
             GetMappedIdProperty();
 
             MappedAttributes = GetMappedProperties(Constants.Attributes.Property);
-            //MappedHasOne = GetMappedProperties(Map, "_referenceMaps");
-            //MappedHasMany = GetMappedProperties(Map, "_collectionMaps");
+            MappedHasOnes = GetMappedProperties(Constants.Attributes.HasOne);
+            MappedHasManys = GetMappedProperties(Constants.Attributes.HasMany);
         }
 
         public void AddSessionField(TypeDefinition sessionTypeDef)

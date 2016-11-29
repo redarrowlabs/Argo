@@ -7,7 +7,7 @@
             return new FluentConfigurator();
         }
 
-        public static IFluentConfigurator Configure(SessionConfiguration configuration)
+        public static IFluentConfigurator Configure(SessionFactoryConfiguration configuration)
         {
             return new FluentConfigurator(configuration);
         }

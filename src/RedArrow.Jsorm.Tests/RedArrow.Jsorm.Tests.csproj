@@ -46,24 +46,12 @@
       <HintPath>..\packages\Microsoft.Win32.Primitives.4.0.1\lib\net46\Microsoft.Win32.Primitives.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Mono.Cecil, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
-      <HintPath>..\packages\FodyCecil.1.29.4\lib\net40\Mono.Cecil.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Mono.Cecil.Mdb, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
-      <HintPath>..\packages\FodyCecil.1.29.4\lib\net40\Mono.Cecil.Mdb.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Mono.Cecil.Pdb, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
-      <HintPath>..\packages\FodyCecil.1.29.4\lib\net40\Mono.Cecil.Pdb.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Mono.Cecil.Rocks, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
-      <HintPath>..\packages\FodyCecil.1.29.4\lib\net40\Mono.Cecil.Rocks.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Moq, Version=4.5.28.0, Culture=neutral, PublicKeyToken=69f491c39445e920, processorArchitecture=MSIL">
       <HintPath>..\packages\Moq.4.5.28\lib\net45\Moq.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Ploeh.AutoFixture, Version=3.50.2.0, Culture=neutral, PublicKeyToken=b24654c590009d4f, processorArchitecture=MSIL">
@@ -125,17 +113,11 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
-    <Compile Include="Config\ModelConfigurationTests.cs" />
-    <Compile Include="Config\SessionConfigurationTests.cs" />
+    <Compile Include="FakeResponseHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="WeaverTestFixture.cs" />
-    <Compile Include="WeaverTests.cs" />
+    <Compile Include="Session\SessionTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AssemblyToWeave\AssemblyToWeave.csproj">
-      <Project>{2aa3dfdf-f71d-4ace-bfd5-0100ec753bc8}</Project>
-      <Name>AssemblyToWeave</Name>
-    </ProjectReference>
     <ProjectReference Include="..\RedArrow.Jsorm.Fody\RedArrow.Jsorm.Fody.csproj">
       <Project>{bd5259a0-0735-456a-9b93-c665aa0a3353}</Project>
       <Name>RedArrow.Jsorm.Fody</Name>
@@ -144,10 +126,17 @@
       <Project>{f540b5ca-b7c2-4799-9eb2-b5401bd1f28c}</Project>
       <Name>RedArrow.Jsorm</Name>
     </ProjectReference>
+    <ProjectReference Include="..\WovenByFody\WovenByFody.csproj">
+      <Project>{2aa3dfdf-f71d-4ace-bfd5-0100ec753bc8}</Project>
+      <Name>WovenByFody</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Config\" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

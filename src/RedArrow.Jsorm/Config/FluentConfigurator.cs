@@ -1,5 +1,4 @@
-﻿using RedArrow.Jsorm.Cache;
-using RedArrow.Jsorm.Session;
+﻿using RedArrow.Jsorm.Session;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -13,25 +12,21 @@ namespace RedArrow.Jsorm.Config
         IRemoteCreator,
         IRemoteConfigure
     {
-        private IList<Action<ModelConfiguration>> ModelConfigurators { get; }
+        private IList<Action<ModelLocator>> ModelConfigurators { get; }
 
         private Func<HttpClient> ClientCreator { get; set; }
         private IList<Action<HttpClient>> ClientConfigurators { get; }
+		
+        private SessionFactoryConfiguration SessionFactoryConfiguration { get; }
 
-        private Func<ICacheProvider> ModelRegistryBuilder { get; set; }
+        internal FluentConfigurator()
+            : this(new SessionFactoryConfiguration()) { }
 
-        internal SessionConfiguration SessionConfiguration { get; }
-
-        public FluentConfigurator()
-            : this(new SessionConfiguration()) { }
-
-        public FluentConfigurator(SessionConfiguration config)
+        internal FluentConfigurator(SessionFactoryConfiguration config)
         {
-            ModelConfigurators = new List<Action<ModelConfiguration>>();
-
+            ModelConfigurators = new List<Action<ModelLocator>>();
             ClientConfigurators = new List<Action<HttpClient>>();
-
-            SessionConfiguration = config;
+            SessionFactoryConfiguration = config;
         }
 
         public IModelConfigurator Models()
@@ -39,18 +34,12 @@ namespace RedArrow.Jsorm.Config
             return this;
 		}
 
-		public IModelConfigurator Configure(Action<ModelConfiguration> configureModel)
+		public IModelConfigurator Configure(Action<ModelLocator> configureModel)
 		{
 			ModelConfigurators.Add(configureModel);
 			return this;
 		}
-
-		//public FluentConfigurator Cache(Func<ICacheProvider> modelRegistry)
-		//{
-		//    ModelRegistryBuilder = modelRegistry;
-		//    return this;
-		//}
-
+		
 		public IRemoteCreator Remote()
         {
             return this;
@@ -68,20 +57,20 @@ namespace RedArrow.Jsorm.Config
             return this;
         }
 
-        public SessionConfiguration BuildConfiguration()
+        public SessionFactoryConfiguration BuildFactoryConfiguration()
         {
             // load all the models
-            var modelConfig = new ModelConfiguration();
+            var modelConfig = new ModelLocator();
             foreach (var builder in ModelConfigurators)
             {
                 builder(modelConfig);
             }
 
             // translate model attributes to session config
-            modelConfig.Configure(SessionConfiguration);
+            modelConfig.Configure(SessionFactoryConfiguration);
 
             // build HttpClient factory
-            SessionConfiguration.HttpClientFactory = () =>
+            SessionFactoryConfiguration.HttpClientFactory = () =>
             {
                 var client = (ClientCreator ?? (() => new HttpClient()))();
                 client.DefaultRequestHeaders
@@ -94,14 +83,13 @@ namespace RedArrow.Jsorm.Config
                 }
                 return client;
             };
-            //SessionConfiguration.CacheProvider = ModelRegistryBuilder();
 
-            return SessionConfiguration;
+            return SessionFactoryConfiguration;
         }
 
         public ISessionFactory BuildSessionFactory()
         {
-            return BuildConfiguration()
+            return BuildFactoryConfiguration()
                 .BuildSessionFactory();
         }
     }

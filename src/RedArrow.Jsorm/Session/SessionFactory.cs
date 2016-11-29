@@ -1,47 +1,29 @@
-﻿using RedArrow.Jsorm.Config;
+﻿using RedArrow.Jsorm.Config.Model;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
-using System.Reflection;
+using RedArrow.Jsorm.Cache;
+using RedArrow.Jsorm.Session.Registry;
 
 namespace RedArrow.Jsorm.Session
 {
     public class SessionFactory : ISessionFactory
     {
-        internal IDictionary<Type, string> TypeLookup { get; }
-        internal IDictionary<Type, PropertyInfo> IdLookup { get; }
-        internal ILookup<Type, PropertyConfiguration> AttributeLookup { get; }
-        //private ICacheProvider CacheProvider { get; }
-
         private Func<HttpClient> HttpClientFactory { get; }
+        private IEnumerable<ModelConfiguration> ModelConfigurations { get; }
 
-        internal SessionFactory(
-            Func<HttpClient> httpClientFactory,
-            IDictionary<Type, string> typeLookup,
-            IDictionary<Type, PropertyInfo> idLookup,
-            ILookup<Type, PropertyConfiguration> attributeLookup)
+        internal SessionFactory(Func<HttpClient> httpClientFactory, IEnumerable<ModelConfiguration> modelConfigurations)
         {
             HttpClientFactory = httpClientFactory;
-            TypeLookup = typeLookup;
-            IdLookup = idLookup;
-            AttributeLookup = attributeLookup;
-            //CacheProvider = cacheProvider;
+            ModelConfigurations = modelConfigurations;
         }
-
-        //public void Register(Type modelType)
-        //{
-        //    CacheProvider.Register(modelType);
-        //}
 
         public ISession CreateSession()
         {
-            //TODO
             return new Session(
                 HttpClientFactory,
-                TypeLookup,
-                IdLookup,
-                AttributeLookup);
+                new BasicCacheProvider(),
+                new ModelRegistry(ModelConfigurations));
         }
     }
 }

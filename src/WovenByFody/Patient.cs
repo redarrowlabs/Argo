@@ -1,7 +1,7 @@
-﻿using RedArrow.Jsorm.Attributes;
-using System;
+﻿using System;
+using RedArrow.Jsorm.Attributes;
 
-namespace AssemblyToWeave
+namespace WovenByFody
 {
     [Model("integration-test-patient")]
     public class Patient
@@ -21,6 +21,7 @@ namespace AssemblyToWeave
         [Property]
         public decimal AccountBalance { get; set; }
 
+        [HasOne]
         public Provider Provider { get; set; }
     }
 }
