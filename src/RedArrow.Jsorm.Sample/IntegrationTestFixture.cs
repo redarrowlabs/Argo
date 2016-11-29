@@ -14,7 +14,7 @@ namespace RedArrow.Jsorm.Sample
 
         public IntegrationTestFixture()
         {
-            using (var authClient = new HttpClient { BaseAddress = new Uri($"{Host}/account/") })
+            using (var authClient = new HttpClient { BaseAddress = new Uri($"{Host}/security/") })
             {
                 var reqBody = new StringContent(JsonConvert.SerializeObject(new
                 {
@@ -23,7 +23,7 @@ namespace RedArrow.Jsorm.Sample
                     email = "ral.titan.shared@gmail.com",
                     password = "Password$$11"
                 }), Encoding.UTF8, "application/json");
-                var response = authClient.PostAsync("auth/login", reqBody).GetAwaiter().GetResult();
+                var response = authClient.PostAsync("login", reqBody).GetAwaiter().GetResult();
 
                 response.EnsureSuccessStatusCode();
 

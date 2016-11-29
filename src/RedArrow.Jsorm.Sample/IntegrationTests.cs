@@ -156,8 +156,8 @@ namespace RedArrow.Jsorm.Sample
 	        {
 	            var patient = new Patient
 	            {
-	                FirstName = "Marvin",
-	                LastName = "Engen"
+	                FirstName = "Joe",
+	                LastName = "King"
 	            };
 
 	            patient = await session.Create(patient);
@@ -170,11 +170,11 @@ namespace RedArrow.Jsorm.Sample
 	        {
 	            var patient = await session.Get<Patient>(crossSessionPatientId);
 
-	            patient.FirstName = "Marv";
+	            patient.FirstName = "Joseph";
 	            patient.Provider = new Provider
 	            {
-	                FirstName = "Peggy",
-	                LastName = "Engen"
+	                FirstName = "Kerry",
+	                LastName = "Oki"
 	            };
 
 	            await session.Update(patient);
@@ -187,6 +187,13 @@ namespace RedArrow.Jsorm.Sample
 	            var patient = await session.Get<Patient>(crossSessionPatientId);
 
                 Assert.Equal(crossSessionProviderId, patient.Provider.Id);
+	        }
+
+            // cleanup
+	        using (var session = sessionFactory.CreateSession())
+	        {
+	            await session.Delete<Patient>(crossSessionPatientId);
+	            await session.Delete<Provider>(crossSessionProviderId);
 	        }
         }
     }
