@@ -20,7 +20,10 @@ namespace RedArrow.Jsorm.Extensions
                     .Where(has1 => has1.Eager)
                     .Select(has1 => has1.AttributeName);
             //.Concat(config.HasManyProperties.Values...
-            queryParams.Add($"include={string.Join(",", eagerRltns)}");
+            if (eagerRltns.Any())
+            {
+                queryParams.Add($"include={string.Join(",", eagerRltns)}");
+            }
 
             //TODO: add other query params for other api features
 
