@@ -1,8 +1,10 @@
 ﻿using RedArrow.Jsorm.Session;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading.Tasks;
 
 namespace RedArrow.Jsorm.Config
 {
@@ -16,7 +18,8 @@ namespace RedArrow.Jsorm.Config
 
         private Func<HttpClient> ClientCreator { get; set; }
         private IList<Action<HttpClient>> ClientConfigurators { get; }
-		
+		private IList<Func<HttpClient, Task>> AsyncClientConfigurators { get; }
+
         private SessionFactoryConfiguration SessionFactoryConfiguration { get; }
 
         internal FluentConfigurator()
@@ -26,6 +29,8 @@ namespace RedArrow.Jsorm.Config
         {
             ModelConfigurators = new List<Action<ModelLocator>>();
             ClientConfigurators = new List<Action<HttpClient>>();
+            AsyncClientConfigurators = new List<Func<HttpClient, Task>>();
+
             SessionFactoryConfiguration = config;
         }
 
@@ -57,6 +62,12 @@ namespace RedArrow.Jsorm.Config
             return this;
         }
 
+        public IRemoteConfigure ConfigureAsync(Func<HttpClient, Task> configureClient)
+        {
+            AsyncClientConfigurators.Add(configureClient);
+            return this;
+        }
+
         public SessionFactoryConfiguration BuildFactoryConfiguration()
         {
             // load all the models
@@ -73,14 +84,19 @@ namespace RedArrow.Jsorm.Config
             SessionFactoryConfiguration.HttpClientFactory = () =>
             {
                 var client = (ClientCreator ?? (() => new HttpClient()))();
-                client.DefaultRequestHeaders
+
+                client
+                    .DefaultRequestHeaders
                     .Accept
-                    .Add(MediaTypeWithQualityHeaderValue
-                        .Parse("application/vnd.api+json"));
+                    .Add(MediaTypeWithQualityHeaderValue.Parse("application/vnd.api+json"));
+                
                 foreach (var configure in ClientConfigurators)
                 {
                     configure(client);
                 }
+
+                Task.WaitAll(AsyncClientConfigurators.Select(x => x.Invoke(client)).ToArray());
+
                 return client;
             };
 
