@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{CCF8A55F-64F2-4305-ABAD-2A3DF0FD3FE0}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>RedArrow.Jsorm.Client</RootNamespace>
+    <AssemblyName>RedArrow.Jsorm.Client</AssemblyName>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;LIBLOG_PORTABLE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- A reference to the entire .NET Framework is automatically included -->
+    <None Include="project.json" />
+    <None Include="RedArrow.Jsorm.Client.nuspec" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Cache\BasicCacheProvider.cs" />
+    <Compile Include="Cache\ICacheProvider.cs" />
+    <Compile Include="Config\FluentConfigurator.cs" />
+    <Compile Include="Config\Fluently.cs" />
+    <Compile Include="Config\IFluentConfigurator.cs" />
+    <Compile Include="Config\IModelConfigurator.cs" />
+    <Compile Include="Config\IRemoteConfigurator.cs" />
+    <Compile Include="Config\ModelScanner.cs" />
+    <Compile Include="Config\Model\AttributeConfiguration.cs" />
+    <Compile Include="Config\Model\HasManyConfiguration.cs" />
+    <Compile Include="Config\Model\HasOneConfiguration.cs" />
+    <Compile Include="Config\Model\ModelConfiguration.cs" />
+    <Compile Include="Config\SessionFactoryConfiguration.cs" />
+    <Compile Include="Extensions\EnumerableExtensions.cs" />
+    <Compile Include="Extensions\ExpressionExtensions.cs" />
+    <Compile Include="Extensions\HttpClientExtensions.cs" />
+    <Compile Include="Extensions\HttpResponseMessage.cs" />
+    <Compile Include="Extensions\ModelConfigurationExtensions.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
+    <Compile Include="Extensions\TypeExtensions.cs" />
+    <Compile Include="Infrastructure\JsormException.cs" />
+    <Compile Include="Infrastructure\ModelNotRegisteredException.cs" />
+    <Compile Include="Infrastructure\ModelTypeMismatchException.cs" />
+    <Compile Include="JsonModels\BaseResourceRoot.cs" />
+    <Compile Include="JsonModels\Error.cs" />
+    <Compile Include="JsonModels\ErrorLink.cs" />
+    <Compile Include="JsonModels\ErrorSource.cs" />
+    <Compile Include="JsonModels\IMetaDecorated.cs" />
+    <Compile Include="JsonModels\JModel.cs" />
+    <Compile Include="JsonModels\Link.cs" />
+    <Compile Include="JsonModels\Relationship.cs" />
+    <Compile Include="JsonModels\Resource.cs" />
+    <Compile Include="JsonModels\ResourceCreate.cs" />
+    <Compile Include="JsonModels\ResourceIdentifier.cs" />
+    <Compile Include="JsonModels\ResourceRootCollection.cs" />
+    <Compile Include="JsonModels\ResourceRootCreate.cs" />
+    <Compile Include="JsonModels\ResourceRootSingle.cs" />
+    <Compile Include="LibLog\LibLog.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Session\ISession.cs" />
+    <Compile Include="Session\ISessionFactory.cs" />
+    <Compile Include="Session\Patch\PatchContext.cs" />
+    <Compile Include="Session\Registry\IModelRegistry.cs" />
+    <Compile Include="Session\Registry\ModelRegistry.cs" />
+    <Compile Include="Session\Session.cs" />
+    <Compile Include="Session\SessionFactory.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RedArrow.Jsorm\RedArrow.Jsorm.csproj">
+      <Project>{f540b5ca-b7c2-4799-9eb2-b5401bd1f28c}</Project>
+      <Name>RedArrow.Jsorm</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
