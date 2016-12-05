@@ -162,7 +162,7 @@ namespace RedArrow.Jsorm.Client.Session
                 return;
             }
 
-            Task.WaitAll(context.GetTransientReferences().Select(async kvp =>
+            await Task.WhenAll(context.GetTransientReferences().Select(async kvp =>
             {
                 var rltnName = kvp.Key;
                 var rltnId = kvp.Value;

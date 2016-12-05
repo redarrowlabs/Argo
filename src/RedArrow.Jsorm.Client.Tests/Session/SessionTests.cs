@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using WovenByFody;
 using Xunit;
 
-namespace RedArrow.Jsorm.Fody.Client.Tests.Session
+namespace RedArrow.Jsorm.Client.Tests.Session
 {
     public class SessionTests
     {

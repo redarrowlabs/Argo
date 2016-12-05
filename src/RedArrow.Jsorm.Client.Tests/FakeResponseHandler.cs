@@ -4,7 +4,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace RedArrow.Jsorm.Fody.Client.Tests
+namespace RedArrow.Jsorm.Client.Tests
 {
     public class FakeResponseHandler : DelegatingHandler
     {
