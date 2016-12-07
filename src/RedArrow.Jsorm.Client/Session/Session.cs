@@ -64,15 +64,15 @@ namespace RedArrow.Jsorm.Client.Session
             response.EnsureSuccessStatusCode();
             var id = response.GetResourceId();
 
-            var model = CreateModel<TModel>(id);
-            Cache.Update(id, model);
             ResourceState[id] = new Resource
             {
                 Id = id,
                 Type = resourceType
             };
+			var model = CreateModel<TModel>(id);
+			Cache.Update(id, model);
 
-            return model;
+			return model;
         }
 
         public async Task<TModel> Create<TModel>(TModel model)
@@ -108,14 +108,14 @@ namespace RedArrow.Jsorm.Client.Session
             response.EnsureSuccessStatusCode();
             id = response.GetResourceId();
 
-            model = CreateModel(modelType, id);
+			ResourceState[id] = new Resource
+			{
+				Id = id,
+				Type = resourceType,
+				Attributes = attributes
+			};
+			model = CreateModel(modelType, id);
             Cache.Update(id, model);
-            ResourceState[id] = new Resource
-            {
-                Id = id,
-                Type = resourceType,
-                Attributes = attributes
-            };
 
             return model;
         }
@@ -142,9 +142,9 @@ namespace RedArrow.Jsorm.Client.Session
             var contentString = await response.Content.ReadAsStringAsync();
             var root = JsonConvert.DeserializeObject<ResourceRootSingle>(contentString);
 
-            model = CreateModel<TModel>(id);
+			ResourceState[id] = root.Data;
+			model = CreateModel<TModel>(id);
             Cache.Update(id, model);
-            ResourceState[id] = root.Data;
 
             return (TModel)model;
         }
@@ -237,15 +237,8 @@ namespace RedArrow.Jsorm.Client.Session
             where TModel : class
         {
             ThrowIfDisposed();
-
-            // first check the patch context
-            PatchContext context;
-            if (PatchContexts.TryGetValue(id, out context) && context.ContainsAttribute(attrName))
-            {
-                return context.GetAttribute<TAttr>(attrName);
-            }
-
-            // then check cached resources
+			
+            // check cached resources
             JToken jValue;
             Resource resource;
             if (ResourceState.TryGetValue(id, out resource)

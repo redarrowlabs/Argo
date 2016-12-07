@@ -36,7 +36,7 @@ namespace RedArrow.Jsorm
 
                 if (backingField == null)
                 {
-                    throw new Exception($"Failed to load backing field for property {propertyDef.FullName}");
+                    throw new Exception($"Failed to load backing field for property {propertyDef?.FullName}");
                 }
 
                 // find the attrName, if there is one
@@ -47,49 +47,23 @@ namespace RedArrow.Jsorm
 
                 LogInfo($"\tWeaving {propertyDef} => {attrName}");
 
-                WeaveAttrGetter(context, backingField, propertyDef, sessionGetAttrGeneric, attrName);
+                WeaveAttrGetter(backingField, propertyDef);
                 WeaveAttrSetter(context, backingField, propertyDef, sessionSetAttrGeneric, attrName);
             }
         }
 
         private void WeaveAttrGetter(
-            ModelWeavingContext context,
             FieldReference backingField,
-            PropertyDefinition propertyDef,
-            MethodReference sessionGetAttrGeneric,
-            string attrName)
+            PropertyDefinition propertyDef)
         {
-            // supply generic type arguments to template
-            var sessionGetRltnTyped = SupplyGenericArgs(sessionGetAttrGeneric, context.ModelTypeRef, propertyDef.GetMethod.ReturnType);
-
             // get
             // {
-            //   if (this.__jsorm__generated_session != null)
-            //   {
-            //     this.<[PropName]>k__BackingField = this.__jsorm__generated_session.GetRelationship<[ModelType], [ReturnType]>(this.Id, "[AttrName]");
-            //   }
             //   return this.<[PropName]>k__BackingField;
             // }
             propertyDef.GetMethod.Body.Instructions.Clear();
             var proc = propertyDef.GetMethod.Body.GetILProcessor();
-
-            var returnField = proc.Create(OpCodes.Ldarg_0);
-
+			
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-            proc.Emit(OpCodes.Ldfld, context.SessionField); // load __jsorm__generated_session field from 'this'
-            proc.Emit(OpCodes.Brfalse, returnField); // if __jsorm__generated_session != null continue, else returnField
-
-            proc.Emit(OpCodes.Ldarg_0); // load 'this' to reference backing field
-
-            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
-            proc.Emit(OpCodes.Ldfld, context.SessionField); // load __jsorm__generated_session field from 'this'
-            proc.Emit(OpCodes.Ldarg_0); // load 'this'
-            proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
-            proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack
-            proc.Emit(OpCodes.Callvirt, context.ImportReference(sessionGetRltnTyped)); // invoke session.GetAttribute(..)
-            proc.Emit(OpCodes.Stfld, backingField); // store return value in 'this'.<backing field>
-
-            proc.Append(returnField); // load 'this' onto stack
             proc.Emit(OpCodes.Ldfld, backingField); // load 'this'.<backing field>
             proc.Emit(OpCodes.Ret); // return
         }
@@ -101,32 +75,39 @@ namespace RedArrow.Jsorm
             MethodReference sessionSetAttrGeneric,
             string attrName)
         {
-            // supply generic type arguments to template
-            var sessionSetRltnTyped = SupplyGenericArgs(sessionSetAttrGeneric, context.ModelTypeRef, propertyDef.GetMethod.ReturnType);
+	        var returnType = propertyDef.GetMethod.ReturnType;
+
+			// supply generic type arguments to template
+			var sessionSetRltnTyped = SupplyGenericArgs(sessionSetAttrGeneric, context.ModelTypeRef, returnType);
 
             propertyDef.SetMethod.Body.Instructions.Clear();
 
-            // set
-            // {
-            //     this.<[PropName]>k__BackingField = value;
-            //     if (this.__jsorm__generated_session != null)
-            //     {
-            //         this.__jsorm__generated_session.SetRelationship<[ModelType], [ReturnType]>(this.Id, "[AttrName]", this.<[PropName]>k__BackingField);
-            //     }
-            // }
-            var proc = propertyDef.SetMethod.Body.GetILProcessor();
+			// set
+			// {
+			//     if (this.__jsorm__generated_session != null && this.<[PropName]>k__BackingField != value)
+			//     {
+			//         this.__jsorm__generated_session.SetRelationship<[ModelType], [ReturnType]>(this.Id, "[AttrName]", this.<[PropName]>k__BackingField);
+			//     }
+			//     this.<[PropName]>k__BackingField = value;
+			// }
+			var proc = propertyDef.SetMethod.Body.GetILProcessor();
 
-            var ret = proc.Create(OpCodes.Ret);
-
-            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-            proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
-            proc.Emit(OpCodes.Stfld, backingField); // 'this'.<backing field> = 'value'
+            var endif = proc.Create(OpCodes.Ldarg_0);
 
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
             proc.Emit(OpCodes.Ldfld, context.SessionField); // load __jsorm__generated_session field from 'this'
-            proc.Emit(OpCodes.Brfalse, ret); // if __jsorm__generated_session != null continue, else return
+            proc.Emit(OpCodes.Brfalse_S, endif); // if __jsorm__generated_session != null continue, else return
 
-            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
+	        if (returnType.SupportsCeq() && returnType.IsValueType)
+	        {
+		        proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+		        proc.Emit(OpCodes.Ldfld, backingField); // load __jsorm__generated_session field from 'this'
+		        proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
+				proc.Emit(OpCodes.Ceq); // compare 'this'.<backing field> == 'value' and push result onto stack
+				proc.Emit(OpCodes.Brtrue_S, endif); // if 'this'.<backing field> != 'value' continue, else return
+			}
+
+	        proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
             proc.Emit(OpCodes.Ldfld, context.SessionField); // load __jsorm__generated_session field from 'this'
             proc.Emit(OpCodes.Ldarg_0); // load 'this'
             proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
@@ -134,8 +115,12 @@ namespace RedArrow.Jsorm
             proc.Emit(OpCodes.Ldarg_0); // load 'this'
             proc.Emit(OpCodes.Ldfld, backingField); // load backing field
             proc.Emit(OpCodes.Callvirt, context.ImportReference(sessionSetRltnTyped)); // invoke session.SetAttribute(..)
+			
+			proc.Append(endif); // load 'this' onto stack
+			proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
+			proc.Emit(OpCodes.Stfld, backingField); // 'this'.<backing field> = 'value'
 
-            proc.Append(ret);
+			proc.Emit(OpCodes.Ret); // return
         }
     }
 }

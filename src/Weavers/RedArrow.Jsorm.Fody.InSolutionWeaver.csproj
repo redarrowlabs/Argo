@@ -95,6 +95,9 @@
     <Compile Include="..\RedArrow.Jsorm.Fody\StringExtensions.cs">
       <Link>StringExtensions.cs</Link>
     </Compile>
+    <Compile Include="..\RedArrow.Jsorm.Fody\SupportsCeqChecker.cs">
+      <Link>SupportsCeqChecker.cs</Link>
+    </Compile>
     <Compile Include="..\RedArrow.Jsorm.Fody\TypeDefLoader.cs">
       <Link>TypeDefLoader.cs</Link>
     </Compile>
