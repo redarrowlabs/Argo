@@ -206,7 +206,8 @@ var sessionFactory = Fluently.Configure("http://api.host.com")
 	.Remote()
 		// with Xamarin iOS apps, you may need to provide your own TLS-compatible HttpMessageHandler
 		.Create(() => new HttpClient())
-		// jsorm will run these configuration actions on the HttpClient when a `ISession` is build by the `ISessionFactory`
+		// jsorm will run these configuration actions on the HttpClient
+		// whenever an `ISession` is built by the `ISessionFactory`
 		.Configure(httpClient => httpClient
 		    .DefaultRequestHeaders
 		    .Authorization = new AuthenticationHeaderValue("Bearer", token))
@@ -235,7 +236,6 @@ using (var session = sessionFactory.CreateSession())
 	person = await session.Create(person);
 	// Id was created by the server and populated by the session
 	crossSessionPersonId = person.Id;
-	Assert.NotNull(crossSessionPersonId);
 	Assert.NotEqual(Guid.Empty, crossSessionPersonId);
 }
 // later that day...
@@ -252,7 +252,9 @@ using (var session = sessionFactory.CreateSession())
 	    FirstName = "Keri",
 	    LastName = "Oki"
 	};
-	// first sends POST to create new Friend, then sends a PATCH to update Person FirstName and BestFriend
+	// 1. first send POST to create new Friend
+	// 2. update Person.BestFriend relationship with new Friend.Id
+	// 3. send PATCH to update Person FirstName and BestFriend relationship
 	await session.Update(person);
 }
 // cleaning up...
