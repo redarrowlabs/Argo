@@ -81,6 +81,12 @@ public class Person
 {
     [Id]
     public Guid Id { get; set; }
+	[Property]
+	public string FirstName { get; set; }
+	[Property]
+	public string LastName { get; set; }
+	[HasOne]
+	public Friend BestFriend { get; set; }
 }
 ```
 At a minimum, each model needs an ```[Id]``` defined.  Jsorm will weave this class into:
@@ -88,7 +94,7 @@ At a minimum, each model needs an ```[Id]``` defined.  Jsorm will weave this cla
 [Model]
 public class Person
 {
-    private IModelSession __jsorm__generated_session;
+    private IModelSession __jsorm_session;
 
     [Id]
 	public Guid Id { get; set; }
@@ -96,11 +102,16 @@ public class Person
     public Patient(Guid id, IModelSession session)
     {
         this.Id = id;
-        this.__jsorm__generated_session = session;
+        this.__jsorm_session = session;
+		
+		this.firstName = __jsorm_session.GetAttribute<Person, string>(this.Id, "firstName");
+		this.lastName = __jsorm_session.GetAttribute<Person, string>(this.Id, "lastName");
     }
+	
+	// properties explained below
 }
 ```
-A ctor is added that will be only be used by the session.  This will allow other model properties to lazy-load data from the session.
+A ctor is added that will be only be used by the session.  Notice `BestFriend` marked as `[HasOne]` was not initialized.  Relationships are lazy-loaded by default.  (Configurable eager loading coming soon...)
 
 A basic property:
 ```csharp
@@ -115,10 +126,6 @@ public string FirstName
 {
 	get
 	{
-		if(this.__jsorm_session != null)
-		{
-		    this.firstName = this.__jsorm_session.GetAttribute<Person, string>(this.Id, "firstName");
-		}
 		return this.firstName;
 	}
 	set
@@ -144,10 +151,6 @@ public string FirstName
 {
 	get
 	{
-		if(this.__jsorm_session != null)
-		{
-		    this.firstName = this.__jsorm_session.GetAttribute<Person, string>(this.Id, "first-name");
-		}
 		return this.firstName;
 	}
 	set
@@ -171,10 +174,6 @@ public Friend BestFriend
 {
     get
     {
-        if(this.__jsorm_session != null)
-        {
-            this.bestFriend = this.__jsorm_session.GetReference<Person, Friend>(this.Id, "bestFriend");
-        }
         return this.bestFriend;
     }
     set
