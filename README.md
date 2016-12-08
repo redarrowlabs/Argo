@@ -73,7 +73,7 @@ Advantages:
 Most all ORMs leverage proxies to abstract your POCO from your database.  Unfortunately, the most popular .net proxy implementation, [Castle DynamicProxy](https://github.com/castleproject/Core/blob/master/docs/dynamicproxy.md), will not play nice with Xamarin iOS projects due to its use of `Reflection.Emit` apis, which are not permitted on iOS.  We get around this by modifying the POCO itself at compile time instead of proxying it at runtime.
 
 Maybe the thought of a 3rd party library modifying your code is scary.  Let's see some examples.
-### Examples
+## Examples
 Just show the code, right?  Below are some examples of how jsorm transforms your POCO into a session-aware ORM proxy.
 ```csharp
 [Model]
@@ -89,7 +89,7 @@ public class Person
 	public Friend BestFriend { get; set; }
 }
 ```
-At a minimum, each model needs an ```[Id]``` defined.  Jsorm will weave this class into:
+At a minimum, each model needs an `[Id]` defined.  Jsorm will weave this class into:
 ```csharp
 [Model]
 public class Person
@@ -156,7 +156,7 @@ public string FirstName
 	set
 	{
 		this.firstName = value;
-		if (this.__jsorm_session != null)
+		if (this.__jsorm_session != null && this.firstName != value)
 		{
 			this.__jsorm_session.SetAttribute<Person, string>(this.Id, "first-name", this.firstName);
 		}
@@ -170,16 +170,21 @@ public Friend BestFriend { get; set; }
 will be woven into
 ```csharp
 private Friend bestFriend;
+[HasOne]
 public Friend BestFriend
 {
     get
     {
+		if(this.__jsorm_session != null)
+        {
+            this.bestFriend = this.__jsorm_session.GetReference<Person, Friend>(this.Id, "bestFriend");
+        }
         return this.bestFriend;
     }
     set
     {
         this.bestFriend = value;
-        if(this.__jsorm_session != null)
+        if(this.__jsorm_session != null && this.bestFriend != value)
         {
             this.__jsorm_session.SetReference<Person, Friend>(this.Id, "bestFriend", this.bestFriend);
         }
@@ -191,30 +196,30 @@ With the model delegating to the session, the session can do a lot of cool stuff
  - track property changes for building `PATCH` requests
  - manage lazy-loading relationships via session-managed collections in place of `IEnumerable<T>`
  - linq provider to allow session-managed sorting, paging, and filtering on collections
+ - cache retrieved models for subsequent gets
 
-### Configuring
+## Configuring
 jsorm gives you a pleasent, easy-to-understand configuration api.  If you've worked with [Fluent NHibernate](https://github.com/jagregory/fluent-nhibernate), this should look a little familiar.
 ```csharp
 // the ISessionFactory is the long-lived object you would (ideally) register in your IoC container
 var sessionFactory = Fluently.Configure("http://api.host.com")
 	.Remote()
-		// optionally, if you really want to control how the HttpClient is created each session, you can
+		// with Xamarin iOS apps, you may need to provide your own TLS-compatible HttpMessageHandler
 		.Create(() => new HttpClient())
-		// jsorm will run these configuration actions on the HttpClient for each session
-		// it's up to you to decide how you want to manage authentication
+		// jsorm will run these configuration actions on the HttpClient when a `ISession` is build by the `ISessionFactory`
 		.Configure(httpClient => httpClient
 		    .DefaultRequestHeaders
 		    .Authorization = new AuthenticationHeaderValue("Bearer", token))
-		// or...
+		// and/or...
 		.ConfigureAsync(() => YourTokenManagerInstance.GetAccessTokenAsync())
 	.Models()
 		// tell jsorm where your models are
 		.Configure(scan => scan.AssemblyOf<Person>())
-		// and/or
+		// and/or...
 		.Configure(scan => scan.Assembly(Assembly.GetExecutingAssembly()))
 	.BuildSessionFactory();
 ```
-### Using
+## In Action
 ```csharp
 Guid crossSessionPersonId;
 // ISession is a short-lived state/cache of request/responses
@@ -257,12 +262,13 @@ using (var session = sessionFactory.CreateSession())
     await session.Delete<Person>(crossSessionPersonId);
 }
 ```
-### The Future
-We're still evaluating the long-term roadmap for this project, but initial, tentative ideas:
+## The Future
+We're still evaluating the long-term roadmap for this project, but initial tentative ideas:
 - Linq provider
   - sorting via OrderBy
   - paging via Take
   - filtering via Where
+- Configurable eager loading
 - Cache provider plugins with initial support for [Akavache](https://github.com/akavache/Akavache)
 - server to client eventing/sync push via [Rx.NET](https://github.com/Reactive-Extensions/Rx.NET)
 - your idea could go here...
