@@ -72,30 +72,20 @@ namespace RedArrow.Jsorm
                 .Where(p => p.CustomAttributes.ContainsAttribute(attrFullName))
                 .ToArray();
         }
-
-        public TypeReference ImportReference(TypeDefinition typeDef)
-        {
-            return ModelTypeDef.Module.ImportReference(typeDef);
-        }
-
+		
         public TypeReference ImportReference(TypeReference typeRef)
         {
             return ModelTypeDef.Module.ImportReference(typeRef);
         }
 
-        public MethodReference ImportReference(MethodDefinition methDef)
-        {
-            return ModelTypeDef.Module.ImportReference(methDef);
-        }
-
         public MethodReference ImportReference(MethodReference methRef)
         {
             return ModelTypeDef.Module.ImportReference(methRef);
-        }
+		}
 
-        public MethodReference ImportReference(GenericInstanceMethod genMethDef)
-        {
-            return ModelTypeDef.Module.ImportReference(genMethDef);
-        }
-    }
+		public MethodReference ImportReference(MethodReference methRef, IGenericParameterProvider context)
+		{
+			return ModelTypeDef.Module.ImportReference(methRef, context);
+		}
+	}
 }

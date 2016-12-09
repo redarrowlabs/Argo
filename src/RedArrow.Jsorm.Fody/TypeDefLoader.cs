@@ -9,9 +9,9 @@ namespace RedArrow.Jsorm
         private TypeDefinition _guidTypeDef;
 
         private int _stringComparison_ordinal;
-        private MethodReference _string_equals;
-
-        private TypeDefinition _equalityComparer;
+        private MethodDefinition _string_equals;
+        private TypeDefinition _equalityComparerTypeDef;
+	    private MethodDefinition _object_equals;
 
         private void LoadTypeDefinitions()
         {
@@ -38,7 +38,14 @@ namespace RedArrow.Jsorm
                 .First(x => x.Name == "Ordinal")
                 .Constant;
 
-            _equalityComparer = msCoreAssemblyDef.MainModule.GetType("System.Collections.Generic.EqualityComparer`1");
+            _equalityComparerTypeDef = msCoreAssemblyDef.MainModule.GetType("System.Collections.Generic.EqualityComparer`1");
+
+	        _object_equals = ModuleDefinition
+		        .TypeSystem
+		        .Object
+		        .Resolve()
+		        .Methods
+		        .First(x => x.Name == "Equals" && x.Parameters.Count == 2);
         }
     }
 }

@@ -61,10 +61,11 @@
     <Compile Include="AttributeWeaver.cs" />
     <Compile Include="Extensions\CecilExtensions.cs" />
     <Compile Include="CtorWeaver.cs" />
+    <Compile Include="Extensions\MethodReferenceExtensions.cs" />
     <Compile Include="Extensions\PropertyDefinitionExtensions.cs" />
+    <Compile Include="Extensions\TypeReferenceExtensions.cs" />
     <Compile Include="HasManyWeaver.cs" />
     <Compile Include="HasOneWeaver.cs" />
-    <Compile Include="MethodConfigurator.cs" />
     <Compile Include="ModelWeavingContext.cs" />
     <Compile Include="IdVerifier.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

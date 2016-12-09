@@ -70,14 +70,9 @@ namespace RedArrow.Jsorm
 		    foreach (var attrPropDef in attrPropDefs)
 		    {
 				// supply generic type arguments to template
-				var sessionGetAttrTyped = SupplyGenericArgs(sessionGetAttrGeneric, context.ModelTypeRef, attrPropDef.GetMethod.ReturnType);
-
-				var backingField = attrPropDef
-					?.GetMethod
-					?.Body
-					?.Instructions
-					?.SingleOrDefault(x => x.OpCode == OpCodes.Ldfld)
-					?.Operand as FieldReference;
+			    var sessionGetAttr = sessionGetAttrGeneric.MakeGenericMethod(context.ModelTypeRef, attrPropDef.PropertyType);
+				
+				var backingField = attrPropDef.BackingField();
 
 				if (backingField == null)
 				{
@@ -96,7 +91,11 @@ namespace RedArrow.Jsorm
 				proc.Emit(OpCodes.Ldarg_0); // load 'this'
 				proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
 				proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack
-				proc.Emit(OpCodes.Callvirt, context.ImportReference(sessionGetAttrTyped)); // invoke session.GetAttribute(..)
+				proc.Emit(OpCodes.Callvirt, context.ImportReference(
+					sessionGetAttr,
+					attrPropDef.PropertyType.IsGenericParameter
+						? context.ModelTypeRef
+						: null)); // invoke session.GetAttribute(..)
 				proc.Emit(OpCodes.Stfld, backingField); // store return value in 'this'.<backing field>
 			}
 

@@ -68,14 +68,14 @@ namespace RedArrow.Jsorm
         private void WeaveAttrSetter(
             ModelWeavingContext context,
             FieldReference backingField,
-            PropertyDefinition propertyDef,
+            PropertyDefinition attrPropDef,
             MethodReference sessionSetAttrGeneric,
             string attrName)
         {
 			// supply generic type arguments to template
-			var sessionSetRltnTyped = SupplyGenericArgs(sessionSetAttrGeneric, context.ModelTypeRef, backingField.FieldType);
+			var sessionSetAttr = sessionSetAttrGeneric.MakeGenericMethod(context.ModelTypeRef, attrPropDef.PropertyType);
 
-            propertyDef.SetMethod.Body.Instructions.Clear();
+            attrPropDef.SetMethod.Body.Instructions.Clear();
 
 			// set
 			// {
@@ -85,7 +85,7 @@ namespace RedArrow.Jsorm
 			//     }
 			//     this.<[PropName]>k__BackingField = value;
 			// }
-			var proc = propertyDef.SetMethod.Body.GetILProcessor();
+			var proc = attrPropDef.SetMethod.Body.GetILProcessor();
 
             var endif = proc.Create(OpCodes.Ldarg_0);
 
@@ -101,8 +101,12 @@ namespace RedArrow.Jsorm
             proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
             proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack
             proc.Emit(OpCodes.Ldarg_1); // load 'value'
-            proc.Emit(OpCodes.Callvirt, context.ImportReference(sessionSetRltnTyped)); // invoke session.SetAttribute(..)
-			
+			proc.Emit(OpCodes.Callvirt, context.ImportReference(
+				sessionSetAttr,
+				attrPropDef.PropertyType.IsGenericParameter
+					? context.ModelTypeRef
+					: null)); // invoke session.GetAttribute(..)
+
 			proc.Append(endif); // load 'this' onto stack
 			proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
 			proc.Emit(OpCodes.Stfld, backingField); // 'this'.<backing field> = 'value'
@@ -125,7 +129,7 @@ namespace RedArrow.Jsorm
             else
             {
                 // TODO: find equality method
-                var typeEqualityMethRef = (MethodReference) null;
+	            var typeEqualityMethRef = returnType.EqualityOperator();
                 if (typeEqualityMethRef == null)
                 {
                     if (returnType.SupportsCeq() && returnType.IsValueType)
@@ -135,34 +139,51 @@ namespace RedArrow.Jsorm
                         proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
                         proc.Emit(OpCodes.Ceq); // compare 'this'.<backing field> == 'value' and push result onto stack
                     }
-                    else if (returnType.IsValueType && _equalityComparer != null)
+                    else if (returnType.IsValueType && _equalityComparerTypeDef != null)
                     {
-                        var eqComparer = _equalityComparer.Resolve();
+                        var equalityComparerTypeDef = _equalityComparerTypeDef.Resolve();
 
-                        var returnTypeComparer = context.ImportReference(eqComparer.MakeGenericInstanceType(returnType));
-                        var getDefaultMethRef = context.ImportReference(eqComparer
+                        var returnTypeComparer = context.ImportReference(equalityComparerTypeDef.MakeGenericInstanceType(returnType));
+                        var getDefaultMethRef = context.ImportReference(equalityComparerTypeDef
                             .Properties
                             .Single(prop => prop.Name == "Default").GetMethod);
-                        var equalsMethRef = context.ImportReference(eqComparer
+                        var equalsMethRef = context.ImportReference(equalityComparerTypeDef
                             .Methods
                             .Single(meth => meth.Name == "Equals" && meth.Parameters.Count == 2));
 
                         getDefaultMethRef.DeclaringType = returnTypeComparer;
                         equalsMethRef.DeclaringType = returnTypeComparer;
 
+						proc.Emit(OpCodes.Nop);
                         proc.Emit(OpCodes.Call, getDefaultMethRef);
                         proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
                         proc.Emit(OpCodes.Ldfld, backingField); // load __jsorm__generated_session field from 'this'
                         proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
                         proc.Emit(OpCodes.Callvirt, equalsMethRef);
                     }
+					else if (returnType.IsValueType || returnType.IsGenericParameter)
+					{
+						proc.Emit(OpCodes.Ldarg_0);
+						proc.Emit(OpCodes.Ldfld, backingField);
+						proc.Emit(OpCodes.Box, returnType);
+						proc.Emit(OpCodes.Ldarg_1);
+						proc.Emit(OpCodes.Box, returnType);
+						proc.Emit(OpCodes.Call, context.ImportReference(_object_equals));
+					}
+					else
+					{
+						proc.Emit(OpCodes.Ldarg_0);
+						proc.Emit(OpCodes.Ldfld, backingField);
+						proc.Emit(OpCodes.Ldarg_1);
+						proc.Emit(OpCodes.Call, context.ImportReference(_object_equals));
+					}
                 }
                 else
                 {
                     proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
                     proc.Emit(OpCodes.Ldfld, backingField); // load __jsorm__generated_session field from 'this'
                     proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
-                    proc.Emit(OpCodes.Call, typeEqualityMethRef);
+                    proc.Emit(OpCodes.Call, context.ImportReference(typeEqualityMethRef));
                 }
             }
 
