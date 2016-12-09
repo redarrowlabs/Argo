@@ -1,0 +1,515 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
+using RedArrow.Jsorm.Client.Infrastructure;
+using RedArrow.Jsorm.Client.Session;
+
+namespace RedArrow.Jsorm.Client.Collections.Generic
+{
+    [DebuggerTypeProxy(typeof(DebuggerCollectionProxy<>))]
+    public class RemoteGenericBag<T> : AbstractRemoteCollection, IList<T>, IList
+    {
+        protected IList<T> InternalBag { get; set; }
+        
+        public override bool Empty => InternalBag.Count == 0;
+
+        public bool RowUpdatePossible => false;
+
+        object ICollection.SyncRoot => this;
+
+        bool ICollection.IsSynchronized => false;
+
+        public RemoteGenericBag()
+        {
+        }
+
+        public RemoteGenericBag(ISession session)
+            : base(session)
+        {
+        }
+
+        public RemoteGenericBag(ISession session, IEnumerable<T> items)
+            : base(session)
+        {
+            InternalBag = items as IList<T> ?? new List<T>(items);
+            SetInitialized();
+            IsDirectlyAccessible = true;
+        }
+
+        void ICollection.CopyTo(Array array, int index)
+        {
+            for (var i = index; i < Count; i++)
+            {
+                array.SetValue(this[i], i);
+            }
+        }
+
+        bool IList.IsFixedSize => false;
+
+        int IList.IndexOf(object value)
+        {
+            return IndexOf((T) value);
+        }
+
+        int IList.Add(object value)
+        {
+            return Add((T) value);
+        }
+
+        void IList.Insert(int index, object value)
+        {
+            Insert(index, (T) value);
+        }
+
+        void IList.Remove(object value)
+        {
+            Remove((T) value);
+        }
+
+        bool IList.Contains(object value)
+        {
+            return Contains((T) value);
+        }
+
+        object IList.this[int index]
+        {
+            get { return this[index]; }
+            set { this[index] = (T) value; }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            Read();
+            return InternalBag.GetEnumerator();
+        }
+
+        public int Count
+        {
+            get { return ReadSize() ? CachedSize : InternalBag.Count; }
+        }
+
+        public bool IsReadOnly => false;
+
+        public void Add(T item)
+        {
+            if (!IsOperationQueueEnabled)
+            {
+                Write();
+                InternalBag.Add(item);
+            }
+            else
+            {
+                QueueOperation(new SimpleAddDelayedOperation(this, item));
+            }
+        }
+
+        public void Clear()
+        {
+            if (ClearQueueEnabled)
+            {
+                QueueOperation(new ClearDelayedOperation(this));
+            }
+            else
+            {
+                Initialize(true);
+                if (InternalBag.Count != 0)
+                {
+                    InternalBag.Clear();
+                    Dirty = true;
+                }
+            }
+        }
+
+        public bool Contains(T item)
+        {
+            var exists = ReadElementExistence(item);
+            return !exists.HasValue ? InternalBag.Contains(item) : exists.Value;
+        }
+
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            for (var i = arrayIndex; i < Count; i++)
+            {
+                array.SetValue(this[i], i);
+            }
+        }
+
+        public bool Remove(T item)
+        {
+            Initialize(true);
+            var result = InternalBag.Remove(item);
+            if (result)
+            {
+                Dirty();
+            }
+            return result;
+        }
+
+        public T this[int index]
+        {
+            get
+            {
+                Read();
+                return InternalBag[index];
+            }
+            set
+            {
+                Write();
+                InternalBag[index] = value;
+            }
+        }
+
+        public int IndexOf(T item)
+        {
+            Read();
+            return InternalBag.IndexOf(item);
+        }
+
+        public void Insert(int index, T item)
+        {
+            Write();
+            InternalBag.Insert(index, item);
+        }
+
+        public void RemoveAt(int index)
+        {
+            Write();
+            InternalBag.RemoveAt(index);
+        }
+
+        public override bool AfterInitialize(ICollectionPersister persister)
+        {
+            // NH Different behavior : NH-739
+            // would be nice to prevent this overhead but the operation is managed where the ICollectionPersister is not available
+            bool result;
+            if (persister.IsOneToMany && HasQueuedOperations)
+            {
+                var additionStartFrom = InternalBag.Count;
+                IList additionQueue = new List<object>(additionStartFrom);
+                foreach (var o in QueuedAdditionIterator)
+                {
+                    if (o != null)
+                    {
+                        for (var i = 0; i < InternalBag.Count; i++)
+                        {
+                            // we are using ReferenceEquals to be sure that is exactly the same queued instance 
+                            if (ReferenceEquals(o, InternalBag[i]))
+                            {
+                                additionQueue.Add(o);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                result = base.AfterInitialize(persister);
+
+                if (!result)
+                {
+                    // removing duplicated additions
+                    foreach (var o in additionQueue)
+                    {
+                        for (var i = additionStartFrom; i < InternalBag.Count; i++)
+                        {
+                            if (ReferenceEquals(o, InternalBag[i]))
+                            {
+                                InternalBag.RemoveAt(i);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                result = base.AfterInitialize(persister);
+            }
+            return result;
+        }
+
+        public override void BeforeInitialize(ICollectionPersister persister, int anticipatedSize)
+        {
+            InternalBag = (IList<T>) persister.CollectionType.Instantiate(anticipatedSize);
+        }
+
+        public override object Disassemble(ICollectionPersister persister)
+        {
+            var length = InternalBag.Count;
+            var result = new object[length];
+
+            for (var i = 0; i < length; i++)
+            {
+                result[i] = persister.ElementType.Disassemble(InternalBag[i], Session, null);
+            }
+
+            return result;
+        }
+
+        public override IEnumerable Entries(ICollectionPersister persister)
+        {
+            return InternalBag;
+        }
+
+        public override bool EntryExists(object entry, int i)
+        {
+            return entry != null;
+        }
+
+        public override bool EqualsSnapshot(ICollectionPersister persister)
+        {
+            var elementType = persister.ElementType;
+            var entityMode = Session.EntityMode;
+
+            var sn = (IList) GetSnapshot();
+            if (sn.Count != InternalBag.Count)
+            {
+                return false;
+            }
+
+            foreach (var elt in InternalBag)
+            {
+                if (CountOccurrences(elt, InternalBag, elementType, entityMode) !=
+                    CountOccurrences(elt, sn, elementType, entityMode))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public override IEnumerable GetDeletes(ICollectionPersister persister, bool indexIsFormula)
+        {
+            var elementType = persister.ElementType;
+            var entityMode = Session.EntityMode;
+            var deletes = new List<object>();
+            var sn = (IList) GetSnapshot();
+            var i = 0;
+            foreach (var old in sn)
+            {
+                var found = false;
+                if (InternalBag.Count > i && elementType.IsSame(old, InternalBag[i++], entityMode))
+                {
+                    //a shortcut if its location didn't change!
+                    found = true;
+                }
+                else
+                {
+                    foreach (object newObject in InternalBag)
+                    {
+                        if (elementType.IsSame(old, newObject, entityMode))
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                if (!found)
+                {
+                    deletes.Add(old);
+                }
+            }
+            return deletes;
+        }
+
+        public override object GetElement(object entry)
+        {
+            return entry;
+        }
+
+        public override object GetIndex(object entry, int i, ICollectionPersister persister)
+        {
+            throw new NotSupportedException("Bags don't have indexes");
+        }
+
+        public override ICollection GetOrphans(object snapshot, string entityName)
+        {
+            var sn = (ICollection) snapshot;
+            return GetOrphans(sn, (ICollection) InternalBag, entityName, Session);
+        }
+
+        public override object GetSnapshot(ICollectionPersister persister)
+        {
+            var entityMode = Session.EntityMode;
+            var clonedList = new List<object>(InternalBag.Count);
+            foreach (object current in InternalBag)
+            {
+                clonedList.Add(persister.ElementType.DeepCopy(current, entityMode, persister.Factory));
+            }
+            return clonedList;
+        }
+
+        public override object GetSnapshotElement(object entry, int i)
+        {
+            var sn = (IList) GetSnapshot();
+            return sn[i];
+        }
+
+        /// <summary>
+        /// Initializes this PersistentBag from the cached values.
+        /// </summary>
+        /// <param name="persister">The CollectionPersister to use to reassemble the PersistentBag.</param>
+        /// <param name="disassembled">The disassembled PersistentBag.</param>
+        /// <param name="owner">The owner object.</param>
+        public override void InitializeFromCache(ICollectionPersister persister, object disassembled, object owner)
+        {
+            var array = (object[]) disassembled;
+            var size = array.Length;
+            BeforeInitialize(persister, size);
+            for (var i = 0; i < size; i++)
+            {
+                var element = persister.ElementType.Assemble(array[i], Session, owner);
+                if (element != null)
+                {
+                    InternalBag.Add((T) element);
+                }
+            }
+        }
+
+        public override bool IsSnapshotEmpty(object snapshot)
+        {
+            return ((ICollection) snapshot).Count == 0;
+        }
+
+        public override bool IsWrapper(object collection)
+        {
+            return InternalBag == collection;
+        }
+
+        public override bool NeedsInserting(object entry, int i, IType elemType)
+        {
+            var sn = (IList) GetSnapshot();
+            var entityMode = Session.EntityMode;
+
+            if (sn.Count > i && elemType.IsSame(sn[i], entry, entityMode))
+            {
+                // a shortcut if its location didn't change
+                return false;
+            }
+            //search for it
+            foreach (var old in sn)
+            {
+                if (elemType.IsEqual(old, entry, entityMode))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Gets a <see cref="bool"/> indicating if this PersistentBag needs to be recreated
+        /// in the database.
+        /// </summary>
+        /// <param name="persister"></param>
+        /// <returns>
+        /// <see langword="false" /> if this is a <c>one-to-many</c> Bag, <see langword="true" /> if this is not
+        /// a <c>one-to-many</c> Bag.  Since a Bag is an unordered, unindexed collection 
+        /// that permits duplicates it is not possible to determine what has changed in a
+        /// <c>many-to-many</c> so it is just recreated.
+        /// </returns>
+        public override bool NeedsRecreate(ICollectionPersister persister)
+        {
+            return !persister.IsOneToMany;
+        }
+
+        public override bool NeedsUpdating(object entry, int i, IType elemType)
+        {
+            return false;
+        }
+
+        public override object ReadFrom(IDataReader reader, ICollectionPersister role, ICollectionAliases descriptor,
+            object owner)
+        {
+            // note that if we load this collection from a cartesian product
+            // the multiplicity would be broken ... so use an idbag instead
+            var element = role.ReadElement(reader, owner, descriptor.SuffixedElementAliases, Session);
+            // NH Different behavior : we don't check for null
+            // The NH-750 test show how checking for null we are ignoring the not-found tag and
+            // the DB may have some records ignored by NH. This issue may need some more deep consideration.
+            //if (element != null)
+            InternalBag.Add((T) element);
+            return element;
+        }
+
+        public override string ToString()
+        {
+            Read();
+            return StringHelper.CollectionToString(InternalBag);
+        }
+
+        /// <summary>
+        /// Counts the number of times that the <paramref name="element"/> occurs
+        /// in the <paramref name="list"/>.
+        /// </summary>
+        /// <param name="element">The element to find in the list.</param>
+        /// <param name="list">The <see cref="IList"/> to search.</param>
+        /// <param name="elementType">The <see cref="IType"/> that can determine equality.</param>
+        /// <param name="entityMode">The entity mode.</param>
+        /// <returns>
+        /// The number of occurrences of the element in the list.
+        /// </returns>
+        private static int CountOccurrences(object element, IEnumerable list, IType elementType, EntityMode entityMode)
+        {
+            var result = 0;
+            foreach (var obj in list)
+            {
+                if (elementType.IsSame(element, obj, entityMode))
+                {
+                    result++;
+                }
+            }
+
+            return result;
+        }
+
+        private sealed class ClearDelayedOperation : IDelayedOperation
+        {
+            private readonly RemoteGenericBag<T> _enclosingInstance;
+
+            public ClearDelayedOperation(RemoteGenericBag<T> enclosingInstance)
+            {
+                _enclosingInstance = enclosingInstance;
+            }
+
+            public object AddedInstance => null;
+
+            public object Orphan
+            {
+                get { throw new NotSupportedException("queued clear cannot be used with orphan delete"); }
+            }
+
+            public void Operate()
+            {
+                _enclosingInstance.InternalBag.Clear();
+            }
+        }
+
+        private sealed class SimpleAddDelayedOperation : IDelayedOperation
+        {
+            private readonly RemoteGenericBag<T> _enclosingInstance;
+            private readonly T _value;
+
+            public SimpleAddDelayedOperation(RemoteGenericBag<T> enclosingInstance, T value)
+            {
+                _enclosingInstance = enclosingInstance;
+                _value = value;
+            }
+
+            public object AddedInstance => _value;
+
+            public object Orphan => null;
+
+            public void Operate()
+            {
+                _enclosingInstance.InternalBag.Add(_value);
+            }
+        }
+    }
+}

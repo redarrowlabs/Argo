@@ -1,7 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
-using System.Diagnostics;
 using System.Linq;
 using Mono.Cecil.Rocks;
 using RedArrow.Jsorm.Extensions;
@@ -163,19 +162,19 @@ namespace RedArrow.Jsorm
                     }
 					else if (returnType.IsValueType || returnType.IsGenericParameter)
 					{
-						proc.Emit(OpCodes.Ldarg_0);
-						proc.Emit(OpCodes.Ldfld, backingField);
-						proc.Emit(OpCodes.Box, returnType);
-						proc.Emit(OpCodes.Ldarg_1);
-						proc.Emit(OpCodes.Box, returnType);
+						proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+                        proc.Emit(OpCodes.Ldfld, backingField); // load __jsorm__generated_session field from 'this'
+                        proc.Emit(OpCodes.Box, returnType);
+						proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
+                        proc.Emit(OpCodes.Box, returnType);
 						proc.Emit(OpCodes.Call, context.ImportReference(_object_equals));
 					}
 					else
 					{
-						proc.Emit(OpCodes.Ldarg_0);
-						proc.Emit(OpCodes.Ldfld, backingField);
-						proc.Emit(OpCodes.Ldarg_1);
-						proc.Emit(OpCodes.Call, context.ImportReference(_object_equals));
+						proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+                        proc.Emit(OpCodes.Ldfld, backingField); // load __jsorm__generated_session field from 'this'
+                        proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
+                        proc.Emit(OpCodes.Call, context.ImportReference(_object_equals));
 					}
                 }
                 else

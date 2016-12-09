@@ -73,7 +73,6 @@
     <Compile Include="ModelFinder.cs" />
     <Compile Include="SessionFieldWeaver.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
-    <Compile Include="SupportsCeqChecker.cs" />
     <Compile Include="TypeDefLoader.cs" />
   </ItemGroup>
   <ItemGroup>
