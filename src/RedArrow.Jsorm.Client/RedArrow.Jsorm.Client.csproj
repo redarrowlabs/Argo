@@ -44,6 +44,8 @@
     </Compile>
     <Compile Include="Cache\BasicCacheProvider.cs" />
     <Compile Include="Cache\ICacheProvider.cs" />
+    <Compile Include="Collections\AbstractRemoteCollection.cs" />
+    <Compile Include="Collections\Generic\RemoteGenericBag.cs" />
     <Compile Include="Config\FluentConfigurator.cs" />
     <Compile Include="Config\Fluently.cs" />
     <Compile Include="Config\IFluentConfigurator.cs" />
@@ -66,6 +68,7 @@
     <Compile Include="Http\IHttpRequestBuilder.cs" />
     <Compile Include="Http\RequestBuilder.cs" />
     <Compile Include="Http\RequestContext.cs" />
+    <Compile Include="Infrastructure\DebuggerCollectionProxy.cs" />
     <Compile Include="Infrastructure\JsormException.cs" />
     <Compile Include="Infrastructure\ModelNotRegisteredException.cs" />
     <Compile Include="Infrastructure\ModelTypeMismatchException.cs" />
@@ -100,6 +103,7 @@
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

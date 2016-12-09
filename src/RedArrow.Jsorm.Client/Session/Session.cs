@@ -271,18 +271,21 @@ namespace RedArrow.Jsorm.Client.Session
             Cache.Update(rltnId, rltn);
         }
 
-        public TEnum GetEnumerable<TModel, TEnum, TRltn>(Guid id, string attrName)
+        public TRltn GetEnumerable<TModel, TRltn, TElmnt>(Guid id, string attrName)
             where TModel : class
-            where TEnum : IEnumerable<TRltn>
-            where TRltn : class
+            where TRltn : IEnumerable<TElmnt>
+            where TElmnt : class
         {
-            return default(TEnum);
+            ThrowIfDisposed();
+
+
+            return default(TRltn);
         }
 
-        public void SetEnumerable<TModel, TEnum, TRltn>(Guid id, string attrName, TEnum value)
+        public void SetEnumerable<TModel, TRltn, TElmnt>(Guid id, string attrName, TRltn value)
             where TModel : class
-            where TEnum : IEnumerable<TRltn>
-            where TRltn : class
+            where TRltn : IEnumerable<TElmnt>
+            where TElmnt : class
         {
         }
 

@@ -85,6 +85,8 @@ public class Person
 	public string FirstName { get; set; }
 	[Property]
 	public string LastName { get; set; }
+	[Property]
+	public int Age { get; set; }
 	[HasOne]
 	public Friend BestFriend { get; set; }
 }
@@ -99,7 +101,7 @@ public class Person
     [Id]
 	public Guid Id { get; set; }
 
-    public Patient(Guid id, IModelSession session)
+    public Person(Guid id, IModelSession session)
     {
         this.Id = id;
         this.__jsorm_session = session;
@@ -131,14 +133,14 @@ public string FirstName
 	set
 	{
 		this.firstName = value;
-		if (this.__jsorm_session != null)
+		if (this.__jsorm_session != null && !string.Equals(this.firstName, value, StringComparison.Ordinal))
 		{
 			this.__jsorm_session.SetAttribute<Person, string>(this.Id, "firstName", this.firstName);
 		}
 	}
 }
 ```
-All attributes are also overridable to allow you to chose your own naming convention to map to your json.api convention.
+Notice the ordinal comparison string equality check.  All attributes are also overridable to allow you to chose your own naming convention to map to your json.api convention.
 ```csharp
 [Property("first-name")]
 public string FirstName { get; set; }
@@ -155,11 +157,11 @@ public string FirstName
 	}
 	set
 	{
-		this.firstName = value;
-		if (this.__jsorm_session != null && this.firstName != value)
+		if (this.__jsorm_session != null && !string.Equals(this.firstName, value, StringComparison.Ordinal))
 		{
 			this.__jsorm_session.SetAttribute<Person, string>(this.Id, "first-name", this.firstName);
 		}
+		this.firstName = value;
 	}
 }
 ```
@@ -184,7 +186,7 @@ public Friend BestFriend
     set
     {
         this.bestFriend = value;
-        if(this.__jsorm_session != null && this.bestFriend != value)
+        if(this.__jsorm_session != null && !object.Equals(this.bestFriend, value))
         {
             this.__jsorm_session.SetReference<Person, Friend>(this.Id, "bestFriend", this.bestFriend);
         }
