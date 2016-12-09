@@ -2,6 +2,7 @@
 using Mono.Cecil.Cil;
 using System;
 using System.Linq;
+using RedArrow.Jsorm.Extensions;
 
 namespace RedArrow.Jsorm
 {
@@ -54,12 +55,12 @@ namespace RedArrow.Jsorm
         private void WeaveReferenceGetter(
             ModelWeavingContext context,
             FieldReference backingField,
-            PropertyDefinition propertyDef,
+            PropertyDefinition refPropDef,
             MethodReference sessionGetAttrGeneric,
             string attrName)
         {
             // supply generic type arguments to template
-            var sessionGetAttrTyped = SupplyGenericArgs(sessionGetAttrGeneric, context.ModelTypeRef, propertyDef.GetMethod.ReturnType);
+            var sessionGetAttr = sessionGetAttrGeneric.MakeGenericMethod(context.ModelTypeRef, refPropDef.PropertyType);
 
             // get
             // {
@@ -69,8 +70,8 @@ namespace RedArrow.Jsorm
             //   }
             //   return this.<[PropName]>k__BackingField;
             // }
-            propertyDef.GetMethod.Body.Instructions.Clear();
-            var proc = propertyDef.GetMethod.Body.GetILProcessor();
+            refPropDef.GetMethod.Body.Instructions.Clear();
+            var proc = refPropDef.GetMethod.Body.GetILProcessor();
 
             var returnField = proc.Create(OpCodes.Ldarg_0);
 
@@ -85,8 +86,12 @@ namespace RedArrow.Jsorm
             proc.Emit(OpCodes.Ldarg_0); // load 'this'
             proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
             proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack
-            proc.Emit(OpCodes.Callvirt, context.ImportReference(sessionGetAttrTyped)); // invoke session.GetAttribute(..)
-            proc.Emit(OpCodes.Stfld, backingField); // store return value in 'this'.<backing field>
+			proc.Emit(OpCodes.Callvirt, context.ImportReference(
+				sessionGetAttr,
+				refPropDef.PropertyType.IsGenericParameter
+					? context.ModelTypeRef
+					: null)); // invoke session.GetReference(..)
+			proc.Emit(OpCodes.Stfld, backingField); // store return value in 'this'.<backing field>
 
             proc.Append(returnField); // load 'this' onto stack
             proc.Emit(OpCodes.Ldfld, backingField); // load 'this'.<backing field>
@@ -96,14 +101,14 @@ namespace RedArrow.Jsorm
         private void WeaveReferenceSetter(
             ModelWeavingContext context,
             FieldReference backingField,
-            PropertyDefinition propertyDef,
+            PropertyDefinition refPropDef,
             MethodReference sessionSetAttrGeneric,
             string attrName)
         {
             // supply generic type arguments to template
-            var sessionSetAttrTyped = SupplyGenericArgs(sessionSetAttrGeneric, context.ModelTypeRef, propertyDef.GetMethod.ReturnType);
+            var sessionSetAttr = sessionSetAttrGeneric.MakeGenericMethod(context.ModelTypeRef, refPropDef.PropertyType);
 
-            propertyDef.SetMethod.Body.Instructions.Clear();
+			refPropDef.SetMethod.Body.Instructions.Clear();
 
             // set
             // {
@@ -113,7 +118,7 @@ namespace RedArrow.Jsorm
             //         this.__jsorm__generated_session.SetReference<[ModelType], [ReturnType]>(this.Id, "[AttrName]", this.<[PropName]>k__BackingField);
             //     }
             // }
-            var proc = propertyDef.SetMethod.Body.GetILProcessor();
+            var proc = refPropDef.SetMethod.Body.GetILProcessor();
 
             var ret = proc.Create(OpCodes.Ret);
 
@@ -132,9 +137,13 @@ namespace RedArrow.Jsorm
             proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack
             proc.Emit(OpCodes.Ldarg_0); // load 'this'
             proc.Emit(OpCodes.Ldfld, backingField); // load backing field
-            proc.Emit(OpCodes.Callvirt, context.ImportReference(sessionSetAttrTyped)); // invoke session.SetAttribute(..)
+			proc.Emit(OpCodes.Callvirt, context.ImportReference(
+				sessionSetAttr,
+				refPropDef.PropertyType.IsGenericParameter
+					? context.ModelTypeRef
+					: null)); // invoke session.GetReference(..)
 
-            proc.Append(ret);
+			proc.Append(ret);
         }
     }
 }

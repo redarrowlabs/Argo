@@ -2,7 +2,7 @@
 using System.Linq;
 using Mono.Cecil;
 
-namespace RedArrow.Jsorm
+namespace RedArrow.Jsorm.Extensions
 {
 	public static class CecilExtensions
 	{

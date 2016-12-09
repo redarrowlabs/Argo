@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using RedArrow.Jsorm.Extensions;
 
 namespace RedArrow.Jsorm
 {
@@ -35,12 +36,7 @@ namespace RedArrow.Jsorm
                 }
                 
                 // get the backing field
-                var backingField = propertyDef
-                    ?.GetMethod
-                    ?.Body
-                    ?.Instructions
-                    ?.SingleOrDefault(x => x.OpCode == OpCodes.Ldfld)
-                    ?.Operand as FieldReference;
+                var backingField = propertyDef.BackingField();
 
                 if (backingField == null)
                 {
@@ -67,17 +63,16 @@ namespace RedArrow.Jsorm
         private void WeaveEnumerableGetter(
             ModelWeavingContext context,
             FieldReference backingField,
-            PropertyDefinition propertyDef,
+            PropertyDefinition rltnPropDef,
             TypeDefinition elementTypeDef,
-            MethodReference sessionGetAttrGeneric,
+            MethodReference sessionGetRltnGeneric,
             string attrName)
         {
             // supply generic type arguments to template
-            var sessionGetAttrTyped = SupplyGenericArgs(
-                sessionGetAttrGeneric,
-                context.ModelTypeRef,
-                propertyDef.GetMethod.ReturnType,
-                elementTypeDef);
+	        var sessionGetRltn = sessionGetRltnGeneric.MakeGenericMethod(
+		        context.ModelTypeRef,
+		        rltnPropDef.PropertyType,
+		        elementTypeDef);
 
             // get
             // {
@@ -87,8 +82,8 @@ namespace RedArrow.Jsorm
             //   }
             //   return this.<[PropName]>k__BackingField;
             // }
-            propertyDef.GetMethod.Body.Instructions.Clear();
-            var proc = propertyDef.GetMethod.Body.GetILProcessor();
+            rltnPropDef.GetMethod.Body.Instructions.Clear();
+            var proc = rltnPropDef.GetMethod.Body.GetILProcessor();
 
             var returnField = proc.Create(OpCodes.Ldarg_0);
 
@@ -103,8 +98,12 @@ namespace RedArrow.Jsorm
             proc.Emit(OpCodes.Ldarg_0); // load 'this'
             proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
             proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack
-            proc.Emit(OpCodes.Callvirt, context.ImportReference(sessionGetAttrTyped)); // invoke session.GetAttribute(..)
-            proc.Emit(OpCodes.Stfld, backingField); // store return value in 'this'.<backing field>
+			proc.Emit(OpCodes.Callvirt, context.ImportReference(
+				sessionGetRltn,
+				rltnPropDef.PropertyType.IsGenericParameter
+					? context.ModelTypeRef
+					: null)); // invoke session.GetEnumerable(..)
+			proc.Emit(OpCodes.Stfld, backingField); // store return value in 'this'.<backing field>
 
             proc.Append(returnField); // load 'this' onto stack
             proc.Emit(OpCodes.Ldfld, backingField); // load 'this'.<backing field>
@@ -114,19 +113,18 @@ namespace RedArrow.Jsorm
         private void WeaveEnumerableSetter(
             ModelWeavingContext context,
             FieldReference backingField,
-            PropertyDefinition propertyDef,
+            PropertyDefinition rltnPropDef,
             TypeDefinition elementTypeDef,
-            MethodReference sessionSetAttrGeneric,
+            MethodReference sessionSetRltnGeneric,
             string attrName)
         {
             // supply generic type arguments to template
-            var sessionSetAttrTyped = SupplyGenericArgs(
-                sessionSetAttrGeneric,
+            var sessionSetRltn = sessionSetRltnGeneric.MakeGenericMethod(
                 context.ModelTypeRef,
-                propertyDef.GetMethod.ReturnType,
+                rltnPropDef.PropertyType,
                 elementTypeDef);
 
-            propertyDef.SetMethod.Body.Instructions.Clear();
+            rltnPropDef.SetMethod.Body.Instructions.Clear();
 
             // set
             // {
@@ -136,7 +134,7 @@ namespace RedArrow.Jsorm
             //         this.__jsorm__generated_session.SetEnumerable<[ModelType], [ReturnType]>(this.Id, "[AttrName]", this.<[PropName]>k__BackingField);
             //     }
             // }
-            var proc = propertyDef.SetMethod.Body.GetILProcessor();
+            var proc = rltnPropDef.SetMethod.Body.GetILProcessor();
 
             var ret = proc.Create(OpCodes.Ret);
 
@@ -155,9 +153,13 @@ namespace RedArrow.Jsorm
             proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack
             proc.Emit(OpCodes.Ldarg_0); // load 'this'
             proc.Emit(OpCodes.Ldfld, backingField); // load backing field
-            proc.Emit(OpCodes.Callvirt, context.ImportReference(sessionSetAttrTyped)); // invoke session.SetAttribute(..)
+			proc.Emit(OpCodes.Callvirt, context.ImportReference(
+				sessionSetRltn,
+				rltnPropDef.PropertyType.IsGenericParameter
+					? context.ModelTypeRef
+					: null)); // invoke session.SetEnumerable(..)
 
-            proc.Append(ret);
+			proc.Append(ret);
         }
     }
 }

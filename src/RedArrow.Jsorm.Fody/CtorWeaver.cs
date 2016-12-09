@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using RedArrow.Jsorm.Extensions;
 
 namespace RedArrow.Jsorm
 {
@@ -51,10 +52,53 @@ namespace RedArrow.Jsorm
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
             proc.Emit(OpCodes.Ldarg_2); // load 'session' onto stack
             proc.Emit(OpCodes.Stfld, context.SessionField); // this.__jsorm__generated_session = session;
-            //proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+
+			// this._attrBackingField = this.__jsorm__generated_session.GetAttribute
+			WeaveAttributeFieldInitializers(context, proc, context.MappedAttributes);
+
             proc.Emit(OpCodes.Ret); // return
 
             context.Methods.Add(ctor);
         }
+
+	    private void WeaveAttributeFieldInitializers(ModelWeavingContext context, ILProcessor proc, IEnumerable<PropertyDefinition> attrPropDefs)
+	    {
+			var sessionGetAttrGeneric = _sessionTypeDef
+				   .Methods
+				   .SingleOrDefault(x => x.Name == "GetAttribute");
+
+		    foreach (var attrPropDef in attrPropDefs)
+		    {
+				// supply generic type arguments to template
+			    var sessionGetAttr = sessionGetAttrGeneric.MakeGenericMethod(context.ModelTypeRef, attrPropDef.PropertyType);
+				
+				var backingField = attrPropDef.BackingField();
+
+				if (backingField == null)
+				{
+					throw new Exception($"Failed to load backing field for property {attrPropDef?.FullName}");
+				}
+
+				var propAttr = attrPropDef.CustomAttributes.GetAttribute(Constants.Attributes.Property);
+				var attrName = propAttr.ConstructorArguments
+					.Select(x => x.Value as string)
+					.SingleOrDefault() ?? attrPropDef.Name.Camelize();
+
+				proc.Emit(OpCodes.Ldarg_0);
+
+				proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
+				proc.Emit(OpCodes.Ldfld, context.SessionField); // load __jsorm__generated_session field from 'this'
+				proc.Emit(OpCodes.Ldarg_0); // load 'this'
+				proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
+				proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack
+				proc.Emit(OpCodes.Callvirt, context.ImportReference(
+					sessionGetAttr,
+					attrPropDef.PropertyType.IsGenericParameter
+						? context.ModelTypeRef
+						: null)); // invoke session.GetAttribute(..)
+				proc.Emit(OpCodes.Stfld, backingField); // store return value in 'this'.<backing field>
+			}
+
+		}
     }
 }
