@@ -59,14 +59,20 @@
     <Compile Include="..\RedArrow.Jsorm.Fody\AttributeWeaver.cs">
       <Link>AttributeWeaver.cs</Link>
     </Compile>
-    <Compile Include="..\RedArrow.Jsorm.Fody\CecilExtensions.cs">
-      <Link>CecilExtensions.cs</Link>
-    </Compile>
     <Compile Include="..\RedArrow.Jsorm.Fody\Constants.cs">
       <Link>Constants.cs</Link>
     </Compile>
     <Compile Include="..\RedArrow.Jsorm.Fody\CtorWeaver.cs">
       <Link>CtorWeaver.cs</Link>
+    </Compile>
+    <Compile Include="..\RedArrow.Jsorm.Fody\Extensions\CecilExtensions.cs">
+      <Link>CecilExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\RedArrow.Jsorm.Fody\Extensions\PropertyDefinitionExtensions.cs">
+      <Link>PropertyDefinitionExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\RedArrow.Jsorm.Fody\Extensions\StringExtensions.cs">
+      <Link>StringExtensions.cs</Link>
     </Compile>
     <Compile Include="..\RedArrow.Jsorm.Fody\HasManyWeaver.cs">
       <Link>HasManyWeaver.cs</Link>
@@ -91,9 +97,6 @@
     </Compile>
     <Compile Include="..\RedArrow.Jsorm.Fody\SessionFieldWeaver.cs">
       <Link>SessionFieldWeaver.cs</Link>
-    </Compile>
-    <Compile Include="..\RedArrow.Jsorm.Fody\StringExtensions.cs">
-      <Link>StringExtensions.cs</Link>
     </Compile>
     <Compile Include="..\RedArrow.Jsorm.Fody\SupportsCeqChecker.cs">
       <Link>SupportsCeqChecker.cs</Link>

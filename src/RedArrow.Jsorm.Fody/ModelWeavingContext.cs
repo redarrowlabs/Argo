@@ -3,6 +3,7 @@ using Mono.Collections.Generic;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using RedArrow.Jsorm.Extensions;
 
 namespace RedArrow.Jsorm
 {
@@ -85,6 +86,11 @@ namespace RedArrow.Jsorm
         public MethodReference ImportReference(MethodDefinition methDef)
         {
             return ModelTypeDef.Module.ImportReference(methDef);
+        }
+
+        public MethodReference ImportReference(MethodReference methRef)
+        {
+            return ModelTypeDef.Module.ImportReference(methRef);
         }
 
         public MethodReference ImportReference(GenericInstanceMethod genMethDef)

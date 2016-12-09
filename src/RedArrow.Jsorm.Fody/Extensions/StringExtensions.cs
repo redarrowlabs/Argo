@@ -1,4 +1,4 @@
-﻿namespace RedArrow.Jsorm
+﻿namespace RedArrow.Jsorm.Extensions
 {
     public static class StringExtensions
     {

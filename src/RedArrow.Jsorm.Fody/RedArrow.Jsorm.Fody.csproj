@@ -59,8 +59,9 @@
     </Compile>
     <Compile Include="Constants.cs" />
     <Compile Include="AttributeWeaver.cs" />
-    <Compile Include="CecilExtensions.cs" />
+    <Compile Include="Extensions\CecilExtensions.cs" />
     <Compile Include="CtorWeaver.cs" />
+    <Compile Include="Extensions\PropertyDefinitionExtensions.cs" />
     <Compile Include="HasManyWeaver.cs" />
     <Compile Include="HasOneWeaver.cs" />
     <Compile Include="MethodConfigurator.cs" />
@@ -70,7 +71,7 @@
     <Compile Include="ModuleWeaver.cs" />
     <Compile Include="ModelFinder.cs" />
     <Compile Include="SessionFieldWeaver.cs" />
-    <Compile Include="StringExtensions.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="SupportsCeqChecker.cs" />
     <Compile Include="TypeDefLoader.cs" />
   </ItemGroup>

@@ -2,6 +2,7 @@
 using Mono.Cecil.Cil;
 using System;
 using System.Linq;
+using RedArrow.Jsorm.Extensions;
 
 namespace RedArrow.Jsorm
 {

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using RedArrow.Jsorm.Extensions;
 
 namespace RedArrow.Jsorm
 {
@@ -35,12 +36,7 @@ namespace RedArrow.Jsorm
                 }
                 
                 // get the backing field
-                var backingField = propertyDef
-                    ?.GetMethod
-                    ?.Body
-                    ?.Instructions
-                    ?.SingleOrDefault(x => x.OpCode == OpCodes.Ldfld)
-                    ?.Operand as FieldReference;
+                var backingField = propertyDef.BackingField();
 
                 if (backingField == null)
                 {
