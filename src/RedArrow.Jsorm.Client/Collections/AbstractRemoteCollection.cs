@@ -44,7 +44,6 @@ namespace RedArrow.Jsorm.Client.Collections
                 {
                     throw new Exception("TODO");
                 }
-                Session.ini
             }
         }
     }

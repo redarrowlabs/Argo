@@ -28,14 +28,14 @@ namespace RedArrow.Jsorm.Extensions
             };
         }
 
-        public static MethodReference EqualityOperator(this TypeReference self)
+        public static MethodReference InequalityOperator(this TypeReference self)
 		{
 			return self.Resolve()
 				?.Methods
 				.Where(x => x.IsStatic)
 				.Where(x => x.IsSpecialName)
 				.Where(x => x.IsPublic)
-				.SingleOrDefault(x => x.Name == "op_Equality");
+				.SingleOrDefault(x => x.Name == "op_Inequality");
         }
 
         public static bool SupportsCeq(this TypeReference typeReference)
