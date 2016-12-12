@@ -40,6 +40,9 @@
     <None Include="RedArrow.Jsorm.Client.nuspec" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="Cache\BasicCacheProvider.cs" />
     <Compile Include="Cache\ICacheProvider.cs" />
     <Compile Include="Config\FluentConfigurator.cs" />
@@ -91,6 +94,7 @@
     <ProjectReference Include="..\RedArrow.Jsorm\RedArrow.Jsorm.csproj">
       <Project>{f540b5ca-b7c2-4799-9eb2-b5401bd1f28c}</Project>
       <Name>RedArrow.Jsorm</Name>
+      <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
