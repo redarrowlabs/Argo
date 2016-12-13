@@ -8,16 +8,21 @@ using RedArrow.Jsorm.Client.Session.Registry;
 using RedArrow.Jsorm.Session;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using RedArrow.Jsorm.Client.Http;
+using RedArrow.Jsorm.Client.Logging;
 
 namespace RedArrow.Jsorm.Client.Session
 {
     public class Session : IModelSession, ISession
     {
+        private static readonly ILog Log = LogProvider.For<Session>();
+
         private HttpClient HttpClient { get; }
+
+        private IHttpRequestBuilder HttpRequestBuilder { get; }
 
         private ICacheProvider Cache { get; }
 
@@ -32,10 +37,12 @@ namespace RedArrow.Jsorm.Client.Session
 
         internal Session(
             Func<HttpClient> httpClientFactory,
+            IHttpRequestBuilder httpRequestBuilder,
             ICacheProvider cache,
             IModelRegistry modelRegistry)
         {
             HttpClient = httpClientFactory();
+            HttpRequestBuilder = httpRequestBuilder;
             Cache = cache;
             ModelRegistry = modelRegistry;
 
@@ -52,68 +59,35 @@ namespace RedArrow.Jsorm.Client.Session
         public async Task<TModel> Create<TModel>()
             where TModel : class
         {
-            ThrowIfDisposed();
-
-            var resourceType = ModelRegistry.GetResourceType<TModel>();
-
-            var requestContent = ResourceRootCreate
-                .FromAttributes(resourceType, null)
-                .ToHttpContent();
-            var response = await HttpClient.PostAsync(resourceType, requestContent);
-
-            response.EnsureSuccessStatusCode();
-            var id = response.GetResourceId();
-
-            ResourceState[id] = new Resource
-            {
-                Id = id,
-                Type = resourceType
-            };
-			var model = CreateModel<TModel>(id);
-			Cache.Update(id, model);
-
-			return model;
+            return (TModel) await Create(typeof(TModel), null);
         }
 
         public async Task<TModel> Create<TModel>(TModel model)
             where TModel : class
         {
-            return (TModel)await Create(typeof(TModel), model);
+            return (TModel) await Create(typeof(TModel), model);
         }
 
         public async Task<object> Create(Type modelType, object model)
         {
             ThrowIfDisposed();
+            
+            var createPayload = HttpRequestBuilder.CreateResource(modelType, model);
 
-            var id = ModelRegistry.GetModelId(model);
-            if (id != Guid.Empty)
-            {
-                throw new Exception($"Model {modelType} [{id}] has already been created");
-            }
+            Log.Info(() => $"creating resource {createPayload.ResourceType} from model {modelType} {JsonConvert.SerializeObject(model)}");
 
-            //TODO: check for transient relationships
-
-            var resourceType = ModelRegistry.GetResourceType(modelType);
-            var attributes = JObject.FromObject(ModelRegistry
-                .GetModelAttributes(modelType)
-                .ToDictionary(
-                    x => x.AttributeName,
-                    x => x.Property.GetValue(model)));
-
-            var requestContent = ResourceRootCreate
-                .FromAttributes(resourceType, attributes)
-                .ToHttpContent();
-            var response = await HttpClient.PostAsync(resourceType, requestContent);
+            var response = await HttpClient.SendAsync(createPayload.Request);
 
             response.EnsureSuccessStatusCode();
-            id = response.GetResourceId();
 
+            var id = response.GetResourceId();
 			ResourceState[id] = new Resource
 			{
 				Id = id,
-				Type = resourceType,
-				Attributes = attributes
+				Type = createPayload.ResourceType,
+				Attributes = createPayload.Attributes
 			};
+
 			model = CreateModel(modelType, id);
             Cache.Update(id, model);
 
@@ -154,7 +128,6 @@ namespace RedArrow.Jsorm.Client.Session
             ThrowIfDisposed();
 
             var id = ModelRegistry.GetModelId(model);
-            var resourceType = ModelRegistry.GetResourceType<TModel>();
 
             PatchContext context;
             if (!PatchContexts.TryGetValue(id, out context))
@@ -162,50 +135,24 @@ namespace RedArrow.Jsorm.Client.Session
                 return;
             }
 
-            await Task.WhenAll(context.GetTransientReferences().Select(async kvp =>
-            {
-                var rltnName = kvp.Key;
-                var rltnId = kvp.Value;
-
-                var transientModel = Cache.Retrieve(rltnId);
-
-                var transientModelType = transientModel.GetType();
-                transientModel = await Create(transientModelType, transientModel);
-                Cache.Remove(rltnId);
-                var transientModelId = ModelRegistry.GetModelId(transientModel);
-                var transientResourceType = ModelRegistry.GetResourceType(transientModelType);
-
-                context.SetReference(
-                    rltnName,
-                    transientModelId,
-                    transientResourceType,
-                    true);
-            }).ToArray());
-
-            var patchResource = context.Resource;
-            var request = new HttpRequestMessage(new HttpMethod("PATCH"), $"{resourceType}/{id}")
-            {
-                Content = ResourceRootSingle.FromResource(patchResource)
-                    .ToHttpContent()
-            };
-
-            var response = await HttpClient.SendAsync(request);
+            var requestContext = HttpRequestBuilder.UpdateResource(id, model, context);
+            var response = await HttpClient.SendAsync(requestContext.Request);
             response.EnsureSuccessStatusCode();
 
             Resource resource;
             if (ResourceState.TryGetValue(id, out resource))
             {
                 // this updateds the locally-cached resource
-                // TODO: I think we need a better solution here
-                if (patchResource.Attributes != null)
+                // TODO: we need a better solution here
+                if (requestContext.Attributes != null)
                 {
-                    resource.Attributes.Merge(patchResource.Attributes, new JsonMergeSettings
+                    resource.Attributes.Merge(requestContext.Attributes, new JsonMergeSettings
                     {
                         MergeNullValueHandling = MergeNullValueHandling.Merge,
                         MergeArrayHandling = MergeArrayHandling.Replace
                     });
                 }
-                patchResource.Relationships?.Each(kvp => resource.GetRelationships()[kvp.Key] = kvp.Value);
+                requestContext.Relationships?.Each(kvp => resource.GetRelationships()[kvp.Key] = kvp.Value);
             }
             PatchContexts.Remove(id);
         }
@@ -279,7 +226,15 @@ namespace RedArrow.Jsorm.Client.Session
                     }
 
                     var rltnId = rltnData.ToObject<ResourceIdentifier>();
-                    return Get<TRltn>(rltnId.Id).GetAwaiter().GetResult();
+                    try
+                    {
+                        return Get<TRltn>(rltnId.Id).Result;
+                    }
+                    catch (AggregateException ae)
+                    {
+                        Log.FatalException("An unexpected error occurred while retriving a relationship.  Rethrowing inner exception", ae);
+                        throw ae.InnerException;
+                    }
                 }
 
                 return default(TRltn);
@@ -335,6 +290,7 @@ namespace RedArrow.Jsorm.Client.Session
 
         private object CreateModel(Type type, Guid id)
         {
+            Log.Debug(() => $"instantiating new session-managed instance of {type} with id {id}");
             return Activator.CreateInstance(type, id, this);
         }
 

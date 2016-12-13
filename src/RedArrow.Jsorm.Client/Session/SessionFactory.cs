@@ -4,6 +4,7 @@ using RedArrow.Jsorm.Client.Session.Registry;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using RedArrow.Jsorm.Client.Http;
 
 namespace RedArrow.Jsorm.Client.Session
 {
@@ -20,10 +21,14 @@ namespace RedArrow.Jsorm.Client.Session
 
         public ISession CreateSession()
         {
+            var modelRegistry = new ModelRegistry(ModelConfigurations);
+            var httpRequestBuider = new HttpRequestBuilder(modelRegistry);
+
             return new Session(
                 HttpClientFactory,
+                httpRequestBuider,
                 new BasicCacheProvider(),
-                new ModelRegistry(ModelConfigurations));
+                modelRegistry);
         }
     }
 }

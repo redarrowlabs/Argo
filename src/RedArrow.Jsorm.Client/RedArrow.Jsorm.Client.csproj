@@ -62,6 +62,10 @@
     <Compile Include="Extensions\ModelConfigurationExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
+    <Compile Include="Http\DefaultHttpMessageHandler.cs" />
+    <Compile Include="Http\IHttpRequestBuilder.cs" />
+    <Compile Include="Http\RequestBuilder.cs" />
+    <Compile Include="Http\RequestContext.cs" />
     <Compile Include="Infrastructure\JsormException.cs" />
     <Compile Include="Infrastructure\ModelNotRegisteredException.cs" />
     <Compile Include="Infrastructure\ModelTypeMismatchException.cs" />
@@ -79,7 +83,7 @@
     <Compile Include="JsonModels\ResourceRootCollection.cs" />
     <Compile Include="JsonModels\ResourceRootCreate.cs" />
     <Compile Include="JsonModels\ResourceRootSingle.cs" />
-    <Compile Include="LibLog\LibLog.cs" />
+    <Compile Include="Logging\Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Session\ISession.cs" />
     <Compile Include="Session\ISessionFactory.cs" />

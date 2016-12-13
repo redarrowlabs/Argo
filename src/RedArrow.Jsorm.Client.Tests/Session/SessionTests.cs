@@ -1,15 +1,26 @@
 ﻿using RedArrow.Jsorm.Client.Config;
+using Serilog;
 using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using RedArrow.Jsorm.TestUtils.XUnitSink;
 using WovenByFody;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace RedArrow.Jsorm.Client.Tests.Session
 {
     public class SessionTests
     {
+        public SessionTests(ITestOutputHelper outputHelper)
+        {
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .WriteTo.XunitTestOutput(outputHelper)
+                .CreateLogger();
+        }
+
         [Fact]
         public async Task Create__Given_NoArgs__Then_PostAndCacheNewModel()
         {

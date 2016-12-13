@@ -1,21 +1,23 @@
-﻿using Ploeh.AutoFixture.Xunit2;
-using RedArrow.Jsorm.Client.Config;
-using RedArrow.Jsorm.Client.Session;
-using System;
+﻿using System;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using Ploeh.AutoFixture.Xunit2;
+using RedArrow.Jsorm.Client.Config;
+using RedArrow.Jsorm.Client.Session;
 using WovenByFody;
 using Xunit;
+using Xunit.Abstractions;
 
-namespace RedArrow.Jsorm.Sample
+namespace RedArrow.Jsorm.Integration
 {
     public class IntegrationTests : IClassFixture<IntegrationTestFixture>
     {
         private IntegrationTestFixture Fixture { get; }
 
-        public IntegrationTests(IntegrationTestFixture fixture)
+        public IntegrationTests(IntegrationTestFixture fixture, ITestOutputHelper outputHelper)
         {
             Fixture = fixture;
+            Fixture.ConfigureLogging(outputHelper);
         }
 
         [Theory, AutoData]
@@ -171,54 +173,50 @@ namespace RedArrow.Jsorm.Sample
         }
 
         [Fact, Trait("Category", "Integration")]
-        public async Task UpdateModelWithTransientReference()
+        public async Task GetNullRelationship()
         {
-            Guid crossSessionPatientId;
-
             var sessionFactory = CreateSessionFactory();
 
             using (var session = sessionFactory.CreateSession())
             {
-                var patient = new Patient
-                {
-                    FirstName = "Joe",
-                    LastName = "King"
-                };
+                var patient = await session.Create<Patient>();
 
-                patient = await session.Create(patient);
-                crossSessionPatientId = patient.Id;
+                var provider = patient.Provider;
+
+                Assert.Null(provider);
             }
+        }
 
-            Guid crossSessionProviderId;
+        [Fact, Trait("Category", "Integration")]
+        public async Task GetNonNullRelationship()
+        {
+            var sessionFactory = CreateSessionFactory();
+
+            Guid patientId;
 
             using (var session = sessionFactory.CreateSession())
             {
-                var patient = await session.Get<Patient>(crossSessionPatientId);
+                var patient = await session.Create<Patient>();
+                patientId = patient.Id;
 
-                patient.FirstName = "Joseph";
-                patient.Provider = new Provider
-                {
-                    FirstName = "Kerry",
-                    LastName = "Oki"
-                };
+                var provider = patient.Provider;
+
+                Assert.Null(provider);
+
+                provider = await session.Create<Provider>();
+
+                patient.Provider = provider;
 
                 await session.Update(patient);
-
-                crossSessionProviderId = patient.Provider.Id;
             }
 
             using (var session = sessionFactory.CreateSession())
             {
-                var patient = await session.Get<Patient>(crossSessionPatientId);
+                var patient = await session.Get<Patient>(patientId);
 
-                Assert.Equal(crossSessionProviderId, patient.Provider.Id);
-            }
+                var provider = patient.Provider;
 
-            // cleanup
-            using (var session = sessionFactory.CreateSession())
-            {
-                await session.Delete<Patient>(crossSessionPatientId);
-                await session.Delete<Provider>(crossSessionProviderId);
+                Assert.NotNull(provider);
             }
         }
 

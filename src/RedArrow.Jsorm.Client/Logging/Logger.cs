@@ -40,8 +40,8 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-[assembly: SuppressMessage("Microsoft.Design", "CA1020:AvoidNamespacesWithFewTypes", Scope = "namespace", Target = "RedArrow.Jsorm.Logging.Client")]
-[assembly: SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed", Scope = "member", Target = "RedArrow.Jsorm.Logging.Client.Logger.#Invoke(RedArrow.Jsorm.Logging.Client.LogLevel,System.Func`1<System.String>,System.Exception,System.Object[])")]
+[assembly: SuppressMessage("Microsoft.Design", "CA1020:AvoidNamespacesWithFewTypes", Scope = "namespace", Target = "RedArrow.Jsorm.Client.Logging")]
+[assembly: SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed", Scope = "member", Target = "RedArrow.Jsorm.Client.Logging.Logger.#Invoke(RedArrow.Jsorm.Client.Logging.LogLevel,System.Func`1<System.String>,System.Exception,System.Object[])")]
 
 // If you copied this file manually, you need to change all "RedArrow.Jsorm" so not to clash with other libraries
 // that use LibLog
@@ -49,7 +49,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace RedArrow.Jsorm.LibLog
 #else
 
-namespace RedArrow.Jsorm.Logging.Client
+namespace RedArrow.Jsorm.Client.Logging
 #endif
 {
     using System.Collections.Generic;
@@ -59,7 +59,7 @@ namespace RedArrow.Jsorm.Logging.Client
     using RedArrow.Jsorm.LibLog.LogProviders;
 #else
 
-    using RedArrow.Jsorm.Logging.Client.LogProviders;
+    using RedArrow.Jsorm.Client.Logging.LogProviders;
 
 #endif
 
@@ -748,7 +748,7 @@ namespace RedArrow.Jsorm.Logging.Client
 namespace RedArrow.Jsorm.LibLog.LogProviders
 #else
 
-namespace RedArrow.Jsorm.Logging.Client.LogProviders
+namespace RedArrow.Jsorm.Client.Logging.LogProviders
 #endif
 {
     using System;
