@@ -33,6 +33,7 @@
   <Target Name="NuGetBuild" DependsOnTargets="Clean">
     <MakeDir Directories="$(SolutionDir)Client.NuGetBuild" />
     <Copy SourceFiles="$(SolutionDir)RedArrow.Jsorm\bin\$(ConfigurationName)\RedArrow.Jsorm.dll" DestinationFolder="$(SolutionDir)Client.NuGetBuild\Lib\netstandard14" />
+    <Copy SourceFiles="$(SolutionDir)RedArrow.Jsorm.Client\bin\$(ConfigurationName)\RedArrow.Jsorm.Client.dll" DestinationFolder="$(SolutionDir)Client.NuGetBuild\Lib\netstandard14" />
     <Copy SourceFiles="$(SolutionDir)Client.NuGet\RedArrow.Jsorm.Client.nuspec" DestinationFolder="$(SolutionDir)Client.NuGetBuild" />
     <Copy SourceFiles="$(SolutionDir)RedArrow.Jsorm.Client\bin\$(ConfigurationName)\RedArrow.Jsorm.Client.dll" DestinationFolder="$(SolutionDir)Client.NuGetBuild" />
     <Copy SourceFiles="$(SolutionDir)RedArrow.Jsorm.Client\bin\$(ConfigurationName)\RedArrow.Jsorm.Client.pdb" DestinationFolder="$(SolutionDir)Client.NuGetBuild" />
