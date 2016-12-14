@@ -44,7 +44,6 @@
     </Compile>
     <Compile Include="Cache\BasicCacheProvider.cs" />
     <Compile Include="Cache\ICacheProvider.cs" />
-    <Compile Include="Collections\AbstractRemoteCollection.cs" />
     <Compile Include="Collections\Generic\RemoteGenericBag.cs" />
     <Compile Include="Config\FluentConfigurator.cs" />
     <Compile Include="Config\Fluently.cs" />
@@ -68,7 +67,6 @@
     <Compile Include="Http\IHttpRequestBuilder.cs" />
     <Compile Include="Http\RequestBuilder.cs" />
     <Compile Include="Http\RequestContext.cs" />
-    <Compile Include="Infrastructure\DebuggerCollectionProxy.cs" />
     <Compile Include="Infrastructure\DebuggerCollectionProxy.cs" />
     <Compile Include="Infrastructure\JsormException.cs" />
     <Compile Include="Infrastructure\ModelNotRegisteredException.cs" />
