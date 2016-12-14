@@ -69,6 +69,7 @@
     <Compile Include="Http\RequestBuilder.cs" />
     <Compile Include="Http\RequestContext.cs" />
     <Compile Include="Infrastructure\DebuggerCollectionProxy.cs" />
+    <Compile Include="Infrastructure\DebuggerCollectionProxy.cs" />
     <Compile Include="Infrastructure\JsormException.cs" />
     <Compile Include="Infrastructure\ModelNotRegisteredException.cs" />
     <Compile Include="Infrastructure\ModelTypeMismatchException.cs" />
