@@ -74,7 +74,7 @@ namespace RedArrow.Jsorm.Client.Session
             
             var createPayload = HttpRequestBuilder.CreateResource(modelType, model);
 
-            Log.Info(() => $"creating resource {createPayload.ResourceType} from model {modelType} {JsonConvert.SerializeObject(model)}");
+            Log.Info(() => $"JSORM||creating resource {createPayload.ResourceType} from model {modelType} {JsonConvert.SerializeObject(model)}");
 
             var response = await HttpClient.SendAsync(createPayload.Request);
 
@@ -222,25 +222,29 @@ namespace RedArrow.Jsorm.Client.Session
                     var rltnData = relationship.Data;
                     if (rltnData?.Type != JTokenType.Object)
                     {
-                        throw new Exception();
+                        throw new Exception("TODO");
                     }
 
                     var rltnId = rltnData.ToObject<ResourceIdentifier>();
-                    try
+
+                    return Task.Run(async () =>
                     {
-                        return Get<TRltn>(rltnId.Id).Result;
-                    }
-                    catch (AggregateException ae)
-                    {
-                        Log.FatalException("An unexpected error occurred while retriving a relationship.  Rethrowing inner exception", ae);
-                        throw ae.InnerException;
-                    }
+                        try
+                        {
+                            return await Get<TRltn>(rltnId.Id);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.FatalException("JSORM||an unexpected error occurred while retrieving a relationship", ex);
+                            throw;
+                        }
+                    }).Result;
                 }
 
                 return default(TRltn);
             }
 
-            throw new Exception();
+            throw new Exception("TODO");
         }
 
         public void SetReference<TModel, TRltn>(Guid id, string attrName, TRltn rltn)
@@ -290,7 +294,7 @@ namespace RedArrow.Jsorm.Client.Session
 
         private object CreateModel(Type type, Guid id)
         {
-            Log.Debug(() => $"instantiating new session-managed instance of {type} with id {id}");
+            Log.Debug(() => $"JSORM||instantiating new session-managed instance of {type} with id {id}");
             return Activator.CreateInstance(type, id, this);
         }
 

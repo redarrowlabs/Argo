@@ -18,7 +18,7 @@ namespace RedArrow.Jsorm.Client.Cache
 
         public void Update(Guid id, object model)
         {
-            Log.Debug(() => $"adding model {id} to cache");
+            Log.Debug(() => $"JSORM||caching model {id}");
             PoorMansCache[id] = model;
         }
 
@@ -26,7 +26,7 @@ namespace RedArrow.Jsorm.Client.Cache
         {
             if (PoorMansCache.ContainsKey(id))
             {
-                Log.Debug(() => $"retrieved model {id} from cache");
+                Log.Debug(() => $"JSORM||retrieved cached model {id}");
                 return PoorMansCache[id];
             }
             return null;
@@ -34,7 +34,7 @@ namespace RedArrow.Jsorm.Client.Cache
 
         public void Remove(Guid id)
         {
-            Log.Debug(() => $"removing model {id} from cache");
+            Log.Debug(() => $"JSORM||removing cached model {id}");
             PoorMansCache.Remove(id);
         }
     }
