@@ -1,15 +1,19 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Net.Http;
 using System.Text;
+using Newtonsoft.Json;
+using RedArrow.Jsorm.TestUtils.XUnitSink;
+using Serilog;
+using Serilog.Events;
+using Xunit.Abstractions;
 
-namespace RedArrow.Jsorm.Sample
+namespace RedArrow.Jsorm.Integration
 {
     public class IntegrationTestFixture : IDisposable
     {
         public string Host = "http://titan-test.centralus.cloudapp.azure.com/api";
         public string AccessToken { get; }
-
+        
         public IntegrationTestFixture()
         {
             using (var authClient = new HttpClient { BaseAddress = new Uri($"{Host}/security/") })
@@ -29,6 +33,14 @@ namespace RedArrow.Jsorm.Sample
                 dynamic resContent = JsonConvert.DeserializeObject(responseContentStr);
                 AccessToken = resContent.token;
             }
+        }
+
+        public void ConfigureLogging(ITestOutputHelper outputHelper)
+        {
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.XunitTestOutput(outputHelper)
+                .CreateLogger();
         }
 
         public void Dispose()

@@ -14,5 +14,7 @@ namespace RedArrow.Jsorm.Client.Config
         IRemoteConfigure Configure(Action<HttpClient> httpClient);
 
         IRemoteConfigure ConfigureAsync(Func<HttpClient, Task> httpClient);
+
+        IRemoteConfigure UseMessageHandler(HttpMessageHandler handler);
     }
 }

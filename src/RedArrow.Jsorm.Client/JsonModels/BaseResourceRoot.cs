@@ -1,8 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
-using System.Net.Http;
-using System.Text;
 
 namespace RedArrow.Jsorm.Client.JsonModels
 {
@@ -29,11 +27,6 @@ namespace RedArrow.Jsorm.Client.JsonModels
         public static ResourceRootSingle FromJson(string json)
         {
             return JsonConvert.DeserializeObject<ResourceRootSingle>(json);
-        }
-
-        public HttpContent ToHttpContent()
-        {
-            return new StringContent(this.ToJson(), Encoding.UTF8, "application/vnd.api+json");
         }
     }
 }

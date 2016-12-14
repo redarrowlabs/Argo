@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using RedArrow.Jsorm.Client.Logging;
 
 namespace RedArrow.Jsorm.Client.Cache
 {
     public class BasicCacheProvider : ICacheProvider
     {
+        private static readonly ILog Log = LogProvider.For<BasicCacheProvider>();
+
         private IDictionary<Guid, object> PoorMansCache { get; }
 
         public BasicCacheProvider()
@@ -15,6 +18,7 @@ namespace RedArrow.Jsorm.Client.Cache
 
         public void Update(Guid id, object model)
         {
+            Log.Debug(() => $"JSORM||caching model {id}");
             PoorMansCache[id] = model;
         }
 
@@ -22,6 +26,7 @@ namespace RedArrow.Jsorm.Client.Cache
         {
             if (PoorMansCache.ContainsKey(id))
             {
+                Log.Debug(() => $"JSORM||retrieved cached model {id}");
                 return PoorMansCache[id];
             }
             return null;
@@ -29,6 +34,7 @@ namespace RedArrow.Jsorm.Client.Cache
 
         public void Remove(Guid id)
         {
+            Log.Debug(() => $"JSORM||removing cached model {id}");
             PoorMansCache.Remove(id);
         }
     }

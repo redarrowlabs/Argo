@@ -50,6 +50,10 @@
       <HintPath>..\packages\AutoFixture.Xunit2.3.50.2\lib\net45\Ploeh.AutoFixture.Xunit2.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Serilog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10, processorArchitecture=MSIL">
+      <HintPath>..\packages\Serilog.2.3.0\lib\net46\Serilog.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Diagnostics.DiagnosticSource, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Diagnostics.DiagnosticSource.4.3.0\lib\net46\System.Diagnostics.DiagnosticSource.dll</HintPath>
@@ -109,6 +113,10 @@
     <ProjectReference Include="..\RedArrow.Jsorm.Client\RedArrow.Jsorm.Client.csproj">
       <Project>{ccf8a55f-64f2-4305-abad-2a3df0fd3fe0}</Project>
       <Name>RedArrow.Jsorm.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\RedArrow.Jsorm.TestUtils\RedArrow.Jsorm.TestUtils.csproj">
+      <Project>{82812774-13b2-4733-a029-89252e6e6df4}</Project>
+      <Name>RedArrow.Jsorm.TestUtils</Name>
     </ProjectReference>
     <ProjectReference Include="..\RedArrow.Jsorm\RedArrow.Jsorm.csproj">
       <Project>{f540b5ca-b7c2-4799-9eb2-b5401bd1f28c}</Project>

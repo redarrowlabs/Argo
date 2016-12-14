@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using RedArrow.Jsorm.Client.Http;
 
 namespace RedArrow.Jsorm.Client.Config
 {
@@ -23,6 +24,7 @@ namespace RedArrow.Jsorm.Client.Config
         private SessionFactoryConfiguration SessionFactoryConfiguration { get; }
 
         private Uri ApiHost { get; }
+        private HttpMessageHandler HttpMessageHandler { get; set; }
 
         internal FluentConfigurator(string apiHost)
             : this(apiHost, new SessionFactoryConfiguration()) { }
@@ -72,6 +74,12 @@ namespace RedArrow.Jsorm.Client.Config
             return this;
         }
 
+        public IRemoteConfigure UseMessageHandler(HttpMessageHandler handler)
+        {
+            HttpMessageHandler = handler;
+            return this;
+        }
+
         public SessionFactoryConfiguration BuildFactoryConfiguration()
         {
             // load all the models
@@ -89,7 +97,7 @@ namespace RedArrow.Jsorm.Client.Config
             // build HttpClient factory
             SessionFactoryConfiguration.HttpClientFactory = () =>
             {
-                var client = (ClientCreator ?? (() => new HttpClient()))();
+                var client = (ClientCreator ?? (() => new HttpClient(new DefaultHttpMessageHandler(HttpMessageHandler))))();
 
                 client
                     .DefaultRequestHeaders
@@ -111,8 +119,7 @@ namespace RedArrow.Jsorm.Client.Config
 
         public ISessionFactory BuildSessionFactory()
         {
-            return BuildFactoryConfiguration()
-                .BuildSessionFactory();
+            return BuildFactoryConfiguration().BuildSessionFactory();
         }
     }
 }
