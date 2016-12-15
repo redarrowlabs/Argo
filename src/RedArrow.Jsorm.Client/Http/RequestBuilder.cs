@@ -20,6 +20,18 @@ namespace RedArrow.Jsorm.Client.Http
             ModelRegistry = modelRegistry;
         }
 
+        public RequestContext GetResource(Guid id, Type modelType)
+        {
+            var resourceType = ModelRegistry.GetResourceType(modelType);
+
+            return new RequestContext
+            {
+                Request = new HttpRequestMessage(HttpMethod.Get, $"{resourceType}/{id}"),
+
+                ResourceType = resourceType
+            };
+        }
+
         public RequestContext CreateResource(Type modelType, object model)
         {
             var resourceType = ModelRegistry.GetResourceType(modelType);

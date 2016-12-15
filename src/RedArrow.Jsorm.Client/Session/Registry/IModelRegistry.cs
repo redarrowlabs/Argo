@@ -1,7 +1,6 @@
 using RedArrow.Jsorm.Client.Config.Model;
 using System;
 using System.Collections.Generic;
-using System.Net.Http;
 
 namespace RedArrow.Jsorm.Client.Session.Registry
 {
@@ -17,8 +16,8 @@ namespace RedArrow.Jsorm.Client.Session.Registry
 
         IEnumerable<AttributeConfiguration> GetModelAttributes(Type modelType);
 
-        HttpRequestMessage CreateGetRequest<TModel>(Guid id);
+        HasManyConfiguration GetCollectionConfiguration<TModel>(string rltnName);
 
-        HttpRequestMessage CreateGetRequest(Type modelType, Guid id);
+        HasManyConfiguration GetCollectionConfiguration(Type modelType, string rltnName);
     }
 }

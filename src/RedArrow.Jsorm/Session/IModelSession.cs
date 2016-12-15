@@ -19,15 +19,21 @@ namespace RedArrow.Jsorm.Session
         void SetReference<TModel, TRltn>(Guid id, string attrName, TRltn value)
             where TModel : class
             where TRltn : class;
-
-        TRltn GetEnumerable<TModel, TRltn, TElmnt>(Guid id, string attrName)
+        
+        IEnumerable<TElmnt> GetGenericEnumerable<TModel, TElmnt>(Guid id, string rltnName)
             where TModel : class
-            where TRltn : IEnumerable<TElmnt>
+            where TElmnt : class;
+        
+        IEnumerable<TElmnt> SetGenericEnumerable<TModel, TElmnt>(Guid id, string attrName, IEnumerable<TElmnt> value)
+            where TModel : class
+            where TElmnt : class;
+        
+        ICollection<TElmnt> GetGenericCollection<TModel, TElmnt>(Guid id, string rltnName)
+            where TModel : class
             where TElmnt : class;
 
-        void SetEnumerable<TModel, TRltn, TElmnt>(Guid id, string attrName, TRltn value)
+        ICollection<TElmnt> SetGenericCollection<TModel, TElmnt>(Guid id, string attrName, IEnumerable<TElmnt> value)
             where TModel : class
-            where TRltn : IEnumerable<TElmnt>
             where TElmnt : class;
     }
 }

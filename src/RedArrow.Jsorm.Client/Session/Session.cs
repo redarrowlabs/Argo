@@ -7,16 +7,20 @@ using RedArrow.Jsorm.Client.Session.Patch;
 using RedArrow.Jsorm.Client.Session.Registry;
 using RedArrow.Jsorm.Session;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading.Tasks;
+using RedArrow.Jsorm.Client.Collections;
+using RedArrow.Jsorm.Client.Collections.Generic;
 using RedArrow.Jsorm.Client.Http;
 using RedArrow.Jsorm.Client.Logging;
 
 namespace RedArrow.Jsorm.Client.Session
 {
-    public class Session : IModelSession, ISession
+    public class Session : IModelSession, ISession, ICollectionSession
     {
         private static readonly ILog Log = LogProvider.For<Session>();
 
@@ -104,9 +108,9 @@ namespace RedArrow.Jsorm.Client.Session
             {
                 return (TModel)model;
             }
-
-            var request = ModelRegistry.CreateGetRequest<TModel>(id);
-            var response = await HttpClient.SendAsync(request);
+            
+            var requestContext = HttpRequestBuilder.GetResource(id, typeof(TModel));
+            var response = await HttpClient.SendAsync(requestContext.Request);
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
                 return default(TModel); // null
@@ -205,7 +209,7 @@ namespace RedArrow.Jsorm.Client.Session
             GetPatchContext<TModel>(id).SetAttriute(attrName, value);
         }
 
-        public TRltn GetReference<TModel, TRltn>(Guid id, string attrName)
+        public TRltn GetReference<TModel, TRltn>(Guid id, string rltnName)
             where TModel : class
             where TRltn : class
         {
@@ -217,7 +221,7 @@ namespace RedArrow.Jsorm.Client.Session
             if (ResourceState.TryGetValue(id, out resource))
             {
                 Relationship relationship;
-                if (resource.Relationships != null && resource.Relationships.TryGetValue(attrName, out relationship))
+                if (resource.Relationships != null && resource.Relationships.TryGetValue(rltnName, out relationship))
                 {
                     var rltnData = relationship.Data;
                     if (rltnData?.Type != JTokenType.Object)
@@ -247,7 +251,7 @@ namespace RedArrow.Jsorm.Client.Session
             throw new Exception("TODO");
         }
 
-        public void SetReference<TModel, TRltn>(Guid id, string attrName, TRltn rltn)
+        public void SetReference<TModel, TRltn>(Guid id, string rltnName, TRltn rltn)
             where TModel : class
             where TRltn : class
         {
@@ -260,33 +264,82 @@ namespace RedArrow.Jsorm.Client.Session
             var persisted = rltnId != Guid.Empty;
             if (!persisted)
             {
-                rltnId = context.GetReference(attrName) ?? Guid.NewGuid();
+                rltnId = context.GetReference(rltnName) ?? Guid.NewGuid();
             }
 
             context.SetReference(
-                attrName,
+                rltnName,
                 rltnId,
                 rltnType,
                 persisted);
             Cache.Update(rltnId, rltn);
         }
 
-        public TRltn GetEnumerable<TModel, TRltn, TElmnt>(Guid id, string attrName)
+        public void InitializeCollection(IRemoteCollection collection)
+        {
+
+        }
+        
+        public IEnumerable<TElmnt> GetGenericEnumerable<TModel, TElmnt>(Guid id, string rltnName)
             where TModel : class
-            where TRltn : IEnumerable<TElmnt>
             where TElmnt : class
         {
-            ThrowIfDisposed();
-
-
-            return default(TRltn);
+            return GetRemoteCollection<TModel, TElmnt>(id, rltnName);
         }
 
-        public void SetEnumerable<TModel, TRltn, TElmnt>(Guid id, string attrName, TRltn value)
+        public IEnumerable<TElmnt> SetGenericEnumerable<TModel, TElmnt>(Guid id, string attrName, IEnumerable<TElmnt> value)
             where TModel : class
-            where TRltn : IEnumerable<TElmnt>
             where TElmnt : class
         {
+            return SetRemoteCollection<TModel, TElmnt>(id, attrName, value);
+        }
+        
+        public ICollection<TElmnt> GetGenericCollection<TModel, TElmnt>(Guid id, string rltnName)
+            where TModel : class
+            where TElmnt : class
+        {
+            return GetRemoteCollection<TModel, TElmnt>(id, rltnName);
+        }
+
+        public ICollection<TElmnt> SetGenericCollection<TModel, TElmnt>(Guid id, string attrName, IEnumerable<TElmnt> value)
+            where TModel : class
+            where TElmnt : class
+        {
+            return SetRemoteCollection<TModel, TElmnt>(id, attrName, value);
+        }
+
+        private RemoteGenericBag<TElmnt> GetRemoteCollection<TModel, TElmnt>(Guid id, string rltnName)
+            where TModel : class
+            where TElmnt : class
+        {
+            var owner = Cache.Retrieve(id);
+
+            var rltnConfig = ModelRegistry.GetCollectionConfiguration<TModel>(rltnName);
+
+            // TODO: configure collection based on rltnConfig
+
+            return new RemoteGenericBag<TElmnt>(this)
+            {
+                Name = rltnName,
+                Owner = owner
+            };
+        }
+
+        private RemoteGenericBag<TElmnt> SetRemoteCollection<TModel, TElmnt>(Guid id, string rltnName, IEnumerable<TElmnt> value)
+            where TModel : class
+            where TElmnt : class
+        {
+            var owner = Cache.Retrieve(id);
+
+            var rltnConfig = ModelRegistry.GetCollectionConfiguration<TModel>(rltnName);
+
+            // TODO: configure collection based on rltnConfig
+
+            return new RemoteGenericBag<TElmnt>(this, value)
+            {
+                Name = rltnName,
+                Owner = owner
+            };
         }
 
         private TModel CreateModel<TModel>(Guid id)

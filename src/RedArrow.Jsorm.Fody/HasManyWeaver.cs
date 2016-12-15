@@ -13,15 +13,11 @@ namespace RedArrow.Jsorm
     {
         private void WeaveHasManys(ModelWeavingContext context)
         {
-            var sessionGetRltnGeneric = _sessionTypeDef
-                .Methods
-                .SingleOrDefault(x => x.Name == "GetEnumerable");
 
-            var sessionSetRltnGeneric = _sessionTypeDef
-                .Methods
-                .SingleOrDefault(x => x.Name == "SetEnumerable");
-
-            if (sessionGetRltnGeneric == null || sessionSetRltnGeneric == null)
+            if (_session_GetGenericEnumerable == null
+             || _session_SetGenericEnumerable == null
+             || _session_GetGenericCollection == null
+             || _session_SetGenericCollection == null)
             {
                 throw new Exception("Jsorm relationship weaving failed unexpectedly");
             }
@@ -30,9 +26,20 @@ namespace RedArrow.Jsorm
             {
                 var propertyTypeRef = propertyDef.PropertyType;
                 var propertyTypeDef = propertyTypeRef.Resolve();
-                if (propertyTypeDef.Interfaces.All(x => x.FullName != "System.Collections.IEnumerable") && !propertyTypeRef.HasGenericParameters)
+                
+                MethodReference setRltnMethRef;
+
+                if (propertyTypeDef.FullName == _genericIEnumerableTypeDef.FullName)
                 {
-                    throw new Exception($"Jsorm encountered a HasMany relationship on non-IEnumerable<T> property {propertyDef.FullName}");
+                    setRltnMethRef = _session_SetGenericEnumerable;
+                }
+                else if (propertyTypeDef.FullName == _genericICollectionTypeDef.FullName)
+                {
+                    setRltnMethRef = _session_SetGenericCollection;
+                }
+                else
+                {
+                    throw new Exception($"Jsorm encountered a HasMany relationship on non IEnumerable<T> or ICollection<T> property {propertyDef.FullName}");
                 }
                 
                 // get the backing field
@@ -43,9 +50,9 @@ namespace RedArrow.Jsorm
                     throw new Exception($"Failed to load backing field for property {propertyDef.FullName}");
                 }
 
-                // find the attrName, if there is one
+                // find the rltnName, if there is one
                 var propAttr = propertyDef.CustomAttributes.GetAttribute(Constants.Attributes.HasMany);
-                var attrName = propAttr.ConstructorArguments
+                var rltnName = propAttr.ConstructorArguments
                     .Where(x => x.Type == TypeSystem.String)
                     .Select(x => x.Value as string)
                     .SingleOrDefault() ?? propertyDef.Name.Camelize();
@@ -53,113 +60,73 @@ namespace RedArrow.Jsorm
                 // find property generic element type
                 var elementTypeDef = ((GenericInstanceType) propertyTypeRef).GenericArguments.First().Resolve();
 
-                LogInfo($"\tWeaving {propertyDef} => {attrName}");
-
-                WeaveEnumerableGetter(context, backingField, propertyDef, elementTypeDef, sessionGetRltnGeneric, attrName);
-                WeaveEnumerableSetter(context, backingField, propertyDef, elementTypeDef, sessionSetRltnGeneric, attrName);
+                LogInfo($"\tWeaving {propertyDef} => {rltnName}");
+                
+                WeaveRltnSetter(context, backingField, propertyDef, elementTypeDef, setRltnMethRef, rltnName);
             }
         }
 
-        private void WeaveEnumerableGetter(
-            ModelWeavingContext context,
-            FieldReference backingField,
-            PropertyDefinition rltnPropDef,
-            TypeDefinition elementTypeDef,
-            MethodReference sessionGetRltnGeneric,
-            string attrName)
-        {
-            // supply generic type arguments to template
-	        var sessionGetRltn = sessionGetRltnGeneric.MakeGenericMethod(
-		        context.ModelTypeRef,
-		        rltnPropDef.PropertyType,
-		        elementTypeDef);
-
-            // get
-            // {
-            //   if (this.__jsorm__generated_session != null)
-            //   {
-            //     this.<[PropName]>k__BackingField = this.__jsorm__generated_session.GetEnumerable<[ModelType], [ReturnType]>(this.Id, "[AttrName]");
-            //   }
-            //   return this.<[PropName]>k__BackingField;
-            // }
-            rltnPropDef.GetMethod.Body.Instructions.Clear();
-            var proc = rltnPropDef.GetMethod.Body.GetILProcessor();
-
-            var returnField = proc.Create(OpCodes.Ldarg_0);
-
-            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-            proc.Emit(OpCodes.Ldfld, context.SessionField); // load __jsorm__generated_session field from 'this'
-            proc.Emit(OpCodes.Brfalse, returnField); // if __jsorm__generated_session != null continue, else returnField
-
-            proc.Emit(OpCodes.Ldarg_0); // load 'this' to reference backing field
-
-            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
-            proc.Emit(OpCodes.Ldfld, context.SessionField); // load __jsorm__generated_session field from 'this'
-            proc.Emit(OpCodes.Ldarg_0); // load 'this'
-            proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
-            proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack
-			proc.Emit(OpCodes.Callvirt, context.ImportReference(
-				sessionGetRltn,
-				rltnPropDef.PropertyType.IsGenericParameter
-					? context.ModelTypeRef
-					: null)); // invoke session.GetEnumerable(..)
-			proc.Emit(OpCodes.Stfld, backingField); // store return value in 'this'.<backing field>
-
-            proc.Append(returnField); // load 'this' onto stack
-            proc.Emit(OpCodes.Ldfld, backingField); // load 'this'.<backing field>
-            proc.Emit(OpCodes.Ret); // return
-        }
-
-        private void WeaveEnumerableSetter(
+        private void WeaveRltnSetter(
             ModelWeavingContext context,
             FieldReference backingField,
             PropertyDefinition rltnPropDef,
             TypeDefinition elementTypeDef,
             MethodReference sessionSetRltnGeneric,
-            string attrName)
+            string rltnName)
         {
             // supply generic type arguments to template
             var sessionSetRltn = sessionSetRltnGeneric.MakeGenericMethod(
                 context.ModelTypeRef,
-                rltnPropDef.PropertyType,
                 elementTypeDef);
 
             rltnPropDef.SetMethod.Body.Instructions.Clear();
 
             // set
             // {
-            //     this.<[PropName]>k__BackingField = value;
             //     if (this.__jsorm__generated_session != null)
             //     {
-            //         this.__jsorm__generated_session.SetEnumerable<[ModelType], [ReturnType]>(this.Id, "[AttrName]", this.<[PropName]>k__BackingField);
+            //         this.<[PropName]>k__BackingField = this.__jsorm__generated_session.Set<[ModelType], [ElementType]>(this.Id, "[RltnName]", this.<[PropName]>k__BackingField);
+            //     }
+            //     else
+            //     {
+            //         this.<[PropName]>k__BackingField = value;
             //     }
             // }
             var proc = rltnPropDef.SetMethod.Body.GetILProcessor();
 
+            var endif = proc.Create(OpCodes.Ldarg_0);
             var ret = proc.Create(OpCodes.Ret);
-
-            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-            proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
-            proc.Emit(OpCodes.Stfld, backingField); // 'this'.<backing field> = 'value'
-
+            
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
             proc.Emit(OpCodes.Ldfld, context.SessionField); // load __jsorm__generated_session field from 'this'
-            proc.Emit(OpCodes.Brfalse, ret); // if __jsorm__generated_session != null continue, else return
+            
+            // if __jsorm__generated_session == null
+            proc.Emit(OpCodes.Brfalse_S, endif);
 
-            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
+            proc.Emit(OpCodes.Ldarg_0);
+
+            proc.Emit(OpCodes.Ldarg_0);
             proc.Emit(OpCodes.Ldfld, context.SessionField); // load __jsorm__generated_session field from 'this'
             proc.Emit(OpCodes.Ldarg_0); // load 'this'
             proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
-            proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack
-            proc.Emit(OpCodes.Ldarg_0); // load 'this'
-            proc.Emit(OpCodes.Ldfld, backingField); // load backing field
-			proc.Emit(OpCodes.Callvirt, context.ImportReference(
-				sessionSetRltn,
-				rltnPropDef.PropertyType.IsGenericParameter
-					? context.ModelTypeRef
-					: null)); // invoke session.SetEnumerable(..)
+            proc.Emit(OpCodes.Ldstr, rltnName); // load attrName onto stack
+            proc.Emit(OpCodes.Ldarg_1); // load 'value'
+            proc.Emit(OpCodes.Callvirt, context.ImportReference(
+                sessionSetRltn,
+                rltnPropDef.PropertyType.IsGenericParameter
+                    ? context.ModelTypeRef
+                    : null)); // invoke session.GetReference(..)
 
-			proc.Append(ret);
+            proc.Emit(OpCodes.Stfld, backingField);
+
+            proc.Emit(OpCodes.Br_S, ret);
+            // else
+            proc.Append(endif); // load 'this' onto stack to reference session field
+            //proc.Emit(OpCodes.Ldarg_0);
+            proc.Emit(OpCodes.Ldarg_1);
+            proc.Emit(OpCodes.Stfld, backingField);
+
+            proc.Append(ret);
         }
     }
 }

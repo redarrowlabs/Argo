@@ -2,24 +2,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using RedArrow.Jsorm.Client.Infrastructure;
 using RedArrow.Jsorm.Client.Session;
 
 namespace RedArrow.Jsorm.Client.Collections.Generic
 {
     [DebuggerTypeProxy(typeof(DebuggerCollectionProxy<>))]
-    public class RemoteGenericBag<T> : IList<T>, IList
+    public class RemoteGenericBag<T> : AbstractRemoteCollection, ICollection<T>, ICollection
     {
-		protected ISession Session { get; }
-
         protected IList<T> InternalBag { get; set; }
-		
-		protected bool Initializing { get; set; }
-
-		protected bool Initialized { get; set; }
-
-		public bool Dirty { get; protected set; }
 
 	    public bool IsSynchronized => false;
 
@@ -31,27 +22,27 @@ namespace RedArrow.Jsorm.Client.Collections.Generic
 
 	    public bool Empty => InternalBag.Count == 0;
 
-		public int Count { get; set; } // TODO
+        public int Count => InternalBag.Count; // TODO
 
-		public RemoteGenericBag()
+		internal RemoteGenericBag()
         {
         }
 
-        public RemoteGenericBag(ISession session) :
-			this(session, new List<T>())
+        internal RemoteGenericBag(ICollectionSession session) :
+			base(session)
         {
         }
 
-        public RemoteGenericBag(ISession session, IEnumerable<T> items)
+        internal RemoteGenericBag(ICollectionSession session, IEnumerable<T> items) :
+            base(session)
 		{
-			Session = session;
 			InternalBag = items as IList<T> ?? new List<T>(items);
         }
 		
 
 		public IEnumerator<T> GetEnumerator()
-	    {
-			//TODO: Read()
+		{
+		    Read();
 		    return InternalBag.GetEnumerator();
 	    }
 
@@ -97,29 +88,7 @@ namespace RedArrow.Jsorm.Client.Collections.Generic
 			// TODO: cache hit
 			return InternalBag.Contains(item);
 		}
-
-		public int IndexOf(object value)
-		{
-			return IndexOf((T) value);
-		}
-
-	    public int IndexOf(T item)
-		{
-			// TODO: Read()
-		    return InternalBag.IndexOf(item);
-		}
-
-	    public void Insert(int index, object value)
-	    {
-		    Insert(index, (T) value);
-	    }
-
-	    public void Insert(int index, T item)
-	    {
-			// TODO: Write()
-			InternalBag.Insert(index, item);
-		}
-
+        
 		public void Remove(object value)
 		{
 			Remove((T) value);
@@ -133,46 +102,14 @@ namespace RedArrow.Jsorm.Client.Collections.Generic
 			return result;
 		}
 
-		public void RemoveAt(int index)
-		{
-			// TODO: Write()
-			InternalBag.RemoveAt(index);
-		}
-
 		public void CopyTo(T[] array, int index)
 		{
-			for (var i = index; i < Count; i++)
-			{
-				array.SetValue(this[i], i);
-			}
+            throw new NotImplementedException();
 		}
 
 		public void CopyTo(Array array, int index)
 		{
-			for (var i = index; i < Count; i++)
-			{
-				array.SetValue(this[i], i);
-			}
-		}
-
-		object IList.this[int index]
-		{
-			get { return this[index]; }
-			set { this[index] = (T) value; }
-		}
-
-		public T this[int index]
-		{
-			get
-			{
-				// TODO: Read()
-				return InternalBag[index];
-			}
-			set
-			{
-				// TODO: Write()
-				InternalBag[index] = value;
-			}
+            throw new NotImplementedException();
 		}
 	}
 }

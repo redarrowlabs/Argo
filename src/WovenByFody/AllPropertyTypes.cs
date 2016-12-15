@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using RedArrow.Jsorm.Attributes;
 
 namespace WovenByFody
 {
 	[Model]
-	public class AllPropertyTypes<T>
+	public class AllPropertyTypes<T, TRef, TElmnt>
 	{
 		[Id]
 		public Guid Id { get; }
@@ -56,5 +57,24 @@ namespace WovenByFody
 
 		[Property]
 		public T GenericProperty { get; set; }
-	}
+
+        [HasOne]
+        public TRef GenericReferenceProperty { get; set; }
+
+        [HasOne]
+        public object ReferenceProperty { get; set; }
+
+        [HasMany]
+        public IEnumerable<object> EnumerableProperty { get; set; }
+
+        //[HasMany]
+        //public IEnumerable<TElmnt> GenericEnumerableProperty { get; set; }
+
+        [HasMany]
+        public ICollection<object> CollectionProperty { get; set; }
+
+        //[HasMany]
+        //public ICollection<TElmnt> GenericCollectionProperty { get; set; }
+
+    }
 }

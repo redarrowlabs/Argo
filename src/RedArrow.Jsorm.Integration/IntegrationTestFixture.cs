@@ -20,18 +20,18 @@ namespace RedArrow.Jsorm.Integration
             {
                 var reqBody = new StringContent(JsonConvert.SerializeObject(new
                 {
-                    accountId = Guid.Parse("00000000-0000-0000-0000-000000000001"),
-                    applicationId = Guid.Parse("00000000-0000-0000-0000-000000000006"),
-                    email = "ral.titan.shared@gmail.com",
-                    password = "Password$$11"
+                    accountId = Guid.Parse("10000000-0000-0000-0000-000000000000"),
+                    applicationId = Guid.Parse("10000000-0000-0000-0000-200000000000"),
+                    email = "redarrowqa+account1user1@gmail.com",
+                    password = "Testing1234"
                 }), Encoding.UTF8, "application/json");
-                var response = authClient.PostAsync("login", reqBody).GetAwaiter().GetResult();
+                var response = authClient.PostAsync("authenticate", reqBody).GetAwaiter().GetResult();
 
                 response.EnsureSuccessStatusCode();
 
                 var responseContentStr = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                 dynamic resContent = JsonConvert.DeserializeObject(responseContentStr);
-                AccessToken = resContent.token;
+                AccessToken = resContent.AccessToken;
             }
         }
 

@@ -18,6 +18,9 @@ namespace RedArrow.Jsorm.Client.Config.Model
         // resource relationship name => model property
         public IDictionary<string, HasOneConfiguration> HasOneProperties { get; }
 
+        // resource relationship name => model property
+        public IDictionary<string, HasManyConfiguration> HasManyProperties { get; }
+
         internal ModelConfiguration(Type modelType)
         {
             ModelType = modelType;
@@ -25,6 +28,7 @@ namespace RedArrow.Jsorm.Client.Config.Model
             IdProperty = modelType.GetModelIdProperty();
             AttributeProperties = modelType.GetModelAttributeConfigurations();
             HasOneProperties = modelType.GetModelHasOneConfigurations();
+            HasManyProperties = modelType.GetModelHasManyConfigurations();
         }
     }
 }

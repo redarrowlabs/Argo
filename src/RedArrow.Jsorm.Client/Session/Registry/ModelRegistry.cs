@@ -1,9 +1,8 @@
 ﻿using RedArrow.Jsorm.Client.Config.Model;
-using RedArrow.Jsorm.Client.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
+using RedArrow.Jsorm.Client.Collections.Generic;
 
 namespace RedArrow.Jsorm.Client.Session.Registry
 {
@@ -42,14 +41,20 @@ namespace RedArrow.Jsorm.Client.Session.Registry
             return GetModelConfig(modelType).AttributeProperties.Values;
         }
 
-        public HttpRequestMessage CreateGetRequest<TModel>(Guid id)
+        public HasManyConfiguration GetCollectionConfiguration<TModel>(string rltnName)
         {
-            return CreateGetRequest(typeof(TModel), id);
+            return GetCollectionConfiguration(typeof(TModel), rltnName);
         }
 
-        public HttpRequestMessage CreateGetRequest(Type modelType, Guid id)
+        public HasManyConfiguration GetCollectionConfiguration(Type modelType, string rltnName)
         {
-            return GetModelConfig(modelType).CreateGetRequest(id);
+            HasManyConfiguration ret;
+            if (!GetModelConfig(modelType).HasManyProperties.TryGetValue(rltnName, out ret))
+            {
+                // TODO: RelationNotRegisteredExecption
+                throw new Exception($"JSORM||has-many configuration named {rltnName} not found");
+            }
+            return ret;
         }
 
         private ModelConfiguration GetModelConfig(Type modelType)
@@ -62,7 +67,7 @@ namespace RedArrow.Jsorm.Client.Session.Registry
             }
 
             // TODO: ModelNotRegisteredException
-            throw new Exception("model not registered");
+            throw new Exception("JSORM||model not registered");
         }
 
         private void ThrowIfNotRegistered(Type type)
@@ -70,7 +75,7 @@ namespace RedArrow.Jsorm.Client.Session.Registry
             if (!Registry.ContainsKey(type))
             {
                 // TODO: ModelNotRegisteredException
-                throw new Exception("model not registered");
+                throw new Exception("JSORM||model not registered");
             }
         }
     }

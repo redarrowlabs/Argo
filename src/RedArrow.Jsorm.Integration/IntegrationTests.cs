@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Linq;
+using System.Configuration;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Ploeh.AutoFixture.Xunit2;
+using RedArrow.Jsorm.Client.Collections.Generic;
 using RedArrow.Jsorm.Client.Config;
 using RedArrow.Jsorm.Client.Session;
 using WovenByFody;
@@ -217,6 +220,26 @@ namespace RedArrow.Jsorm.Integration
                 var provider = patient.Provider;
 
                 Assert.NotNull(provider);
+
+                //clean up
+                await session.Delete(patient);
+            }
+        }
+
+        [Fact, Trait("Category", "Integration")]
+        public async Task GetEmptyCollection()
+        {
+            var sessionFactory = CreateSessionFactory();
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                var provider = await session.Create<Provider>();
+
+                Assert.NotNull(provider.Patients);
+                Assert.IsType<RemoteGenericBag<Patient>>(provider.Patients);
+                Assert.False(provider.Patients.Any());
+
+                await session.Delete(provider);
             }
         }
 

@@ -42,26 +42,9 @@ namespace RedArrow.Jsorm
                     .SingleOrDefault() ?? propertyDef.Name.Camelize();
 
                 LogInfo($"\tWeaving {propertyDef} => {attrName}");
-
-                WeaveAttrGetter(backingField, propertyDef);
+                
                 WeaveAttrSetter(context, backingField, propertyDef, sessionSetAttrGeneric, attrName);
             }
-        }
-
-        private static void WeaveAttrGetter(
-            FieldReference backingField,
-            PropertyDefinition propertyDef)
-        {
-            // get
-            // {
-            //   return this.<[PropName]>k__BackingField;
-            // }
-            propertyDef.GetMethod.Body.Instructions.Clear();
-            var proc = propertyDef.GetMethod.Body.GetILProcessor();
-			
-            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-            proc.Emit(OpCodes.Ldfld, backingField); // load 'this'.<backing field>
-            proc.Emit(OpCodes.Ret); // return
         }
 
         private void WeaveAttrSetter(

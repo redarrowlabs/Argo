@@ -67,5 +67,16 @@ namespace RedArrow.Jsorm.Client.Extensions
                     has1Cfg => has1Cfg.AttributeName,
                     has1Cfg => has1Cfg);
         }
+
+        internal static IDictionary<string, HasManyConfiguration> GetModelHasManyConfigurations(this Type type)
+        {
+            return type.GetTypeInfo()
+                .DeclaredProperties
+                .Where(prop => prop.IsDefined(typeof(HasManyAttribute)))
+                .Select(prop => new HasManyConfiguration(prop))
+                .ToDictionary(
+                    hasMCfg => hasMCfg.AttributeName,
+                    hasMCfg => hasMCfg);
+        }
     }
 }
