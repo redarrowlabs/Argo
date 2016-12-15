@@ -4,8 +4,10 @@ using System.Collections.Generic;
 
 namespace RedArrow.Jsorm.Client.JsonModels
 {
-    internal class Relationship : JModel, IMetaDecorated
+    public class Relationship : JModel, IMetaDecorated
     {
+        internal Relationship() { }
+
         [JsonProperty("links", NullValueHandling = NullValueHandling.Ignore)]
         public IDictionary<string, JToken> Links { get; set; }
 
@@ -15,7 +17,7 @@ namespace RedArrow.Jsorm.Client.JsonModels
         [JsonProperty("meta", NullValueHandling = NullValueHandling.Ignore)]
         public IDictionary<string, JToken> Meta { get; set; }
 
-        public static Relationship FromJson(string json)
+        internal static Relationship FromJson(string json)
         {
             return JsonConvert.DeserializeObject<Relationship>(json);
         }

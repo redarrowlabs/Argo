@@ -5,8 +5,10 @@ using System.Collections.Generic;
 
 namespace RedArrow.Jsorm.Client.JsonModels
 {
-    internal class Link : JModel, IMetaDecorated
+    public class Link : JModel, IMetaDecorated
     {
+        internal Link() { }
+
         [JsonProperty("href", NullValueHandling = NullValueHandling.Ignore)]
         public Uri Href { get; set; }
 

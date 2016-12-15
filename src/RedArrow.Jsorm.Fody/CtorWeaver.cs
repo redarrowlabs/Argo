@@ -4,8 +4,6 @@ using Mono.Cecil.Rocks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using RedArrow.Jsorm.Extensions;
 
 namespace RedArrow.Jsorm
@@ -33,7 +31,7 @@ namespace RedArrow.Jsorm
                 new ParameterDefinition(
                     "session",
                     ParameterAttributes.None,
-                    context.SessionTypeRef));
+                    context.ImportReference(_sessionTypeDef)));
 
             var objectCtor = context.ImportReference(TypeSystem.Object.Resolve().GetConstructors().First());
 
@@ -55,7 +53,6 @@ namespace RedArrow.Jsorm
 
 			// this._attrBackingField = this.__jsorm__generated_session.GetAttribute
 			WeaveAttributeFieldInitializers(context, proc, context.MappedAttributes);
-            WeaveCollectionFieldInitializers(context, proc, context.MappedHasManys);
 
             proc.Emit(OpCodes.Ret); // return
 
@@ -101,67 +98,5 @@ namespace RedArrow.Jsorm
 				proc.Emit(OpCodes.Stfld, backingField); // store return value in 'this'.<backing field>
 			}
 		}
-
-        private void WeaveCollectionFieldInitializers(ModelWeavingContext context, ILProcessor proc, IEnumerable<PropertyDefinition> rltnPropDefs)
-        {
-            foreach (var rltnPropDef in rltnPropDefs)
-            {
-                var propertyTypeRef = rltnPropDef.PropertyType;
-                var propertyTypeDef = propertyTypeRef.Resolve();
-
-                MethodReference getRltnMethRef;
-
-                if (propertyTypeDef.FullName == _genericIEnumerableTypeDef.FullName)
-                {
-                    getRltnMethRef = _session_GetGenericEnumerable;
-                }
-                else if (propertyTypeDef.FullName == _genericICollectionTypeDef.FullName)
-                {
-                    getRltnMethRef = _session_GetGenericCollection;
-                }
-                else
-                {
-                    throw new Exception($"Jsorm encountered a HasMany relationship on non IEnumerable<T> or ICollection<T> property {rltnPropDef.FullName}");
-                }
-
-                // get the backing field
-                var backingField = rltnPropDef.BackingField();
-
-                if (backingField == null)
-                {
-                    throw new Exception($"Failed to load backing field for property {rltnPropDef.FullName}");
-                }
-
-                // find the rltnName, if there is one
-                var propAttr = rltnPropDef.CustomAttributes.GetAttribute(Constants.Attributes.HasMany);
-                var rltnName = propAttr.ConstructorArguments
-                    .Where(x => x.Type == TypeSystem.String)
-                    .Select(x => x.Value as string)
-                    .SingleOrDefault() ?? rltnPropDef.Name.Camelize();
-
-                // find property generic element type
-                var elementTypeDef = ((GenericInstanceType)propertyTypeRef).GenericArguments.First().Resolve();
-
-                // supply generic type arguments to template
-                var sessionGetRltn = getRltnMethRef.MakeGenericMethod(
-                    context.ModelTypeRef,
-                    elementTypeDef);
-
-                proc.Emit(OpCodes.Ldarg_0);
-
-                proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
-                proc.Emit(OpCodes.Ldfld, context.SessionField); // load __jsorm__generated_session field from 'this'
-                proc.Emit(OpCodes.Ldarg_0); // load 'this'
-                proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
-                proc.Emit(OpCodes.Ldstr, rltnName); // load attrName onto stack
-                proc.Emit(OpCodes.Callvirt, context.ImportReference(
-                    sessionGetRltn,
-                    rltnPropDef.PropertyType.IsGenericParameter
-                        ? context.ModelTypeRef
-                        : null)); // invoke session.GetAttribute(..)
-
-                proc.Emit(OpCodes.Stfld, backingField); // store return value in 'this'.<backing field>
-            }
-        }
     }
 }

@@ -4,8 +4,10 @@ using System.Collections.Generic;
 
 namespace RedArrow.Jsorm.Client.JsonModels
 {
-    internal class Resource : ResourceIdentifier
+    public class Resource : ResourceIdentifier
     {
+        internal Resource() { }
+
         [JsonProperty("attributes", NullValueHandling = NullValueHandling.Ignore)]
         public JObject Attributes { get; set; }
 
@@ -15,7 +17,7 @@ namespace RedArrow.Jsorm.Client.JsonModels
         [JsonProperty("links", NullValueHandling = NullValueHandling.Ignore)]
         public IDictionary<string, JToken> Links { get; set; }
 
-        public static Resource FromJson(string json)
+        internal static Resource FromJson(string json)
         {
             return JsonConvert.DeserializeObject<Resource>(json);
         }

@@ -31,7 +31,7 @@ namespace RedArrow.Jsorm.Integration
 
                 var responseContentStr = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                 dynamic resContent = JsonConvert.DeserializeObject(responseContentStr);
-                AccessToken = resContent.AccessToken;
+                AccessToken = resContent.accessToken;
             }
         }
 

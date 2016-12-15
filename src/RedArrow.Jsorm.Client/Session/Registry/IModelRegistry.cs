@@ -10,7 +10,7 @@ namespace RedArrow.Jsorm.Client.Session.Registry
 
         string GetResourceType(Type modelType);
 
-        Guid GetModelId<TModel>(TModel model);
+        Guid GetModelId(object model);
 
         IEnumerable<AttributeConfiguration> GetModelAttributes<TModel>();
 

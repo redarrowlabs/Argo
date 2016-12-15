@@ -2,8 +2,10 @@
 
 namespace RedArrow.Jsorm.Client.Session
 {
-    public interface ICollectionSession
+    internal interface ICollectionSession
     {
-        void InitializeCollection(IRemoteCollection collection);
+
+        void InitializeCollection<T>(IRemoteCollection<T> collection)
+            where T : class;
     }
 }

@@ -21,9 +21,8 @@ namespace RedArrow.Jsorm
         public Collection<FieldDefinition> Fields => ModelTypeDef.Fields;
         public Collection<MethodDefinition> Methods => ModelTypeDef.Methods;
         public Collection<PropertyDefinition> Properties => ModelTypeDef.Properties;
-
-        public TypeReference SessionTypeRef { get; private set; }
-        public FieldDefinition SessionField { get; private set; }
+        
+        public FieldDefinition SessionField { get; set; }
 
         public ModelWeavingContext(TypeDefinition modelTypeDef)
         {
@@ -34,20 +33,6 @@ namespace RedArrow.Jsorm
             MappedAttributes = GetMappedProperties(Constants.Attributes.Property);
             MappedHasOnes = GetMappedProperties(Constants.Attributes.HasOne);
             MappedHasManys = GetMappedProperties(Constants.Attributes.HasMany);
-        }
-
-        public void AddSessionField(TypeDefinition sessionTypeDef)
-        {
-            if (SessionField != null) return;
-
-            SessionTypeRef = ModelTypeDef.Module.ImportReference(sessionTypeDef);
-
-            SessionField = new FieldDefinition(
-                    "__jsorm__generated_session",
-                    FieldAttributes.Private | FieldAttributes.NotSerialized,
-                    SessionTypeRef);
-
-            Fields.Add(SessionField);
         }
 
         private void GetMappedIdProperty()

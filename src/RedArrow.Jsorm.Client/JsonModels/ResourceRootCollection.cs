@@ -2,7 +2,10 @@
 
 namespace RedArrow.Jsorm.Client.JsonModels
 {
-    internal class ResourceRootCollection : BaseResourceRoot<IEnumerable<Resource>>
+    public class ResourceRootCollection : BaseResourceRoot<IEnumerable<Resource>>
     {
+        internal ResourceRootCollection()
+        {
+        }
     }
 }

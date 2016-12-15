@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using RedArrow.Jsorm.Client.Session;
 
 namespace RedArrow.Jsorm.Client.Collections
 {
-    public abstract class AbstractRemoteCollection : IRemoteCollection
+    internal abstract class AbstractRemoteCollection<T> : IRemoteCollection<T>, ICollection
+        where T : class
     {
         protected ICollectionSession Session { get; }
 
@@ -34,5 +37,20 @@ namespace RedArrow.Jsorm.Client.Collections
             }
             Session.InitializeCollection(this);
         }
+
+        public abstract void Initialize(IEnumerable<T> items);
+
+        public abstract IEnumerator<T> GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        public abstract void Add(T item);
+        public abstract void Clear();
+        public abstract bool Contains(T item);
+        public abstract void CopyTo(T[] array, int arrayIndex);
+        public abstract bool Remove(T item);
+        public abstract void CopyTo(Array array, int index);
+        public abstract int Count { get; }
+        public virtual bool IsSynchronized => false;
+        public virtual object SyncRoot => this;
+        public virtual bool IsReadOnly => false;
     }
 }

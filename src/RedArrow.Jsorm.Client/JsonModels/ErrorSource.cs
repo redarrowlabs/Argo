@@ -2,8 +2,10 @@
 
 namespace RedArrow.Jsorm.Client.JsonModels
 {
-    internal class ErrorSource : JModel
+    public class ErrorSource : JModel
     {
+        internal ErrorSource() { }
+
         [JsonProperty("pointer", NullValueHandling = NullValueHandling.Ignore)]
         public string Pointer { get; set; }
 

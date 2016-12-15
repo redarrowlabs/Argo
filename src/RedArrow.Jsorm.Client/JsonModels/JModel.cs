@@ -2,7 +2,7 @@
 
 namespace RedArrow.Jsorm.Client.JsonModels
 {
-    internal abstract class JModel
+    public abstract class JModel
     {
         public virtual string ToJson()
         {

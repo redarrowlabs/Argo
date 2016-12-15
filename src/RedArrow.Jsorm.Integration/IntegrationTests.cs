@@ -227,7 +227,7 @@ namespace RedArrow.Jsorm.Integration
         }
 
         [Fact, Trait("Category", "Integration")]
-        public async Task GetEmptyCollection()
+        public async Task GetCollectionFromNullRelationship()
         {
             var sessionFactory = CreateSessionFactory();
 
@@ -236,10 +236,45 @@ namespace RedArrow.Jsorm.Integration
                 var provider = await session.Create<Provider>();
 
                 Assert.NotNull(provider.Patients);
-                Assert.IsType<RemoteGenericBag<Patient>>(provider.Patients);
                 Assert.False(provider.Patients.Any());
 
                 await session.Delete(provider);
+            }
+        }
+
+        [Fact, Trait("Category", "Integration")]
+        public async Task GetCollectionFromEmptyRelationship()
+        {
+            var sessionFactory = CreateSessionFactory();
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                // this is a "reserved" provider I have created specifically for this test
+                var provider = await session.Get<Provider>(Guid.Parse("0b9709c5-492e-4f0f-ac46-546cbbde0b0b"));
+
+                Assert.NotNull(provider.Patients);
+                Assert.False(provider.Patients.Any());
+            }
+        }
+
+        [Fact, Trait("Category", "Integration")]
+        public async Task GetCollectionFromRelationship()
+        {
+            var sessionFactory = CreateSessionFactory();
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                // this is a "reserved" provider I have created specifically for this test
+                var provider = await session.Get<Provider>(Guid.Parse("e3f919b8-625b-42cf-8ef2-4c2489c51c5e"));
+
+                Assert.NotNull(provider.Patients);
+                Assert.True(provider.Patients.Any());
+                Assert.Equal(8, provider.Patients.Count());
+                Assert.All(provider.Patients, x =>
+                {
+                    Assert.Equal("Will", x.FirstName);
+                    Assert.Equal("Power", x.LastName);
+                });
             }
         }
 

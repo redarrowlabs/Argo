@@ -26,15 +26,18 @@ namespace RedArrow.Jsorm
             {
                 var propertyTypeRef = propertyDef.PropertyType;
                 var propertyTypeDef = propertyTypeRef.Resolve();
-                
+
+                MethodReference getRltnMethRef;
                 MethodReference setRltnMethRef;
 
                 if (propertyTypeDef.FullName == _genericIEnumerableTypeDef.FullName)
                 {
+                    getRltnMethRef = _session_GetGenericEnumerable;
                     setRltnMethRef = _session_SetGenericEnumerable;
                 }
                 else if (propertyTypeDef.FullName == _genericICollectionTypeDef.FullName)
                 {
+                    getRltnMethRef = _session_GetGenericCollection;
                     setRltnMethRef = _session_SetGenericCollection;
                 }
                 else
@@ -62,8 +65,56 @@ namespace RedArrow.Jsorm
 
                 LogInfo($"\tWeaving {propertyDef} => {rltnName}");
                 
+                WeaveRltnGetter(context, backingField, propertyDef, elementTypeDef, getRltnMethRef, rltnName);
                 WeaveRltnSetter(context, backingField, propertyDef, elementTypeDef, setRltnMethRef, rltnName);
             }
+        }
+        
+        private void WeaveRltnGetter(
+            ModelWeavingContext context,
+            FieldReference backingField,
+            PropertyDefinition rltnPropDef,
+            TypeDefinition elementTypeDef,
+            MethodReference sessionGetRltnGeneric,
+            string rltnName)
+        {
+            // supply generic type args to template
+            var sessionGetRltn = sessionGetRltnGeneric.MakeGenericMethod(
+                context.ModelTypeRef,
+                elementTypeDef);
+
+            rltnPropDef.GetMethod.Body.Instructions.Clear();
+
+            var proc = rltnPropDef.GetMethod.Body.GetILProcessor();
+
+            var endif = proc.Create(OpCodes.Ldarg_0);
+
+            // TODO: this isn't thread safe - consider generating a Lazy in the ctor and invoking it here
+            proc.Emit(OpCodes.Ldarg_0);
+            proc.Emit(OpCodes.Ldfld, context.SessionField);
+            proc.Emit(OpCodes.Brfalse_S, endif);
+            proc.Emit(OpCodes.Ldarg_0);
+            proc.Emit(OpCodes.Ldfld, backingField);
+            proc.Emit(OpCodes.Brtrue_S, endif);
+
+            proc.Emit(OpCodes.Ldarg_0);
+
+            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
+            proc.Emit(OpCodes.Ldfld, context.SessionField); // load __jsorm__generated_session field from 'this'
+            proc.Emit(OpCodes.Ldarg_0); // load 'this'
+            proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
+            proc.Emit(OpCodes.Ldstr, rltnName); // load attrName onto stack
+            proc.Emit(OpCodes.Callvirt, context.ImportReference(
+                sessionGetRltn,
+                rltnPropDef.PropertyType.IsGenericParameter
+                    ? context.ModelTypeRef
+                    : null)); // invoke session.GetAttribute(..)
+
+            proc.Emit(OpCodes.Stfld, backingField); // store return value in 'this'.<backing field>
+
+            proc.Append(endif);
+            proc.Emit(OpCodes.Ldfld, backingField);
+            proc.Emit(OpCodes.Ret);
         }
 
         private void WeaveRltnSetter(
@@ -122,10 +173,9 @@ namespace RedArrow.Jsorm
             proc.Emit(OpCodes.Br_S, ret);
             // else
             proc.Append(endif); // load 'this' onto stack to reference session field
-            //proc.Emit(OpCodes.Ldarg_0);
             proc.Emit(OpCodes.Ldarg_1);
             proc.Emit(OpCodes.Stfld, backingField);
-
+            
             proc.Append(ret);
         }
     }

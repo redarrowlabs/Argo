@@ -59,6 +59,9 @@
     <Compile Include="..\RedArrow.Jsorm.Fody\AttributeWeaver.cs">
       <Link>AttributeWeaver.cs</Link>
     </Compile>
+    <Compile Include="..\RedArrow.Jsorm.Fody\ClassWeaver.cs">
+      <Link>ClassWeaver.cs</Link>
+    </Compile>
     <Compile Include="..\RedArrow.Jsorm.Fody\Constants.cs">
       <Link>Constants.cs</Link>
     </Compile>
@@ -97,9 +100,6 @@
     </Compile>
     <Compile Include="..\RedArrow.Jsorm.Fody\ModuleWeaver.cs">
       <Link>ModuleWeaver.cs</Link>
-    </Compile>
-    <Compile Include="..\RedArrow.Jsorm.Fody\SessionFieldWeaver.cs">
-      <Link>SessionFieldWeaver.cs</Link>
     </Compile>
     <Compile Include="..\RedArrow.Jsorm.Fody\TypeDefLoader.cs">
       <Link>TypeDefLoader.cs</Link>

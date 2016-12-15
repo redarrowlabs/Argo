@@ -1,35 +1,29 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using RedArrow.Jsorm.Client.Extensions;
 using RedArrow.Jsorm.Client.Infrastructure;
 using RedArrow.Jsorm.Client.Session;
 
 namespace RedArrow.Jsorm.Client.Collections.Generic
 {
     [DebuggerTypeProxy(typeof(DebuggerCollectionProxy<>))]
-    public class RemoteGenericBag<T> : AbstractRemoteCollection, ICollection<T>, ICollection
+    internal class RemoteGenericBag<T> : AbstractRemoteCollection<T>
+        where T : class
     {
         protected IList<T> InternalBag { get; set; }
+        
+	    public bool Empty => Count == 0;
 
-	    public bool IsSynchronized => false;
-
-	    public object SyncRoot => this;
-
-	    public bool IsFixedSize => false;
-
-	    public bool IsReadOnly => false;
-
-	    public bool Empty => InternalBag.Count == 0;
-
-        public int Count => InternalBag.Count; // TODO
+        public override int Count => InternalBag?.Count ?? 0; // TODO
 
 		internal RemoteGenericBag()
         {
         }
 
         internal RemoteGenericBag(ICollectionSession session) :
-			base(session)
+			this(session, new List<T>())
         {
         }
 
@@ -38,26 +32,24 @@ namespace RedArrow.Jsorm.Client.Collections.Generic
 		{
 			InternalBag = items as IList<T> ?? new List<T>(items);
         }
-		
 
-		public IEnumerator<T> GetEnumerator()
+        public override void Initialize(IEnumerable<T> items)
+        {
+            Initializing = true; // TODO
+
+            items.Each(x => InternalBag.Add(x));
+
+            Initialized = true; // TODO
+            Initializing = false; // TODO
+        }
+
+        public override IEnumerator<T> GetEnumerator()
 		{
 		    Read();
 		    return InternalBag.GetEnumerator();
 	    }
-
-	    IEnumerator IEnumerable.GetEnumerator()
-	    {
-		    return GetEnumerator();
-		}
-
-		public int Add(object value)
-		{
-			Add((T)value);
-			return InternalBag.Count - 1;
-		}
-
-		public void Add(T item)
+        
+		public override void Add(T item)
 	    {
 			// TODO: Write()
 			InternalBag.Add(item);
@@ -65,7 +57,7 @@ namespace RedArrow.Jsorm.Client.Collections.Generic
 			// TODO: queued operation
 	    }
 
-	    public void Clear()
+	    public override void Clear()
 		{
 			// TODO: queued operation
 
@@ -76,25 +68,15 @@ namespace RedArrow.Jsorm.Client.Collections.Generic
 			    Dirty = true;
 		    }
 	    }
-
-	    public bool Contains(object value)
-	    {
-		    return Contains((T) value);
-	    }
-
-		public bool Contains(T item)
+        
+		public override bool Contains(T item)
 		{
 			// TODO: this will not work with paging
 			// TODO: cache hit
 			return InternalBag.Contains(item);
 		}
         
-		public void Remove(object value)
-		{
-			Remove((T) value);
-		}
-
-		public bool Remove(T item)
+		public override bool Remove(T item)
 		{
 			// TODO: Initialize(true)
 			var result = InternalBag.Remove(item);
@@ -102,14 +84,22 @@ namespace RedArrow.Jsorm.Client.Collections.Generic
 			return result;
 		}
 
-		public void CopyTo(T[] array, int index)
+		public override void CopyTo(T[] array, int index)
 		{
-            throw new NotImplementedException();
+            Read();
+		    for (var i = index; i < Count; i++)
+		    {
+		        array.SetValue(InternalBag[i], i);
+		    }
 		}
 
-		public void CopyTo(Array array, int index)
+		public override void CopyTo(Array array, int index)
 		{
-            throw new NotImplementedException();
+            Read();
+		    for (var i = index; i < Count; i++)
+		    {
+		        array.SetValue(InternalBag[i], i);
+		    }
 		}
 	}
 }

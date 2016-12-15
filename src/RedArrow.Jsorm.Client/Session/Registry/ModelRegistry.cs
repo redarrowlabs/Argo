@@ -25,7 +25,7 @@ namespace RedArrow.Jsorm.Client.Session.Registry
             return GetModelConfig(modelType).ResourceType;
         }
 
-        public Guid GetModelId<TModel>(TModel model)
+        public Guid GetModelId(object model)
         {
             var modelType = model.GetType();
             return (Guid)GetModelConfig(modelType).IdProperty.GetValue(model);

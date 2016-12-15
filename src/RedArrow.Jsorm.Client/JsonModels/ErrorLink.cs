@@ -2,8 +2,10 @@
 
 namespace RedArrow.Jsorm.Client.JsonModels
 {
-    internal class ErrorLink : JModel
+    public class ErrorLink : JModel
     {
+        internal ErrorLink() { }
+
         [JsonProperty("about", NullValueHandling = NullValueHandling.Ignore)]
         public Link About { get; set; }
     }

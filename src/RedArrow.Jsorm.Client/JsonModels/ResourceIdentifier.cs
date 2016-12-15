@@ -5,8 +5,10 @@ using System.Collections.Generic;
 
 namespace RedArrow.Jsorm.Client.JsonModels
 {
-    internal class ResourceIdentifier : JModel, IMetaDecorated
+    public class ResourceIdentifier : JModel, IMetaDecorated
     {
+        internal ResourceIdentifier() { }
+
         [JsonProperty("id")]
         public Guid Id { get; set; }
 

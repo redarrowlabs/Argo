@@ -1,8 +1,10 @@
 ﻿namespace RedArrow.Jsorm.Client.JsonModels
 {
-    internal class ResourceRootSingle : BaseResourceRoot<Resource>
+    public class ResourceRootSingle : BaseResourceRoot<Resource>
     {
-        public static ResourceRootSingle FromResource(Resource resource)
+        internal ResourceRootSingle() { }
+
+        internal static ResourceRootSingle FromResource(Resource resource)
         {
             return new ResourceRootSingle
             {

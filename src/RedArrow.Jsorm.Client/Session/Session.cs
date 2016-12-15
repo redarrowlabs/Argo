@@ -7,11 +7,10 @@ using RedArrow.Jsorm.Client.Session.Patch;
 using RedArrow.Jsorm.Client.Session.Registry;
 using RedArrow.Jsorm.Session;
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Reflection;
 using System.Threading.Tasks;
 using RedArrow.Jsorm.Client.Collections;
 using RedArrow.Jsorm.Client.Collections.Generic;
@@ -274,12 +273,52 @@ namespace RedArrow.Jsorm.Client.Session
                 persisted);
             Cache.Update(rltnId, rltn);
         }
-
-        public void InitializeCollection(IRemoteCollection collection)
-        {
-
-        }
         
+        public void InitializeCollection<T>(IRemoteCollection<T> collection)
+            where T : class
+        {
+            // TODO: determine if resources were included in root
+            // TODO: determine if {id/type} from owner relationship are cached already
+            // TODO: abstract this into a collection loader/initializer
+
+            var owner = collection.Owner;
+            var rltnName = collection.Name;
+            var id = ModelRegistry.GetModelId(owner);
+            var resourceType = ModelRegistry.GetResourceType(owner.GetType());
+
+            // TODO: brute force this for now
+
+            Task.Run(async () =>
+            {
+                // re-fetch the parent model, requesting only the relationship
+                var response = await HttpClient.GetAsync($"{resourceType}/{id}?include={rltnName}&fields[{resourceType}]={rltnName}");
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return;
+                }
+                response.EnsureSuccessStatusCode();
+
+                var contentJson = await response.Content.ReadAsStringAsync();
+                var root = JsonConvert.DeserializeObject<ResourceRootSingle>(contentJson);
+
+                if (root.Included == null)
+                {
+                    return;
+                }
+
+                // TODO: clean this up
+
+                var items = root.Included.Select(x =>
+                {
+                    ResourceState[x.Id] = x;
+                    var model = CreateModel<T>(x.Id);
+                    Cache.Update(x.Id, model);
+                    return model;
+                });
+                collection.Initialize(items);
+            }).Wait();
+        }
+
         public IEnumerable<TElmnt> GetGenericEnumerable<TModel, TElmnt>(Guid id, string rltnName)
             where TModel : class
             where TElmnt : class
