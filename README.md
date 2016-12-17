@@ -2,7 +2,7 @@
 # Argo
 A Json Api 1.0 C# ORM client to translate Json Api semantics into familiar, friendly POCOs.
 
-[![GitHub license](https://img.shields.io/github/license/redarrowlabs/jsorm.svg)](https://raw.githubusercontent.com/redarrowlabs/jsorm/development/LICENSE)
+[![GitHub license](https://img.shields.io/github/license/redarrowlabs/argo.svg)](https://raw.githubusercontent.com/redarrowlabs/argo/development/LICENSE)
 
 #### Weaver
 | Branch | Nuget | Build |
@@ -18,7 +18,7 @@ A Json Api 1.0 C# ORM client to translate Json Api semantics into familiar, frie
 
 
 ## What
-With the advent of NoSQL databases, we all need to decide how to relate these schemaless resources over web apis.  This often introduces new challenges, like how to model relationships bewteen resources.  These challenges compound when you introduce filtering or paging and sorting features to your api. [JSON API](http://jsonapi.org/) is a specification to define a common approach to overcoming these challenges.  However, additional challenges arise when you realize you need to somehow map a JSON API resource to a POCO.  The goal of jsorm is to solve all of these challenges (and then some!) for you.
+With the advent of NoSQL databases, we all need to decide how to relate these schemaless resources over web apis.  This often introduces new challenges, like how to model relationships bewteen resources.  These challenges compound when you introduce filtering or paging and sorting features to your api. [JSON API](http://jsonapi.org/) is a specification to define a common approach to overcoming these challenges.  However, additional challenges arise when you realize you need to somehow map a JSON API resource to a POCO.  The goal of Argo is to solve all of these challenges (and then some!) for you.
 ## Why
 Here is an example of a JSON API resource:
 ```javascript
@@ -26,7 +26,7 @@ Here is an example of a JSON API resource:
     "type": "article",
     "id": "02e8ae9d-b9b5-40e9-9746-906f1fb26b64",
     "attributes": {
-      "title": "jsorm and JSON API: a coming of age story"
+      "title": "argo and JSON API: a coming of age story"
     },
     "relationships": {
       "author": {
@@ -64,18 +64,18 @@ article.Comments = comments;
 ```
 Yuck.
 ## How
-jsorm takes advantage of [Fody](https://github.com/Fody/Fody) to weave code into your POCO at compile time in order to bridge the gap between the POCO semantics developers expect and the JSON API json structure.
+Argo takes advantage of [Fody](https://github.com/Fody/Fody) to weave code into your POCO at compile time in order to bridge the gap between the POCO semantics developers expect and the JSON API json structure.
 
 Advantages:
  1. Cross Platform!
  2. Most expensive reflection-based mapping logic is executed at compile time and not at runtime.
- 3. Simple.  jsorm targets netstandard 1.3
+ 3. Simple.  Argo targets netstandard 1.3
 
 Most all ORMs leverage proxies to abstract your POCO from your database.  Unfortunately, the most popular .net proxy implementation, [Castle DynamicProxy](https://github.com/castleproject/Core/blob/master/docs/dynamicproxy.md), will not play nice with Xamarin iOS projects due to its use of `Reflection.Emit` apis, which are not permitted on iOS.  We get around this by modifying the POCO itself at compile time instead of proxying it at runtime.
 
 Maybe the thought of a 3rd party library modifying your code is scary.  Let's see some examples.
 ## Examples
-Just show the code, right?  Below are some examples of how jsorm transforms your POCO into a session-aware ORM proxy.
+Just show the code, right?  Below are some examples of how Argo transforms your POCO into a session-aware ORM proxy.
 ```csharp
 [Model]
 public class Person
@@ -90,12 +90,12 @@ public class Person
 	public Friend BestFriend { get; set; }
 }
 ```
-At a minimum, each model needs an `[Id]` defined.  Jsorm will weave this class into:
+At a minimum, each model needs an `[Id]` defined.  Argo will weave this class into:
 ```csharp
 [Model]
 public class Person
 {
-    private IModelSession __jsorm_session;
+    private IModelSession __argo_session;
 
     [Id]
 	public Guid Id { get; set; }
