@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using RedArrow.Jsorm.Attributes;
+using RedArrow.Argo.Attributes;
 
 namespace WovenByFody
 {

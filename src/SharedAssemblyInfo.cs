@@ -3,7 +3,7 @@ using System.Resources;
 
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Red Arrow")]
-[assembly: AssemblyProduct("Jsorm")]
+[assembly: AssemblyProduct("Argo")]
 [assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

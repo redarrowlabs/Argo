@@ -32,30 +32,18 @@
   <Target Name="ReBuild" DependsOnTargets="NuGetBuild" />
   <Target Name="NuGetBuild" DependsOnTargets="Clean">
     <MakeDir Directories="$(SolutionDir)Client.NuGetBuild" />
-    <Copy SourceFiles="$(SolutionDir)RedArrow.Jsorm\bin\$(ConfigurationName)\RedArrow.Jsorm.dll" DestinationFolder="$(SolutionDir)Client.NuGetBuild\Lib\netstandard14" />
-    <Copy SourceFiles="$(SolutionDir)RedArrow.Jsorm.Client\bin\$(ConfigurationName)\RedArrow.Jsorm.Client.dll" DestinationFolder="$(SolutionDir)Client.NuGetBuild\Lib\netstandard14" />
-    <Copy SourceFiles="$(SolutionDir)Client.NuGet\RedArrow.Jsorm.Client.nuspec" DestinationFolder="$(SolutionDir)Client.NuGetBuild" />
-    <Copy SourceFiles="$(SolutionDir)RedArrow.Jsorm.Client\bin\$(ConfigurationName)\RedArrow.Jsorm.Client.dll" DestinationFolder="$(SolutionDir)Client.NuGetBuild" />
-    <Copy SourceFiles="$(SolutionDir)RedArrow.Jsorm.Client\bin\$(ConfigurationName)\RedArrow.Jsorm.Client.pdb" DestinationFolder="$(SolutionDir)Client.NuGetBuild" />
-    <PepitaPackage.CreatePackageTask NuGetBuildDirectory="$(SolutionDir)Client.NuGetBuild" MetadataAssembly="$(SolutionDir)RedArrow.Jsorm.Client\bin\$(ConfigurationName)\RedArrow.Jsorm.Client.dll" />
+    <Copy SourceFiles="$(SolutionDir)RedArrow.Argo\bin\$(ConfigurationName)\RedArrow.Argo.dll" DestinationFolder="$(SolutionDir)Client.NuGetBuild\Lib\netstandard14" />
+    <Copy SourceFiles="$(SolutionDir)RedArrow.Argo.Client\bin\$(ConfigurationName)\RedArrow.Argo.Client.dll" DestinationFolder="$(SolutionDir)Client.NuGetBuild\Lib\netstandard14" />
+    <Copy SourceFiles="$(SolutionDir)Client.NuGet\RedArrow.Argo.Client.nuspec" DestinationFolder="$(SolutionDir)Client.NuGetBuild" />
+    <Copy SourceFiles="$(SolutionDir)RedArrow.Argo.Client\bin\$(ConfigurationName)\RedArrow.Argo.Client.dll" DestinationFolder="$(SolutionDir)Client.NuGetBuild" />
+    <Copy SourceFiles="$(SolutionDir)RedArrow.Argo.Client\bin\$(ConfigurationName)\RedArrow.Argo.Client.pdb" DestinationFolder="$(SolutionDir)Client.NuGetBuild" />
+    <PepitaPackage.CreatePackageTask NuGetBuildDirectory="$(SolutionDir)Client.NuGetBuild" MetadataAssembly="$(SolutionDir)RedArrow.Argo.Client\bin\$(ConfigurationName)\RedArrow.Argo.Client.dll" />
   </Target>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="RedArrow.Jsorm.Client.nuspec">
+    <None Include="RedArrow.Argo.Client.nuspec">
       <SubType>Designer</SubType>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\RedArrow.Jsorm.Client\RedArrow.Jsorm.Client.csproj">
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <Project>{CCF8A55F-64F2-4305-ABAD-2A3DF0FD3FE0}</Project>
-      <Name>RedArrow.Jsorm.Client</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\RedArrow.Jsorm\RedArrow.Jsorm.csproj">
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <Project>{F540B5CA-B7C2-4799-9EB2-B5401BD1F28C}</Project>
-      <Name>RedArrow.Jsorm</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="..\packages\PepitaPackage.1.21.4\build\PepitaPackage.targets" Condition="Exists('..\packages\PepitaPackage.1.21.4\build\PepitaPackage.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
