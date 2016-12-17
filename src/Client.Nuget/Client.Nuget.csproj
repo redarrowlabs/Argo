@@ -45,6 +45,18 @@
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RedArrow.Argo.Client\RedArrow.Argo.Client.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Project>{CCF8A55F-64F2-4305-ABAD-2A3DF0FD3FE0}</Project>
+      <Name>RedArrow.Argo.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\RedArrow.Argo\RedArrow.Argo.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Project>{F540B5CA-B7C2-4799-9EB2-B5401BD1F28C}</Project>
+      <Name>RedArrow.Argo</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="..\packages\PepitaPackage.1.21.4\build\PepitaPackage.targets" Condition="Exists('..\packages\PepitaPackage.1.21.4\build\PepitaPackage.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
