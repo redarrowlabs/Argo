@@ -1,5 +1,6 @@
-# jsorm (json orm)
-A JSON API C# ORM client to abstract a JSON API 1.0 spec web api with familiar, friendly POCO semantics
+![Argo](argo.png?raw=true)
+# Argo
+A Json Api 1.0 C# ORM client to translate Json Api semantics into familiar, friendly POCOs.
 
 [![GitHub license](https://img.shields.io/github/license/redarrowlabs/jsorm.svg)](https://raw.githubusercontent.com/redarrowlabs/jsorm/development/LICENSE)
 
@@ -275,3 +276,8 @@ We're still evaluating the long-term roadmap for this project, but initial tenta
 - server to client eventing/sync push via [Rx.NET](https://github.com/Reactive-Extensions/Rx.NET)
 - your idea could go here...
 
+## Name
+In Greek mythology, [Argo](https://en.wikipedia.org/wiki/Argo) was the ship Jason and the Argonauts sailed in search of the golden fleece.
+
+## Logo
+[Sail Boat](https://thenounproject.com/term/sail-boat/17570/) designed by [Celia Jaber](https://thenounproject.com/celiajaber/) from The Noun Project
