@@ -32,32 +32,21 @@
   <Target Name="ReBuild" DependsOnTargets="NuGetBuild" />
   <Target Name="NuGetBuild" DependsOnTargets="Clean">
     <MakeDir Directories="$(SolutionDir)Fody.NuGetBuild" />
-    <Copy SourceFiles="$(SolutionDir)RedArrow.Jsorm\bin\$(ConfigurationName)\RedArrow.Jsorm.dll" DestinationFolder="$(SolutionDir)Fody.NuGetBuild\Lib\netstandard14" />
-    <Copy SourceFiles="$(SolutionDir)Fody.NuGet\RedArrow.Jsorm.Fody.nuspec" DestinationFolder="$(SolutionDir)Fody.NuGetBuild" />
+    <Copy SourceFiles="$(SolutionDir)RedArrow.Argo\bin\$(ConfigurationName)\RedArrow.Argo.dll" DestinationFolder="$(SolutionDir)Fody.NuGetBuild\Lib\netstandard14" />
+    <Copy SourceFiles="$(SolutionDir)Fody.NuGet\RedArrow.Argo.Fody.nuspec" DestinationFolder="$(SolutionDir)Fody.NuGetBuild" />
     <Copy SourceFiles="$(ProjectDir)install.ps1" DestinationFiles="$(SolutionDir)Fody.NuGetBuild\Tools\install.ps1" />
     <Copy SourceFiles="$(ProjectDir)uninstall.ps1" DestinationFiles="$(SolutionDir)Fody.NuGetBuild\Tools\uninstall.ps1" />
-    <Copy SourceFiles="$(SolutionDir)RedArrow.Jsorm.Fody\bin\$(ConfigurationName)\RedArrow.Jsorm.Fody.dll" DestinationFolder="$(SolutionDir)Fody.NuGetBuild" />
-    <Copy SourceFiles="$(SolutionDir)RedArrow.Jsorm.Fody\bin\$(ConfigurationName)\RedArrow.Jsorm.Fody.pdb" DestinationFolder="$(SolutionDir)Fody.NuGetBuild" />
-    <PepitaPackage.CreatePackageTask NuGetBuildDirectory="$(SolutionDir)Fody.NuGetBuild" MetadataAssembly="$(SolutionDir)RedArrow.Jsorm.Fody\bin\$(ConfigurationName)\RedArrow.Jsorm.Fody.dll" />
+    <Copy SourceFiles="$(SolutionDir)RedArrow.Argo.Fody\bin\$(ConfigurationName)\RedArrow.Argo.Fody.dll" DestinationFolder="$(SolutionDir)Fody.NuGetBuild" />
+    <Copy SourceFiles="$(SolutionDir)RedArrow.Argo.Fody\bin\$(ConfigurationName)\RedArrow.Argo.Fody.pdb" DestinationFolder="$(SolutionDir)Fody.NuGetBuild" />
+    <PepitaPackage.CreatePackageTask NuGetBuildDirectory="$(SolutionDir)Fody.NuGetBuild" MetadataAssembly="$(SolutionDir)RedArrow.Argo.Fody\bin\$(ConfigurationName)\RedArrow.Argo.Fody.dll" />
   </Target>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="RedArrow.Jsorm.Fody.nuspec">
+    <None Include="RedArrow.Argo.Fody.nuspec">
       <SubType>Designer</SubType>
     </None>
     <None Include="install.ps1" />
     <None Include="uninstall.ps1" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\RedArrow.Jsorm.Fody\RedArrow.Jsorm.Fody.csproj">
-      <Project>{bd5259a0-0735-456a-9b93-c665aa0a3353}</Project>
-      <Name>RedArrow.Jsorm.Fody</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\RedArrow.Jsorm\RedArrow.Jsorm.csproj">
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <Project>{F540B5CA-B7C2-4799-9EB2-B5401BD1F28C}</Project>
-      <Name>RedArrow.Jsorm</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="..\packages\PepitaPackage.1.21.4\build\PepitaPackage.targets" Condition="Exists('..\packages\PepitaPackage.1.21.4\build\PepitaPackage.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

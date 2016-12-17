@@ -48,13 +48,13 @@
     <Compile Include="Provider.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\RedArrow.Jsorm\RedArrow.Jsorm.csproj">
-      <Project>{F540B5CA-B7C2-4799-9EB2-B5401BD1F28C}</Project>
-      <Name>RedArrow.Jsorm</Name>
-    </ProjectReference>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <ProjectReference Include="..\RedArrow.Argo\RedArrow.Argo.csproj">
+      <Project>{f540b5ca-b7c2-4799-9eb2-b5401bd1f28c}</Project>
+      <Name>RedArrow.Argo</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Fody.1.29.4\build\dotnet\Fody.targets" Condition="Exists('..\packages\Fody.1.29.4\build\dotnet\Fody.targets')" />

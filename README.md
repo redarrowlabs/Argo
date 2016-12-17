@@ -103,10 +103,10 @@ public class Person
     public Patient(Guid id, IModelSession session)
     {
         this.Id = id;
-        this.__jsorm_session = session;
+        this.__argo_session = session;
 		
-		this.firstName = __jsorm_session.GetAttribute<Person, string>(this.Id, "firstName");
-		this.lastName = __jsorm_session.GetAttribute<Person, string>(this.Id, "lastName");
+		this.firstName = __argo_session.GetAttribute<Person, string>(this.Id, "firstName");
+		this.lastName = __argo_session.GetAttribute<Person, string>(this.Id, "lastName");
     }
 	
 	// properties explained below
@@ -132,9 +132,9 @@ public string FirstName
 	set
 	{
 		this.firstName = value;
-		if (this.__jsorm_session != null)
+		if (this.__argo_session != null)
 		{
-			this.__jsorm_session.SetAttribute<Person, string>(this.Id, "firstName", this.firstName);
+			this.__argo_session.SetAttribute<Person, string>(this.Id, "firstName", this.firstName);
 		}
 	}
 }
@@ -157,9 +157,9 @@ public string FirstName
 	set
 	{
 		this.firstName = value;
-		if (this.__jsorm_session != null && this.firstName != value)
+		if (this.__argo_session != null && this.firstName != value)
 		{
-			this.__jsorm_session.SetAttribute<Person, string>(this.Id, "first-name", this.firstName);
+			this.__argo_session.SetAttribute<Person, string>(this.Id, "first-name", this.firstName);
 		}
 	}
 }
@@ -176,18 +176,18 @@ public Friend BestFriend
 {
     get
     {
-		if(this.__jsorm_session != null)
+		if(this.__argo_session != null)
         {
-            this.bestFriend = this.__jsorm_session.GetReference<Person, Friend>(this.Id, "bestFriend");
+            this.bestFriend = this.__argo_session.GetReference<Person, Friend>(this.Id, "bestFriend");
         }
         return this.bestFriend;
     }
     set
     {
         this.bestFriend = value;
-        if(this.__jsorm_session != null && this.bestFriend != value)
+        if(this.__argo_session != null && this.bestFriend != value)
         {
-            this.__jsorm_session.SetReference<Person, Friend>(this.Id, "bestFriend", this.bestFriend);
+            this.__argo_session.SetReference<Person, Friend>(this.Id, "bestFriend", this.bestFriend);
         }
     }
 }
@@ -200,14 +200,14 @@ With the model delegating to the session, the session can do a lot of cool stuff
  - cache retrieved models for subsequent gets
 
 ## Configuring
-jsorm gives you a pleasent, easy-to-understand configuration api.  If you've worked with [Fluent NHibernate](https://github.com/jagregory/fluent-nhibernate), this should look a little familiar.
+Argo gives you a pleasent, easy-to-understand configuration Api.  If you've worked with [Fluent NHibernate](https://github.com/jagregory/fluent-nhibernate), this should look a little familiar.
 ```csharp
 // the ISessionFactory is the long-lived object you would (ideally) register in your IoC container
 var sessionFactory = Fluently.Configure("http://api.host.com")
 	.Remote()
 		// with Xamarin iOS apps, you may need to provide your own TLS-compatible HttpMessageHandler
 		.Create(() => new HttpClient())
-		// jsorm will run these configuration actions on the HttpClient
+		// Argo will run these configuration actions on the HttpClient
 		// whenever an `ISession` is built by the `ISessionFactory`
 		.Configure(httpClient => httpClient
 		    .DefaultRequestHeaders
@@ -215,7 +215,7 @@ var sessionFactory = Fluently.Configure("http://api.host.com")
 		// and/or...
 		.ConfigureAsync(() => YourTokenManagerInstance.GetAccessTokenAsync())
 	.Models()
-		// tell jsorm where your models are
+		// tell Argo where your models are
 		.Configure(scan => scan.AssemblyOf<Person>())
 		// and/or...
 		.Configure(scan => scan.Assembly(Assembly.GetExecutingAssembly()))

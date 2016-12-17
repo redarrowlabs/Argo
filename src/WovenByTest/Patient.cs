@@ -1,5 +1,5 @@
 ﻿using System;
-using RedArrow.Jsorm.Attributes;
+using RedArrow.Argo.Attributes;
 
 namespace WovenByTest
 {
