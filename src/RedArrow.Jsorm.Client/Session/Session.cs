@@ -291,7 +291,7 @@ namespace RedArrow.Jsorm.Client.Session
             Task.Run(async () =>
             {
                 // re-fetch the parent model, requesting only the relationship
-                var response = await HttpClient.GetAsync($"{resourceType}/{id}?include={rltnName}&fields[{resourceType}]={rltnName}");
+                var response = await HttpClient.GetAsync($"{resourceType}/{id}/{rltnName}");
                 if (response.StatusCode == HttpStatusCode.NotFound)
                 {
                     return;
@@ -299,16 +299,16 @@ namespace RedArrow.Jsorm.Client.Session
                 response.EnsureSuccessStatusCode();
 
                 var contentJson = await response.Content.ReadAsStringAsync();
-                var root = JsonConvert.DeserializeObject<ResourceRootSingle>(contentJson);
+                var root = JsonConvert.DeserializeObject<ResourceRootCollection>(contentJson);
 
-                if (root.Included == null)
+                if (root.Data == null)
                 {
                     return;
                 }
 
                 // TODO: clean this up
 
-                var items = root.Included.Select(x =>
+                var items = root.Data.Select(x =>
                 {
                     ResourceState[x.Id] = x;
                     var model = CreateModel<T>(x.Id);
