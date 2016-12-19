@@ -28,7 +28,22 @@ namespace RedArrow.Jsorm.Client.Http
             {
                 Request = new HttpRequestMessage(HttpMethod.Get, $"{resourceType}/{id}"),
 
+                ResourceId = id,
                 ResourceType = resourceType
+            };
+        }
+
+        public RequestContext GetRelated(object owner, string rltnName)
+        {
+            var id = ModelRegistry.GetModelId(owner);
+            var resourceType = ModelRegistry.GetResourceType(owner.GetType());
+
+            return new RequestContext
+            {
+                Request = new HttpRequestMessage(HttpMethod.Get, $"{resourceType}/{id}/{rltnName}"),
+
+                ResourceId = id,
+                ResourceType = resourceType,
             };
         }
 
@@ -80,6 +95,7 @@ namespace RedArrow.Jsorm.Client.Http
                 Relationships = patchContext.Resource?.Relationships
             };
         }
+
 
         private static HttpContent BuildHttpContent(string content)
         {

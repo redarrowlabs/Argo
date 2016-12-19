@@ -277,21 +277,15 @@ namespace RedArrow.Jsorm.Client.Session
         public void InitializeCollection<T>(IRemoteCollection<T> collection)
             where T : class
         {
-            // TODO: determine if resources were included in root
             // TODO: determine if {id/type} from owner relationship are cached already
             // TODO: abstract this into a collection loader/initializer
-
-            var owner = collection.Owner;
-            var rltnName = collection.Name;
-            var id = ModelRegistry.GetModelId(owner);
-            var resourceType = ModelRegistry.GetResourceType(owner.GetType());
-
+            
             // TODO: brute force this for now
 
             Task.Run(async () =>
             {
-                // re-fetch the parent model, requesting only the relationship
-                var response = await HttpClient.GetAsync($"{resourceType}/{id}/{rltnName}");
+                var requestContext = HttpRequestBuilder.GetRelated(collection.Owner, collection.Name);
+                var response = await HttpClient.SendAsync(requestContext.Request);
                 if (response.StatusCode == HttpStatusCode.NotFound)
                 {
                     return;
