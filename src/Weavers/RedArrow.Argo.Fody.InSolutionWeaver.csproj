@@ -65,6 +65,9 @@
     <Compile Include="..\RedArrow.Argo.Fody\AttributeWeaver.cs">
       <Link>AttributeWeaver.cs</Link>
     </Compile>
+    <Compile Include="..\RedArrow.Argo.Fody\ClassWeaver.cs">
+      <Link>ClassWeaver.cs</Link>
+    </Compile>
     <Compile Include="..\RedArrow.Argo.Fody\Constants.cs">
       <Link>Constants.cs</Link>
     </Compile>
@@ -103,12 +106,6 @@
     </Compile>
     <Compile Include="..\RedArrow.Argo.Fody\ModuleWeaver.cs">
       <Link>ModuleWeaver.cs</Link>
-    </Compile>
-    <Compile Include="..\RedArrow.Argo.Fody\SessionFieldWeaver.cs">
-      <Link>SessionFieldWeaver.cs</Link>
-    </Compile>
-    <Compile Include="..\RedArrow.Argo.Fody\SupportsCeqChecker.cs">
-      <Link>SupportsCeqChecker.cs</Link>
     </Compile>
     <Compile Include="..\RedArrow.Argo.Fody\TypeDefLoader.cs">
       <Link>TypeDefLoader.cs</Link>

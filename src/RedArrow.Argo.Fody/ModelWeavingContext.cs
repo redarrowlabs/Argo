@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Mono.Cecil;
+using Mono.Collections.Generic;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Mono.Cecil;
-using Mono.Collections.Generic;
 using RedArrow.Argo.Extensions;
 
 namespace RedArrow.Argo
@@ -22,8 +22,7 @@ namespace RedArrow.Argo
         public Collection<MethodDefinition> Methods => ModelTypeDef.Methods;
         public Collection<PropertyDefinition> Properties => ModelTypeDef.Properties;
 
-        public TypeReference SessionTypeRef { get; private set; }
-        public FieldDefinition SessionField { get; private set; }
+        public FieldDefinition SessionField { get; set; }
 
         public ModelWeavingContext(TypeDefinition modelTypeDef)
         {
@@ -34,20 +33,6 @@ namespace RedArrow.Argo
             MappedAttributes = GetMappedProperties(Constants.Attributes.Property);
             MappedHasOnes = GetMappedProperties(Constants.Attributes.HasOne);
             MappedHasManys = GetMappedProperties(Constants.Attributes.HasMany);
-        }
-
-        public void AddSessionField(TypeDefinition sessionTypeDef)
-        {
-            if (SessionField != null) return;
-
-            SessionTypeRef = ModelTypeDef.Module.ImportReference(sessionTypeDef);
-
-            SessionField = new FieldDefinition(
-                    "__argo__generated_session",
-                    FieldAttributes.Private | FieldAttributes.NotSerialized,
-                    SessionTypeRef);
-
-            Fields.Add(SessionField);
         }
 
         private void GetMappedIdProperty()
@@ -72,7 +57,7 @@ namespace RedArrow.Argo
                 .Where(p => p.CustomAttributes.ContainsAttribute(attrFullName))
                 .ToArray();
         }
-		
+
         public TypeReference ImportReference(TypeReference typeRef)
         {
             return ModelTypeDef.Module.ImportReference(typeRef);
@@ -81,11 +66,11 @@ namespace RedArrow.Argo
         public MethodReference ImportReference(MethodReference methRef)
         {
             return ModelTypeDef.Module.ImportReference(methRef);
-		}
+        }
 
-		public MethodReference ImportReference(MethodReference methRef, IGenericParameterProvider context)
-		{
-			return ModelTypeDef.Module.ImportReference(methRef, context);
-		}
-	}
+        public MethodReference ImportReference(MethodReference methRef, IGenericParameterProvider context)
+        {
+            return ModelTypeDef.Module.ImportReference(methRef, context);
+        }
+    }
 }

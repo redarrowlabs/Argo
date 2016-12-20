@@ -1,22 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RedArrow.Argo.Client.Cache;
 using RedArrow.Argo.Client.Extensions;
-using RedArrow.Argo.Client.Http;
 using RedArrow.Argo.Client.JsonModels;
-using RedArrow.Argo.Client.Logging;
 using RedArrow.Argo.Client.Session.Patch;
 using RedArrow.Argo.Client.Session.Registry;
 using RedArrow.Argo.Session;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
+using RedArrow.Argo.Client.Collections;
+using RedArrow.Argo.Client.Collections.Generic;
+using RedArrow.Argo.Client.Http;
+using RedArrow.Argo.Client.Logging;
 
 namespace RedArrow.Argo.Client.Session
 {
-    public class Session : IModelSession, ISession
+    public class Session : IModelSession, ISession, ICollectionSession
     {
         private static readonly ILog Log = LogProvider.For<Session>();
 
@@ -59,19 +62,19 @@ namespace RedArrow.Argo.Client.Session
         public async Task<TModel> Create<TModel>()
             where TModel : class
         {
-            return (TModel) await Create(typeof(TModel), null);
+            return (TModel)await Create(typeof(TModel), null);
         }
 
         public async Task<TModel> Create<TModel>(TModel model)
             where TModel : class
         {
-            return (TModel) await Create(typeof(TModel), model);
+            return (TModel)await Create(typeof(TModel), model);
         }
 
         public async Task<object> Create(Type modelType, object model)
         {
             ThrowIfDisposed();
-            
+
             var createPayload = HttpRequestBuilder.CreateResource(modelType, model);
 
             Log.Info(() => $"JSORM||creating resource {createPayload.ResourceType} from model {modelType} {JsonConvert.SerializeObject(model)}");
@@ -81,14 +84,14 @@ namespace RedArrow.Argo.Client.Session
             response.EnsureSuccessStatusCode();
 
             var id = response.GetResourceId();
-			ResourceState[id] = new Resource
-			{
-				Id = id,
-				Type = createPayload.ResourceType,
-				Attributes = createPayload.Attributes
-			};
+            ResourceState[id] = new Resource
+            {
+                Id = id,
+                Type = createPayload.ResourceType,
+                Attributes = createPayload.Attributes
+            };
 
-			model = CreateModel(modelType, id);
+            model = CreateModel(modelType, id);
             Cache.Update(id, model);
 
             return model;
@@ -105,8 +108,8 @@ namespace RedArrow.Argo.Client.Session
                 return (TModel)model;
             }
 
-            var request = ModelRegistry.CreateGetRequest<TModel>(id);
-            var response = await HttpClient.SendAsync(request);
+            var requestContext = HttpRequestBuilder.GetResource(id, typeof(TModel));
+            var response = await HttpClient.SendAsync(requestContext.Request);
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
                 return default(TModel); // null
@@ -116,8 +119,8 @@ namespace RedArrow.Argo.Client.Session
             var contentString = await response.Content.ReadAsStringAsync();
             var root = JsonConvert.DeserializeObject<ResourceRootSingle>(contentString);
 
-			ResourceState[id] = root.Data;
-			model = CreateModel<TModel>(id);
+            ResourceState[id] = root.Data;
+            model = CreateModel<TModel>(id);
             Cache.Update(id, model);
 
             return (TModel)model;
@@ -184,7 +187,7 @@ namespace RedArrow.Argo.Client.Session
             where TModel : class
         {
             ThrowIfDisposed();
-			
+
             // check cached resources
             JToken jValue;
             Resource resource;
@@ -205,7 +208,7 @@ namespace RedArrow.Argo.Client.Session
             GetPatchContext<TModel>(id).SetAttriute(attrName, value);
         }
 
-        public TRltn GetReference<TModel, TRltn>(Guid id, string attrName)
+        public TRltn GetReference<TModel, TRltn>(Guid id, string rltnName)
             where TModel : class
             where TRltn : class
         {
@@ -217,7 +220,7 @@ namespace RedArrow.Argo.Client.Session
             if (ResourceState.TryGetValue(id, out resource))
             {
                 Relationship relationship;
-                if (resource.Relationships != null && resource.Relationships.TryGetValue(attrName, out relationship))
+                if (resource.Relationships != null && resource.Relationships.TryGetValue(rltnName, out relationship))
                 {
                     var rltnData = relationship.Data;
                     if (rltnData?.Type != JTokenType.Object)
@@ -247,7 +250,7 @@ namespace RedArrow.Argo.Client.Session
             throw new Exception("TODO");
         }
 
-        public void SetReference<TModel, TRltn>(Guid id, string attrName, TRltn rltn)
+        public void SetReference<TModel, TRltn>(Guid id, string rltnName, TRltn rltn)
             where TModel : class
             where TRltn : class
         {
@@ -260,30 +263,118 @@ namespace RedArrow.Argo.Client.Session
             var persisted = rltnId != Guid.Empty;
             if (!persisted)
             {
-                rltnId = context.GetReference(attrName) ?? Guid.NewGuid();
+                rltnId = context.GetReference(rltnName) ?? Guid.NewGuid();
             }
 
             context.SetReference(
-                attrName,
+                rltnName,
                 rltnId,
                 rltnType,
                 persisted);
             Cache.Update(rltnId, rltn);
         }
 
-        public TEnum GetEnumerable<TModel, TEnum, TRltn>(Guid id, string attrName)
-            where TModel : class
-            where TEnum : IEnumerable<TRltn>
-            where TRltn : class
+        public void InitializeCollection<T>(IRemoteCollection<T> collection)
+            where T : class
         {
-            return default(TEnum);
+            // TODO: determine if {id/type} from owner relationship are cached already
+            // TODO: abstract this into a collection loader/initializer
+
+            // TODO: brute force this for now
+
+            // TODO: don't run this task if the resource collection is empty/null!
+
+            Task.Run(async () =>
+            {
+                var requestContext = HttpRequestBuilder.GetRelated(collection.Owner, collection.Name);
+                var response = await HttpClient.SendAsync(requestContext.Request);
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return;
+                }
+                response.EnsureSuccessStatusCode();
+
+                var contentJson = await response.Content.ReadAsStringAsync();
+                var root = JsonConvert.DeserializeObject<ResourceRootCollection>(contentJson);
+
+                if (root.Data == null)
+                {
+                    return;
+                }
+
+                // TODO: clean this up
+
+                var items = root.Data.Select(x =>
+                {
+                    ResourceState[x.Id] = x;
+                    var model = CreateModel<T>(x.Id);
+                    Cache.Update(x.Id, model);
+                    return model;
+                });
+                collection.Initialize(items);
+            }).Wait();
         }
 
-        public void SetEnumerable<TModel, TEnum, TRltn>(Guid id, string attrName, TEnum value)
+        public IEnumerable<TElmnt> GetGenericEnumerable<TModel, TElmnt>(Guid id, string rltnName)
             where TModel : class
-            where TEnum : IEnumerable<TRltn>
-            where TRltn : class
+            where TElmnt : class
         {
+            return GetRemoteCollection<TModel, TElmnt>(id, rltnName);
+        }
+
+        public IEnumerable<TElmnt> SetGenericEnumerable<TModel, TElmnt>(Guid id, string attrName, IEnumerable<TElmnt> value)
+            where TModel : class
+            where TElmnt : class
+        {
+            return SetRemoteCollection<TModel, TElmnt>(id, attrName, value);
+        }
+
+        public ICollection<TElmnt> GetGenericCollection<TModel, TElmnt>(Guid id, string rltnName)
+            where TModel : class
+            where TElmnt : class
+        {
+            return GetRemoteCollection<TModel, TElmnt>(id, rltnName);
+        }
+
+        public ICollection<TElmnt> SetGenericCollection<TModel, TElmnt>(Guid id, string attrName, IEnumerable<TElmnt> value)
+            where TModel : class
+            where TElmnt : class
+        {
+            return SetRemoteCollection<TModel, TElmnt>(id, attrName, value);
+        }
+
+        private RemoteGenericBag<TElmnt> GetRemoteCollection<TModel, TElmnt>(Guid id, string rltnName)
+            where TModel : class
+            where TElmnt : class
+        {
+            var owner = Cache.Retrieve(id);
+
+            var rltnConfig = ModelRegistry.GetCollectionConfiguration<TModel>(rltnName);
+
+            // TODO: configure collection based on rltnConfig
+
+            return new RemoteGenericBag<TElmnt>(this)
+            {
+                Name = rltnName,
+                Owner = owner
+            };
+        }
+
+        private RemoteGenericBag<TElmnt> SetRemoteCollection<TModel, TElmnt>(Guid id, string rltnName, IEnumerable<TElmnt> value)
+            where TModel : class
+            where TElmnt : class
+        {
+            var owner = Cache.Retrieve(id);
+
+            var rltnConfig = ModelRegistry.GetCollectionConfiguration<TModel>(rltnName);
+
+            // TODO: configure collection based on rltnConfig
+
+            return new RemoteGenericBag<TElmnt>(this, value)
+            {
+                Name = rltnName,
+                Owner = owner
+            };
         }
 
         private TModel CreateModel<TModel>(Guid id)

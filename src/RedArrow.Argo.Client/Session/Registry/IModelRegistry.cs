@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Net.Http;
 using RedArrow.Argo.Client.Config.Model;
 
 namespace RedArrow.Argo.Client.Session.Registry
@@ -11,14 +10,14 @@ namespace RedArrow.Argo.Client.Session.Registry
 
         string GetResourceType(Type modelType);
 
-        Guid GetModelId<TModel>(TModel model);
+        Guid GetModelId(object model);
 
         IEnumerable<AttributeConfiguration> GetModelAttributes<TModel>();
 
         IEnumerable<AttributeConfiguration> GetModelAttributes(Type modelType);
 
-        HttpRequestMessage CreateGetRequest<TModel>(Guid id);
+        HasManyConfiguration GetCollectionConfiguration<TModel>(string rltnName);
 
-        HttpRequestMessage CreateGetRequest(Type modelType, Guid id);
+        HasManyConfiguration GetCollectionConfiguration(Type modelType, string rltnName);
     }
 }

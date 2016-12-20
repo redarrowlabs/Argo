@@ -20,6 +20,33 @@ namespace RedArrow.Argo.Client.Http
             ModelRegistry = modelRegistry;
         }
 
+        public RequestContext GetResource(Guid id, Type modelType)
+        {
+            var resourceType = ModelRegistry.GetResourceType(modelType);
+
+            return new RequestContext
+            {
+                Request = new HttpRequestMessage(HttpMethod.Get, $"{resourceType}/{id}"),
+
+                ResourceId = id,
+                ResourceType = resourceType
+            };
+        }
+
+        public RequestContext GetRelated(object owner, string rltnName)
+        {
+            var id = ModelRegistry.GetModelId(owner);
+            var resourceType = ModelRegistry.GetResourceType(owner.GetType());
+
+            return new RequestContext
+            {
+                Request = new HttpRequestMessage(HttpMethod.Get, $"{resourceType}/{id}/{rltnName}"),
+
+                ResourceId = id,
+                ResourceType = resourceType,
+            };
+        }
+
         public RequestContext CreateResource(Type modelType, object model)
         {
             var resourceType = ModelRegistry.GetResourceType(modelType);

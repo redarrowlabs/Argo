@@ -1,8 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Ploeh.AutoFixture.Xunit2;
 using RedArrow.Argo.Client.Config;
+using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Session;
 using WovenByFody;
 using Xunit;
@@ -217,6 +223,171 @@ namespace RedArrow.Argo.Integration
                 var provider = patient.Provider;
 
                 Assert.NotNull(provider);
+
+                //clean up
+                await session.Delete(patient);
+            }
+        }
+
+        [Fact, Trait("Category", "Integration")]
+        public async Task GetCollectionFromNullRelationship()
+        {
+            var sessionFactory = CreateSessionFactory();
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                var provider = await session.Create<Provider>();
+
+                Assert.NotNull(provider.Patients);
+                Assert.False(provider.Patients.Any());
+
+                await session.Delete(provider);
+            }
+        }
+
+        [Theory, AutoData, Trait("Category", "Integration")]
+        public async Task GetCollectionFromEmptyRelationship(Guid providerId)
+        {
+            // create the provider
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri("http://titan-test.centralus.cloudapp.azure.com/api/data/");
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken);
+
+                var body = new
+                {
+                    data = new
+                    {
+                        id = providerId,
+                        type = "integration-test-provider",
+                        attributes = new
+                        {
+                            firstName = "Dr.",
+                            lastName = "Payne"
+                        },
+                        relationships = new Dictionary<string, dynamic>
+                        {
+                            {"patients", new { data = Enumerable.Empty<Patient>()}}
+                        }
+                    }
+                };
+
+                var content = new StringContent(
+                    JsonConvert.SerializeObject(body),
+                    Encoding.UTF8,
+                    "application/vnd.api+json");
+                var providerResponse = await client.PostAsync("integration-test-provider", content);
+
+                Assert.True(providerResponse.IsSuccessStatusCode);
+            }
+
+            var sessionFactory = CreateSessionFactory();
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                // this is a "reserved" provider I have created specifically for this test
+                var provider = await session.Get<Provider>(providerId);
+
+                Assert.NotNull(provider);
+                Assert.Equal("Dr.", provider.FirstName);
+                Assert.Equal("Payne", provider.LastName);
+                Assert.NotNull(provider.Patients);
+                Assert.False(provider.Patients.Any());
+
+                await session.Delete<Provider>(providerId);
+            }
+        }
+
+        [Theory, AutoData, Trait("Category", "Integration")]
+        public async Task GetCollectionFromRelationship(Guid providerId, IEnumerable<Guid> patientIds)
+        {
+            // create the patients
+            await Task.WhenAll(patientIds.Select(async x =>
+            {
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri("http://titan-test.centralus.cloudapp.azure.com/api/data/");
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken);
+
+                    var body = new
+                    {
+                        data = new
+                        {
+                            id = x,
+                            type = "integration-test-patient",
+                            attributes = new
+                            {
+                                firstName = "Will",
+                                lastName = "Power"
+                            }
+                        }
+                    };
+
+                    var content = new StringContent(
+                        JsonConvert.SerializeObject(body),
+                        Encoding.UTF8,
+                        "application/vnd.api+json");
+                    var response = await client.PostAsync("integration-test-patient", content);
+                    response.EnsureSuccessStatusCode();
+                }
+            }));
+
+            // create the provider
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri("http://titan-test.centralus.cloudapp.azure.com/api/data/");
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken);
+
+                var body = new
+                {
+                    data = new
+                    {
+                        id = providerId,
+                        type = "integration-test-provider",
+                        attributes = new
+                        {
+                            firstName = "Dr.",
+                            lastName = "Payne"
+                        },
+                        relationships = new Dictionary<string, dynamic>
+                        {
+                            {
+                                "patients",
+                                new
+                                {
+                                    data = patientIds.Select(x => new {id = x, type = "integration-test-patient"})
+                                }
+                            }
+                        }
+                    }
+                };
+
+                var content = new StringContent(
+                    JsonConvert.SerializeObject(body),
+                    Encoding.UTF8,
+                    "application/vnd.api+json");
+                var response = await client.PostAsync("integration-test-provider", content);
+                response.EnsureSuccessStatusCode();
+            }
+
+            var sessionFactory = CreateSessionFactory();
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                // this is a "reserved" provider I have created specifically for this test
+                var provider = await session.Get<Provider>(providerId);
+
+                Assert.NotNull(provider.Patients);
+                Assert.True(provider.Patients.Any());
+                Assert.Equal(patientIds.Count(), provider.Patients.Count());
+                Assert.All(provider.Patients, x =>
+                {
+                    Assert.Equal("Will", x.FirstName);
+                    Assert.Equal("Power", x.LastName);
+                });
+
+                await session.Delete<Provider>(providerId);
+                await Task.WhenAll(patientIds.Select(x => session.Delete<Patient>(x)));
             }
         }
 

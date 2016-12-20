@@ -44,6 +44,9 @@
     </Compile>
     <Compile Include="Cache\BasicCacheProvider.cs" />
     <Compile Include="Cache\ICacheProvider.cs" />
+    <Compile Include="Collections\AbstractRemoteCollection.cs" />
+    <Compile Include="Collections\Generic\RemoteGenericBag.cs" />
+    <Compile Include="Collections\IRemoteCollection.cs" />
     <Compile Include="Config\FluentConfigurator.cs" />
     <Compile Include="Config\Fluently.cs" />
     <Compile Include="Config\IFluentConfigurator.cs" />
@@ -59,13 +62,13 @@
     <Compile Include="Extensions\ExpressionExtensions.cs" />
     <Compile Include="Extensions\HttpClientExtensions.cs" />
     <Compile Include="Extensions\HttpResponseMessage.cs" />
-    <Compile Include="Extensions\ModelConfigurationExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="Http\DefaultHttpMessageHandler.cs" />
     <Compile Include="Http\IHttpRequestBuilder.cs" />
     <Compile Include="Http\RequestBuilder.cs" />
     <Compile Include="Http\RequestContext.cs" />
+    <Compile Include="Infrastructure\DebuggerCollectionProxy.cs" />
     <Compile Include="Infrastructure\JsormException.cs" />
     <Compile Include="Infrastructure\ModelNotRegisteredException.cs" />
     <Compile Include="Infrastructure\ModelTypeMismatchException.cs" />
@@ -85,6 +88,7 @@
     <Compile Include="JsonModels\ResourceRootSingle.cs" />
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Session\ICollectionSession.cs" />
     <Compile Include="Session\ISession.cs" />
     <Compile Include="Session\ISessionFactory.cs" />
     <Compile Include="Session\Patch\PatchContext.cs" />
