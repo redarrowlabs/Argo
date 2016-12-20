@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using RedArrow.Argo.Client.Config.Model;
-using RedArrow.Argo.Client.Extensions;
 
 namespace RedArrow.Argo.Client.Session.Registry
 {
@@ -26,7 +24,7 @@ namespace RedArrow.Argo.Client.Session.Registry
             return GetModelConfig(modelType).ResourceType;
         }
 
-        public Guid GetModelId<TModel>(TModel model)
+        public Guid GetModelId(object model)
         {
             var modelType = model.GetType();
             return (Guid)GetModelConfig(modelType).IdProperty.GetValue(model);
@@ -42,14 +40,20 @@ namespace RedArrow.Argo.Client.Session.Registry
             return GetModelConfig(modelType).AttributeProperties.Values;
         }
 
-        public HttpRequestMessage CreateGetRequest<TModel>(Guid id)
+        public HasManyConfiguration GetCollectionConfiguration<TModel>(string rltnName)
         {
-            return CreateGetRequest(typeof(TModel), id);
+            return GetCollectionConfiguration(typeof(TModel), rltnName);
         }
 
-        public HttpRequestMessage CreateGetRequest(Type modelType, Guid id)
+        public HasManyConfiguration GetCollectionConfiguration(Type modelType, string rltnName)
         {
-            return GetModelConfig(modelType).CreateGetRequest(id);
+            HasManyConfiguration ret;
+            if (!GetModelConfig(modelType).HasManyProperties.TryGetValue(rltnName, out ret))
+            {
+                // TODO: RelationNotRegisteredExecption
+                throw new Exception($"JSORM||has-many configuration named {rltnName} not found");
+            }
+            return ret;
         }
 
         private ModelConfiguration GetModelConfig(Type modelType)
@@ -62,7 +66,7 @@ namespace RedArrow.Argo.Client.Session.Registry
             }
 
             // TODO: ModelNotRegisteredException
-            throw new Exception("model not registered");
+            throw new Exception("JSORM||model not registered");
         }
 
         private void ThrowIfNotRegistered(Type type)
@@ -70,7 +74,7 @@ namespace RedArrow.Argo.Client.Session.Registry
             if (!Registry.ContainsKey(type))
             {
                 // TODO: ModelNotRegisteredException
-                throw new Exception("model not registered");
+                throw new Exception("JSORM||model not registered");
             }
         }
     }

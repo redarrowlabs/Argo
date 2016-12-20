@@ -9,11 +9,11 @@ namespace WovenByFody
     {
         [Id]
         public Guid Id { get; protected set; }
-
-        [Property("first-name")]
+        
+        [Property]
         public string FirstName { get; set; }
 
-        [Property("last-name")]
+        [Property]
         public string LastName { get; set; }
 
         [HasMany]

@@ -19,14 +19,20 @@ namespace RedArrow.Argo.Session
             where TModel : class
             where TRltn : class;
 
-        TEnum GetEnumerable<TModel, TEnum, TRltn>(Guid id, string attrName)
+        IEnumerable<TElmnt> GetGenericEnumerable<TModel, TElmnt>(Guid id, string rltnName)
             where TModel : class
-            where TEnum : IEnumerable<TRltn>
-            where TRltn : class;
+            where TElmnt : class;
 
-        void SetEnumerable<TModel, TEnum, TRltn>(Guid id, string attrName, TEnum value)
+        IEnumerable<TElmnt> SetGenericEnumerable<TModel, TElmnt>(Guid id, string attrName, IEnumerable<TElmnt> value)
             where TModel : class
-            where TEnum : IEnumerable<TRltn>
-            where TRltn : class;
+            where TElmnt : class;
+
+        ICollection<TElmnt> GetGenericCollection<TModel, TElmnt>(Guid id, string rltnName)
+            where TModel : class
+            where TElmnt : class;
+
+        ICollection<TElmnt> SetGenericCollection<TModel, TElmnt>(Guid id, string attrName, IEnumerable<TElmnt> value)
+            where TModel : class
+            where TElmnt : class;
     }
 }

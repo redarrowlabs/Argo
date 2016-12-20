@@ -1,7 +1,7 @@
-﻿using System;
-using System.Linq;
-using Mono.Cecil;
+﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using System;
+using System.Linq;
 using Mono.Cecil.Rocks;
 using RedArrow.Argo.Extensions;
 
@@ -22,7 +22,7 @@ namespace RedArrow.Argo
 
             if (sessionGetAttrGeneric == null || sessionSetAttrGeneric == null)
             {
-                throw new Exception("Argo attribute weaving failed unexpectedly");
+                throw new Exception("Jsorm attribute weaving failed unexpectedly");
             }
 
             foreach (var propertyDef in context.MappedAttributes)
@@ -43,25 +43,8 @@ namespace RedArrow.Argo
 
                 LogInfo($"\tWeaving {propertyDef} => {attrName}");
 
-                WeaveAttrGetter(backingField, propertyDef);
                 WeaveAttrSetter(context, backingField, propertyDef, sessionSetAttrGeneric, attrName);
             }
-        }
-
-        private static void WeaveAttrGetter(
-            FieldReference backingField,
-            PropertyDefinition propertyDef)
-        {
-            // get
-            // {
-            //   return this.<[PropName]>k__BackingField;
-            // }
-            propertyDef.GetMethod.Body.Instructions.Clear();
-            var proc = propertyDef.GetMethod.Body.GetILProcessor();
-			
-            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-            proc.Emit(OpCodes.Ldfld, backingField); // load 'this'.<backing field>
-            proc.Emit(OpCodes.Ret); // return
         }
 
         private void WeaveAttrSetter(
@@ -71,71 +54,79 @@ namespace RedArrow.Argo
             MethodReference sessionSetAttrGeneric,
             string attrName)
         {
-			// supply generic type arguments to template
-			var sessionSetAttr = sessionSetAttrGeneric.MakeGenericMethod(context.ModelTypeRef, attrPropDef.PropertyType);
+            // supply generic type arguments to template
+            var sessionSetAttr = sessionSetAttrGeneric.MakeGenericMethod(context.ModelTypeRef, attrPropDef.PropertyType);
 
             attrPropDef.SetMethod.Body.Instructions.Clear();
 
-			// set
-			// {
-			//     if (this.__argo__generated_session != null && this.<[PropName]>k__BackingField != value)
-			//     {
-			//         this.__argo__generated_session.SetRelationship<[ModelType], [ReturnType]>(this.Id, "[AttrName]", value);
-			//     }
-			//     this.<[PropName]>k__BackingField = value;
-			// }
-			var proc = attrPropDef.SetMethod.Body.GetILProcessor();
+            // set
+            // {
+            //     if (this.__jsorm__generated_session != null && this.<[PropName]>k__BackingField != value)
+            //     {
+            //         this.__jsorm__generated_session.SetRelationship<[ModelType], [ReturnType]>(this.Id, "[AttrName]", value);
+            //     }
+            //     this.<[PropName]>k__BackingField = value;
+            // }
+            var proc = attrPropDef.SetMethod.Body.GetILProcessor();
 
             var endif = proc.Create(OpCodes.Ldarg_0);
 
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-            proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
-            proc.Emit(OpCodes.Brfalse_S, endif); // if __argo__generated_session != null continue, else return
+            proc.Emit(OpCodes.Ldfld, context.SessionField); // load __jsorm__generated_session field from 'this'
+            proc.Emit(OpCodes.Brfalse_S, endif); // if __jsorm__generated_session != null continue, else return
 
-	        EmitEqualityCheck(context, proc, backingField, endif);
+            EmitInequalityCheck(context, proc, backingField, endif);
 
-	        proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
-            proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
+            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
+            proc.Emit(OpCodes.Ldfld, context.SessionField); // load __jsorm__generated_session field from 'this'
             proc.Emit(OpCodes.Ldarg_0); // load 'this'
             proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
             proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack
             proc.Emit(OpCodes.Ldarg_1); // load 'value'
-			proc.Emit(OpCodes.Callvirt, context.ImportReference(
-				sessionSetAttr,
-				attrPropDef.PropertyType.IsGenericParameter
-					? context.ModelTypeRef
-					: null)); // invoke session.GetAttribute(..)
+            proc.Emit(OpCodes.Callvirt, context.ImportReference(
+                sessionSetAttr,
+                attrPropDef.PropertyType.IsGenericParameter
+                    ? context.ModelTypeRef
+                    : null)); // invoke session.GetAttribute(..)
 
-			proc.Append(endif); // load 'this' onto stack
-			proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
-			proc.Emit(OpCodes.Stfld, backingField); // 'this'.<backing field> = 'value'
+            proc.Append(endif); // load 'this' onto stack
+            proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
+            proc.Emit(OpCodes.Stfld, backingField); // 'this'.<backing field> = 'value'
 
-			proc.Emit(OpCodes.Ret); // return
+            proc.Emit(OpCodes.Ret); // return
         }
 
-        private void EmitEqualityCheck(ModelWeavingContext context, ILProcessor proc, FieldReference backingField, Instruction endif)
+        private void EmitInequalityCheck(ModelWeavingContext context, ILProcessor proc, FieldReference backingField, Instruction endif)
         {
             var returnType = backingField.FieldType;
 
             if (returnType == TypeSystem.String)
             {
                 proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-                proc.Emit(OpCodes.Ldfld, backingField); // load __argo__generated_session field from 'this'
+                proc.Emit(OpCodes.Ldfld, backingField); // load __jsorm__generated_session field from 'this'
                 proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
                 proc.Emit(OpCodes.Ldc_I4, _stringComparison_ordinal); // load 'StringComparison.Ordinal' onto stack
                 proc.Emit(OpCodes.Call, context.ImportReference(_string_equals));
+                proc.Emit(OpCodes.Brtrue_S, endif);
             }
             else
             {
-                // TODO: find equality method
-	            var typeEqualityMethRef = returnType.EqualityOperator();
-                if (typeEqualityMethRef == null)
+                var typeIneqOp = returnType.InequalityOperator();
+                if (typeIneqOp != null)
+                {
+                    proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+                    proc.Emit(OpCodes.Ldfld, backingField); // load __jsorm__generated_session field from 'this'
+                    proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
+                    proc.Emit(OpCodes.Call, context.ImportReference(typeIneqOp));
+                    proc.Emit(OpCodes.Brfalse_S, endif);
+                }
+                else
                 {
                     if (returnType.SupportsCeq() && returnType.IsValueType)
                     {
                         proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-                        proc.Emit(OpCodes.Ldfld, backingField); // load __argo__generated_session field from 'this'
-						proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
+                        proc.Emit(OpCodes.Ldfld, backingField); // load __jsorm__generated_session field from 'this'
+                        proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
                         proc.Emit(OpCodes.Ceq); // compare 'this'.<backing field> == 'value' and push result onto stack
                     }
                     else if (returnType.IsValueType && _equalityComparerTypeDef != null)
@@ -153,40 +144,32 @@ namespace RedArrow.Argo
                         getDefaultMethRef.DeclaringType = returnTypeComparer;
                         equalsMethRef.DeclaringType = returnTypeComparer;
 
-						proc.Emit(OpCodes.Nop);
+                        proc.Emit(OpCodes.Nop);
                         proc.Emit(OpCodes.Call, getDefaultMethRef);
                         proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-                        proc.Emit(OpCodes.Ldfld, backingField); // load __argo__generated_session field from 'this'
-						proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
+                        proc.Emit(OpCodes.Ldfld, backingField); // load __jsorm__generated_session field from 'this'
+                        proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
                         proc.Emit(OpCodes.Callvirt, equalsMethRef);
                     }
-					else if (returnType.IsValueType || returnType.IsGenericParameter)
-					{
-						proc.Emit(OpCodes.Ldarg_0);
-						proc.Emit(OpCodes.Ldfld, backingField);
-						proc.Emit(OpCodes.Box, returnType);
-						proc.Emit(OpCodes.Ldarg_1);
-						proc.Emit(OpCodes.Box, returnType);
-						proc.Emit(OpCodes.Call, context.ImportReference(_object_equals));
-					}
-					else
-					{
-						proc.Emit(OpCodes.Ldarg_0);
-						proc.Emit(OpCodes.Ldfld, backingField);
-						proc.Emit(OpCodes.Ldarg_1);
-						proc.Emit(OpCodes.Call, context.ImportReference(_object_equals));
-					}
-                }
-                else
-                {
-                    proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-                    proc.Emit(OpCodes.Ldfld, backingField); // load __argo__generated_session field from 'this'
-					proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
-                    proc.Emit(OpCodes.Call, context.ImportReference(typeEqualityMethRef));
+                    else if (returnType.IsValueType || returnType.IsGenericParameter)
+                    {
+                        proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+                        proc.Emit(OpCodes.Ldfld, backingField); // load __jsorm__generated_session field from 'this'
+                        proc.Emit(OpCodes.Box, returnType);
+                        proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
+                        proc.Emit(OpCodes.Box, returnType);
+                        proc.Emit(OpCodes.Call, context.ImportReference(_object_equals));
+                    }
+                    else
+                    {
+                        proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+                        proc.Emit(OpCodes.Ldfld, backingField); // load __jsorm__generated_session field from 'this'
+                        proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
+                        proc.Emit(OpCodes.Call, context.ImportReference(_object_equals));
+                    }
+                    proc.Emit(OpCodes.Brtrue_S, endif);
                 }
             }
-
-            proc.Emit(OpCodes.Brtrue_S, endif);
         }
     }
 }
