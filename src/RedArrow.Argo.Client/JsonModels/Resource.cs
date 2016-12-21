@@ -4,7 +4,7 @@ using Newtonsoft.Json.Linq;
 
 namespace RedArrow.Argo.Client.JsonModels
 {
-    internal class Resource : ResourceIdentifier
+    public class Resource : ResourceIdentifier
     {
         [JsonProperty("attributes", NullValueHandling = NullValueHandling.Ignore)]
         public JObject Attributes { get; set; }
@@ -15,7 +15,9 @@ namespace RedArrow.Argo.Client.JsonModels
         [JsonProperty("links", NullValueHandling = NullValueHandling.Ignore)]
         public IDictionary<string, JToken> Links { get; set; }
 
-        public static Resource FromJson(string json)
+        internal Resource() { }
+
+        internal static Resource FromJson(string json)
         {
             return JsonConvert.DeserializeObject<Resource>(json);
         }

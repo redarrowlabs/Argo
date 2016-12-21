@@ -4,7 +4,7 @@ using Newtonsoft.Json.Linq;
 
 namespace RedArrow.Argo.Client.JsonModels
 {
-    internal abstract class BaseResourceRoot<TData> : JModel, IMetaDecorated
+    public abstract class BaseResourceRoot<TData> : JModel, IMetaDecorated
     {
         [JsonProperty("jsonapi", NullValueHandling = NullValueHandling.Ignore)]
         public IDictionary<string, JToken> JsonApi { get; set; }
@@ -23,8 +23,8 @@ namespace RedArrow.Argo.Client.JsonModels
 
         [JsonProperty("included", NullValueHandling = NullValueHandling.Ignore)]
         public IList<Resource> Included { get; set; }
-
-        public static ResourceRootSingle FromJson(string json)
+        
+        internal static ResourceRootSingle FromJson(string json)
         {
             return JsonConvert.DeserializeObject<ResourceRootSingle>(json);
         }

@@ -47,6 +47,20 @@ namespace RedArrow.Argo.Client.Http
             };
         }
 
+        public RequestContext AddRelated(object owner, string rltnName, object related)
+        {
+            var ownerId = ModelRegistry.GetModelId(owner);
+            var ownerResourceType = ModelRegistry.GetResourceType(owner.GetType());
+
+            var relatedId = ModelRegistry.GetModelId(related);
+            var relatedType = ModelRegistry.GetResourceType(related.GetType());
+
+            return new RequestContext
+            {
+                Request = new HttpRequestMessage(HttpMethod.Post, $"{ownerResourceType}/{ownerId}/relationships/{rltnName}")
+            }
+        }
+
         public RequestContext CreateResource(Type modelType, object model)
         {
             var resourceType = ModelRegistry.GetResourceType(modelType);

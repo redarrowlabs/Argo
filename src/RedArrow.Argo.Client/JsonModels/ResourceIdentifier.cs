@@ -5,7 +5,7 @@ using Newtonsoft.Json.Linq;
 
 namespace RedArrow.Argo.Client.JsonModels
 {
-    internal class ResourceIdentifier : JModel, IMetaDecorated
+    public class ResourceIdentifier : JModel, IMetaDecorated
     {
         [JsonProperty("id")]
         public Guid Id { get; set; }
@@ -15,5 +15,7 @@ namespace RedArrow.Argo.Client.JsonModels
 
         [JsonProperty("meta", NullValueHandling = NullValueHandling.Ignore)]
         public IDictionary<string, JToken> Meta { get; set; }
+
+        internal ResourceIdentifier() { }
     }
 }

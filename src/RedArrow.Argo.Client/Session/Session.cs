@@ -27,9 +27,9 @@ namespace RedArrow.Argo.Client.Session
 
         private IHttpRequestBuilder HttpRequestBuilder { get; }
 
-        private ICacheProvider Cache { get; }
+        internal ICacheProvider Cache { get; }
 
-        private IModelRegistry ModelRegistry { get; }
+        internal IModelRegistry ModelRegistry { get; }
 
         //TODO: combine these into ResourceRegistry
         private IDictionary<Guid, Resource> ResourceState { get; }
@@ -62,16 +62,27 @@ namespace RedArrow.Argo.Client.Session
         public async Task<TModel> Create<TModel>()
             where TModel : class
         {
-            return (TModel)await Create(typeof(TModel), null);
+            return (TModel)await CreateResource(typeof(TModel), null);
+        }
+
+        public async Task<TModel> Create<TModel>(Guid id)
+            where TModel : class
+        {
+            return (TModel) await Create(typeof(TModel), CreateModel<TModel>(id));
         }
 
         public async Task<TModel> Create<TModel>(TModel model)
             where TModel : class
         {
-            return (TModel)await Create(typeof(TModel), model);
+            return (TModel) await CreateResource(typeof(TModel), model);
         }
 
-        public async Task<object> Create(Type modelType, object model)
+        public Task<object> Create(Type modelType, object model)
+        {
+            return CreateResource(modelType, model);
+        }
+
+        private async Task<object> CreateResource(Type modelType, object model)
         {
             ThrowIfDisposed();
 
@@ -91,7 +102,7 @@ namespace RedArrow.Argo.Client.Session
                 Attributes = createPayload.Attributes
             };
 
-            model = CreateModel(modelType, id);
+            model = CreateManagedModel(modelType, id);
             Cache.Update(id, model);
 
             return model;
@@ -138,6 +149,13 @@ namespace RedArrow.Argo.Client.Session
                 return;
             }
 
+            // flush collections to patch context
+            ModelRegistry
+                .GetCollectionConfigurations<TModel>()
+                .Select(x => x.PropertyInfo.GetValue(model))
+                .OfType<IRemoteCollection>()
+                .Each(x => x.Patch(context));
+
             var requestContext = HttpRequestBuilder.UpdateResource(id, model, context);
             var response = await HttpClient.SendAsync(requestContext.Request);
             response.EnsureSuccessStatusCode();
@@ -158,6 +176,11 @@ namespace RedArrow.Argo.Client.Session
                 requestContext.Relationships?.Each(kvp => resource.GetRelationships()[kvp.Key] = kvp.Value);
             }
             PatchContexts.Remove(id);
+            ModelRegistry
+                .GetCollectionConfigurations<TModel>()
+                .Select(x => x.PropertyInfo.GetValue(model))
+                .OfType<IRemoteCollection>()
+                .Each(x => x.ClearOperationQueue());
         }
 
         public Task Delete<TModel>(TModel model)
@@ -263,10 +286,10 @@ namespace RedArrow.Argo.Client.Session
             var persisted = rltnId != Guid.Empty;
             if (!persisted)
             {
-                rltnId = context.GetReference(rltnName) ?? Guid.NewGuid();
+                rltnId = context.GetRelated(rltnName) ?? Guid.NewGuid();
             }
 
-            context.SetReference(
+            context.SetRelated(
                 rltnName,
                 rltnId,
                 rltnType,
@@ -274,8 +297,7 @@ namespace RedArrow.Argo.Client.Session
             Cache.Update(rltnId, rltn);
         }
 
-        public void InitializeCollection<T>(IRemoteCollection<T> collection)
-            where T : class
+        public void InitializeCollection(IRemoteCollection collection)
         {
             // TODO: determine if {id/type} from owner relationship are cached already
             // TODO: abstract this into a collection loader/initializer
@@ -307,11 +329,11 @@ namespace RedArrow.Argo.Client.Session
                 var items = root.Data.Select(x =>
                 {
                     ResourceState[x.Id] = x;
-                    var model = CreateModel<T>(x.Id);
+                    var model = CreateManagedModel(x.GetType(), x.Id);
                     Cache.Update(x.Id, model);
                     return model;
                 });
-                collection.Initialize(items);
+                collection.SetItems(items);
             }).Wait();
         }
 
@@ -380,10 +402,10 @@ namespace RedArrow.Argo.Client.Session
         private TModel CreateModel<TModel>(Guid id)
             where TModel : class
         {
-            return (TModel)CreateModel(typeof(TModel), id);
+            return (TModel)CreateManagedModel(typeof(TModel), id);
         }
 
-        private object CreateModel(Type type, Guid id)
+        private object CreateManagedModel(Type type, Guid id)
         {
             Log.Debug(() => $"JSORM||instantiating new session-managed instance of {type} with id {id}");
             return Activator.CreateInstance(type, id, this);

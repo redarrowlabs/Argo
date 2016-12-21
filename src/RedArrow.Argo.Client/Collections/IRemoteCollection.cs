@@ -1,15 +1,18 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using RedArrow.Argo.Client.Session.Patch;
 
 namespace RedArrow.Argo.Client.Collections
 {
-    public interface IRemoteCollection<T> : ICollection<T>
-        where T : class
+    public interface IRemoteCollection : ICollection
     {
         bool Dirty { get; }
 
         object Owner { get; }
         string Name { get; }
 
-        void Initialize(IEnumerable<T> items);
+        void SetItems(IEnumerable items);
+
+        void Patch(PatchContext patchContext);
+        void ClearOperationQueue();
     }
 }

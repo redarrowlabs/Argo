@@ -2,9 +2,11 @@
 
 namespace RedArrow.Argo.Client.JsonModels
 {
-    internal class ErrorLink : JModel
+    public class ErrorLink : JModel
     {
         [JsonProperty("about", NullValueHandling = NullValueHandling.Ignore)]
         public Link About { get; set; }
+
+        internal ErrorLink() { }
     }
 }

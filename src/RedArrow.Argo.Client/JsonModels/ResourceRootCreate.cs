@@ -2,9 +2,11 @@
 
 namespace RedArrow.Argo.Client.JsonModels
 {
-    internal class ResourceRootCreate : BaseResourceRoot<ResourceCreate>
+    public class ResourceRootCreate : BaseResourceRoot<ResourceCreate>
     {
-        public static ResourceRootCreate FromAttributes(string type, JObject attributes)
+        internal ResourceRootCreate() { }
+
+        internal static ResourceRootCreate FromAttributes(string type, JObject attributes)
         {
             return new ResourceRootCreate
             {

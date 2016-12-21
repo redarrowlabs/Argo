@@ -2,8 +2,10 @@
 
 namespace RedArrow.Argo.Client.JsonModels
 {
-    internal abstract class JModel
+    public abstract class JModel
     {
+        internal JModel() { }
+
         public virtual string ToJson()
         {
             return JsonConvert.SerializeObject(this, Formatting.None, new JsonSerializerSettings

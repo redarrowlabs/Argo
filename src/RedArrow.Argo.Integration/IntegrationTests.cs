@@ -391,6 +391,17 @@ namespace RedArrow.Argo.Integration
             }
         }
 
+        [Theory, AutoData, Trait("Category", "Integration")]
+        public async Task AddRelated(Guid providerId, Guid patientId)
+        {
+            var sessionFactory = CreateSessionFactory();
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                var patient = create
+            }
+        }
+
         private ISessionFactory CreateSessionFactory()
         {
             return Fluently.Configure($"{Fixture.Host}/data/")
