@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using RedArrow.Argo.Client.Collections.Operations;
 using RedArrow.Argo.Client.Infrastructure;
-using RedArrow.Argo.Client.Session;
 using RedArrow.Argo.Client.Session.Patch;
 
 namespace RedArrow.Argo.Client.Collections.Generic
@@ -20,12 +19,7 @@ namespace RedArrow.Argo.Client.Collections.Generic
         public override int Count => InternalBag?.Count ?? 0; // TODO
 
         protected ICollection<IQueuedOperation> QueuedOperations { get; }
-
-        internal RemoteGenericBag()
-        {
-            QueuedOperations = new List<IQueuedOperation>();
-        }
-
+        
         internal RemoteGenericBag(Session.Session session) :
             this(session, new List<T>())
         {
@@ -34,6 +28,7 @@ namespace RedArrow.Argo.Client.Collections.Generic
         internal RemoteGenericBag(Session.Session session, IEnumerable<T> items) :
             base(session)
         {
+            QueuedOperations = new List<IQueuedOperation>();
             InternalBag = items as IList<T> ?? new List<T>(items);
         }
         

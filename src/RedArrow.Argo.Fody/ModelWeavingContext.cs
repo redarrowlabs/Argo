@@ -3,12 +3,26 @@ using Mono.Collections.Generic;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Mono.Cecil.Cil;
 using RedArrow.Argo.Extensions;
 
 namespace RedArrow.Argo
 {
     public class ModelWeavingContext
     {
+        // Will log an MessageImportance.Normal message to MSBuild. OPTIONAL
+        public Action<string> LogDebug { get; }
+        // Will log an MessageImportance.High message to MSBuild. OPTIONAL
+        public Action<string> LogInfo { get; }
+        // Will log an warning message to MSBuild. OPTIONAL
+        public Action<string> LogWarning { get; }
+        // Will log an warning message to MSBuild at a specific point in the code. OPTIONAL
+        public Action<string, SequencePoint> LogWarningPoint { get; }
+        // Will log an error message to MSBuild. OPTIONAL
+        public Action<string> LogError { get; }
+        // Will log an error message to MSBuild at a specific point in the code. OPTIONAL
+        public Action<string, SequencePoint> LogErrorPoint { get; }
+
         public PropertyDefinition IdPropDef { get; private set; }
 
         public IEnumerable<PropertyDefinition> MappedAttributes { get; }
@@ -24,10 +38,24 @@ namespace RedArrow.Argo
 
         public FieldDefinition SessionField { get; set; }
 
-        public ModelWeavingContext(TypeDefinition modelTypeDef)
+        public ModelWeavingContext(
+            TypeDefinition modelTypeDef,
+            Action<string> logDebug,
+            Action<string> logInfo,
+            Action<string> logWarning,
+            Action<string, SequencePoint> logWarningPoint,
+            Action<string> logError,
+            Action<string, SequencePoint> logErrorPoint)
         {
             ModelTypeDef = modelTypeDef;
 
+            LogDebug = logDebug;
+            LogInfo = logInfo;
+            LogWarning = logWarning;
+            LogWarningPoint = logWarningPoint;
+            LogError = logError;
+            LogErrorPoint = logErrorPoint;
+            
             GetMappedIdProperty();
 
             MappedAttributes = GetMappedProperties(Constants.Attributes.Property);
@@ -41,12 +69,11 @@ namespace RedArrow.Argo
 
             if (IdPropDef == null)
             {
-                throw new Exception($"{ModelTypeDef.FullName} does not have an id property mapped");
+                LogError($"{ModelTypeDef.FullName} does not have an id property mapped");
             }
-
-            if (IdPropDef.GetMethod?.ReturnType.FullName != "System.Guid")
+            else if (IdPropDef.GetMethod?.ReturnType.FullName != "System.Guid")
             {
-                throw new Exception($"{ModelTypeDef} id property must have a System.Guid getter");
+                LogError($"{ModelTypeDef} id property must have a System.Guid getter");
             }
         }
 

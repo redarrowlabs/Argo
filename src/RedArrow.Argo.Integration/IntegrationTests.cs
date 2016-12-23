@@ -392,13 +392,42 @@ namespace RedArrow.Argo.Integration
         }
 
         [Theory, AutoData, Trait("Category", "Integration")]
-        public async Task AddRelated(Guid providerId, Guid patientId)
+        public async Task AddRelated()
         {
             var sessionFactory = CreateSessionFactory();
 
+            Guid providerId;
+            Guid patientId;
+
             using (var session = sessionFactory.CreateSession())
             {
-                var patient = create
+                var provider = await session.Create<Provider>();
+                providerId = provider.Id;
+                var patient = await session.Create<Patient>();
+                patientId = patient.Id;
+
+                provider.Patients.Add(patient);
+
+                await session.Update(provider);
+            }
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                var provider = await session.Get<Provider>(providerId);
+
+                Assert.NotNull(provider);
+                Assert.NotNull(provider.Patients);
+
+                var patient = provider.Patients.First();
+
+                Assert.NotNull(patient);
+                Assert.Equal(patientId, patient.Id);
+            }
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                await session.Delete<Provider>(providerId);
+                await session.Delete<Patient>(patientId);
             }
         }
 

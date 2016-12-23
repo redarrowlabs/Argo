@@ -10,7 +10,7 @@ namespace RedArrow.Argo.Client.Session
 
         Task<TModel> Create<TModel>(TModel model)
             where TModel : class;
-
+        
         Task<TModel> Get<TModel>(Guid id)
             where TModel : class;
 
