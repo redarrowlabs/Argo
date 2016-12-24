@@ -37,7 +37,7 @@ namespace RedArrow.Argo.Client.Collections
 
         public abstract void SetItems(IEnumerable items);
         public abstract void Patch(PatchContext patchContext);
-        public abstract void ClearOperationQueue();
+        public abstract void Clean();
 
         public abstract IEnumerator GetEnumerator();
         public abstract void CopyTo(Array array, int index);

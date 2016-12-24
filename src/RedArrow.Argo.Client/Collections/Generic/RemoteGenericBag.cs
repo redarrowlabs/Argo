@@ -53,9 +53,10 @@ namespace RedArrow.Argo.Client.Collections.Generic
             }
         }
 
-        public override void ClearOperationQueue()
+        public override void Clean()
         {
             QueuedOperations.Clear();
+            Dirty = false;
         }
 
         IEnumerator<T> IEnumerable<T>.GetEnumerator()
@@ -103,7 +104,7 @@ namespace RedArrow.Argo.Client.Collections.Generic
 
         public bool Remove(T item)
         {
-            // TODO: Initialize(true)
+            Initialize();
             var result = InternalBag.Remove(item);
             if (result)
             {

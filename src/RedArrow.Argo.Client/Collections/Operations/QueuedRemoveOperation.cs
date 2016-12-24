@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using System;
+using System.Linq;
+using Newtonsoft.Json.Linq;
 using RedArrow.Argo.Client.JsonModels;
 using RedArrow.Argo.Client.Session.Patch;
 using RedArrow.Argo.Client.Session.Registry;
@@ -22,11 +24,15 @@ namespace RedArrow.Argo.Client.Collections.Operations
 
         public override void Patch(PatchContext patchContext)
         {
+            // TODO: better jsonpath query here
+            // according to jsonpath.com...
+            // $.[?(@.id=="{id}" && @.type=="{type}")]
             var id = ModelRegistry.GetModelId(Item);
-            var resourceType = ModelRegistry.GetResourceType(Item.GetType());
-
             GetRelationshipData(patchContext)
-                .Remove(JToken.FromObject(new ResourceIdentifier {Id = id, Type = resourceType}));
+                .SingleOrDefault(x => x
+                    .SelectToken("id")
+                    ?.ToObject<Guid>() == id)
+                ?.Remove();
         }
     }
 }

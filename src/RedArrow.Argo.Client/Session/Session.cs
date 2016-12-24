@@ -203,11 +203,7 @@ namespace RedArrow.Argo.Client.Session
                 requestContext.Relationships?.Each(kvp => resource.GetRelationships()[kvp.Key] = kvp.Value);
             }
             PatchContexts.Remove(id);
-            ModelRegistry
-                .GetCollectionConfigurations<TModel>()
-                .Select(x => x.PropertyInfo.GetValue(model))
-                .OfType<IRemoteCollection>()
-                .Each(x => x.ClearOperationQueue());
+            dirtyCollections.Each(x => x.Clean());
         }
 
         public Task Delete<TModel>(TModel model)

@@ -13,6 +13,6 @@ namespace RedArrow.Argo.Client.Collections
         void SetItems(IEnumerable items);
 
         void Patch(PatchContext patchContext);
-        void ClearOperationQueue();
+        void Clean();
     }
 }
