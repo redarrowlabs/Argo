@@ -99,8 +99,7 @@ namespace RedArrow.Argo.Client.Collections.Generic
 
         public bool Contains(T item)
         {
-            // TODO: this will not work with paging
-            // TODO: cache hit
+            Initialize();
             return InternalBag.Contains(item);
         }
 
