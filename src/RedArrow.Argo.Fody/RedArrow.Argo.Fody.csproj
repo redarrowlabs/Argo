@@ -67,8 +67,8 @@
     <Compile Include="Extensions\TypeReferenceExtensions.cs" />
     <Compile Include="HasManyWeaver.cs" />
     <Compile Include="HasOneWeaver.cs" />
-    <Compile Include="ModelWeavingContext.cs" />
     <Compile Include="IdVerifier.cs" />
+    <Compile Include="ModelWeavingContext.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ModuleWeaver.cs" />
     <Compile Include="ModelFinder.cs" />

@@ -27,9 +27,9 @@ namespace RedArrow.Argo.Client.Session
 
         private IHttpRequestBuilder HttpRequestBuilder { get; }
 
-        private ICacheProvider Cache { get; }
+        internal ICacheProvider Cache { get; }
 
-        private IModelRegistry ModelRegistry { get; }
+        internal IModelRegistry ModelRegistry { get; }
 
         //TODO: combine these into ResourceRegistry
         private IDictionary<Guid, Resource> ResourceState { get; }
@@ -62,16 +62,21 @@ namespace RedArrow.Argo.Client.Session
         public async Task<TModel> Create<TModel>()
             where TModel : class
         {
-            return (TModel)await Create(typeof(TModel), null);
+            return (TModel) await CreateResource(typeof(TModel), null);
         }
 
         public async Task<TModel> Create<TModel>(TModel model)
             where TModel : class
         {
-            return (TModel)await Create(typeof(TModel), model);
+            return (TModel) await CreateResource(typeof(TModel), model);
         }
 
-        public async Task<object> Create(Type modelType, object model)
+        public Task<object> Create(Type modelType, object model)
+        {
+            return CreateResource(modelType, model);
+        }
+
+        private async Task<object> CreateResource(Type modelType, object model)
         {
             ThrowIfDisposed();
 
@@ -105,7 +110,7 @@ namespace RedArrow.Argo.Client.Session
             var model = Cache.Retrieve(id);
             if (model != null)
             {
-                return (TModel)model;
+                return (TModel) model;
             }
 
             var requestContext = HttpRequestBuilder.GetResource(id, typeof(TModel));
@@ -123,20 +128,58 @@ namespace RedArrow.Argo.Client.Session
             model = CreateModel<TModel>(id);
             Cache.Update(id, model);
 
-            return (TModel)model;
+            return (TModel) model;
         }
 
-        public async Task Update<TModel>(TModel model) where TModel : class
+        public async Task Update<TModel>(TModel model)
+            where TModel : class
         {
             ThrowIfDisposed();
 
             var id = ModelRegistry.GetModelId(model);
+            var resourceType = ModelRegistry.GetResourceType(typeof(TModel));
+
+            var dirtyCollections = ModelRegistry
+                .GetCollectionConfigurations<TModel>()
+                .Select(x => x.PropertyInfo.GetValue(model))
+                .OfType<IRemoteCollection>()
+                .Where(x => x.Dirty)
+                .ToArray();
 
             PatchContext context;
             if (!PatchContexts.TryGetValue(id, out context))
             {
-                return;
+                if (dirtyCollections.Any() && ResourceState.ContainsKey(id))
+                {
+                    context = new PatchContext(new Resource
+                    {
+                        Id = id,
+                        Type = resourceType
+                    });
+
+                    dirtyCollections.Each(x =>
+                    {
+                        var relationship = ResourceState[id]
+                            .GetRelationships()
+                            .ContainsKey(x.Name)
+                                ? ResourceState[id].Relationships[x.Name]
+                                : new Relationship();
+                        context.SetRelationship(x.Name, relationship);
+                    });
+                    PatchContexts[id] = context;
+                }
+                else
+                {
+                    return;
+                }
             }
+
+            // flush collection ops to patch context
+            ModelRegistry
+                .GetCollectionConfigurations<TModel>()
+                .Select(x => x.PropertyInfo.GetValue(model))
+                .OfType<IRemoteCollection>()
+                .Each(x => x.Patch(context));
 
             var requestContext = HttpRequestBuilder.UpdateResource(id, model, context);
             var response = await HttpClient.SendAsync(requestContext.Request);
@@ -158,6 +201,7 @@ namespace RedArrow.Argo.Client.Session
                 requestContext.Relationships?.Each(kvp => resource.GetRelationships()[kvp.Key] = kvp.Value);
             }
             PatchContexts.Remove(id);
+            dirtyCollections.Each(x => x.Clean());
         }
 
         public Task Delete<TModel>(TModel model)
@@ -263,10 +307,10 @@ namespace RedArrow.Argo.Client.Session
             var persisted = rltnId != Guid.Empty;
             if (!persisted)
             {
-                rltnId = context.GetReference(rltnName) ?? Guid.NewGuid();
+                rltnId = context.GetRelated(rltnName) ?? Guid.NewGuid();
             }
 
-            context.SetReference(
+            context.SetRelated(
                 rltnName,
                 rltnId,
                 rltnType,
@@ -274,8 +318,7 @@ namespace RedArrow.Argo.Client.Session
             Cache.Update(rltnId, rltn);
         }
 
-        public void InitializeCollection<T>(IRemoteCollection<T> collection)
-            where T : class
+        public void InitializeCollection(IRemoteCollection collection)
         {
             // TODO: determine if {id/type} from owner relationship are cached already
             // TODO: abstract this into a collection loader/initializer
@@ -302,16 +345,20 @@ namespace RedArrow.Argo.Client.Session
                     return;
                 }
 
-                // TODO: clean this up
-
                 var items = root.Data.Select(x =>
                 {
                     ResourceState[x.Id] = x;
-                    var model = CreateModel<T>(x.Id);
+                    var modelType = ModelRegistry.GetModelType(x.Type);
+                    if (modelType == null)
+                    {
+                        // TODO: ModelNotRegisteredException
+                        throw new Exception("TODO");
+                    }
+                    var model = CreateModel(modelType, x.Id);
                     Cache.Update(x.Id, model);
                     return model;
                 });
-                collection.Initialize(items);
+                collection.SetItems(items);
             }).Wait();
         }
 
@@ -322,7 +369,8 @@ namespace RedArrow.Argo.Client.Session
             return GetRemoteCollection<TModel, TElmnt>(id, rltnName);
         }
 
-        public IEnumerable<TElmnt> SetGenericEnumerable<TModel, TElmnt>(Guid id, string attrName, IEnumerable<TElmnt> value)
+        public IEnumerable<TElmnt> SetGenericEnumerable<TModel, TElmnt>(Guid id, string attrName,
+            IEnumerable<TElmnt> value)
             where TModel : class
             where TElmnt : class
         {
@@ -336,7 +384,8 @@ namespace RedArrow.Argo.Client.Session
             return GetRemoteCollection<TModel, TElmnt>(id, rltnName);
         }
 
-        public ICollection<TElmnt> SetGenericCollection<TModel, TElmnt>(Guid id, string attrName, IEnumerable<TElmnt> value)
+        public ICollection<TElmnt> SetGenericCollection<TModel, TElmnt>(Guid id, string attrName,
+            IEnumerable<TElmnt> value)
             where TModel : class
             where TElmnt : class
         {
@@ -360,7 +409,8 @@ namespace RedArrow.Argo.Client.Session
             };
         }
 
-        private RemoteGenericBag<TElmnt> SetRemoteCollection<TModel, TElmnt>(Guid id, string rltnName, IEnumerable<TElmnt> value)
+        private RemoteGenericBag<TElmnt> SetRemoteCollection<TModel, TElmnt>(Guid id, string rltnName,
+            IEnumerable<TElmnt> value)
             where TModel : class
             where TElmnt : class
         {
@@ -378,9 +428,8 @@ namespace RedArrow.Argo.Client.Session
         }
 
         private TModel CreateModel<TModel>(Guid id)
-            where TModel : class
         {
-            return (TModel)CreateModel(typeof(TModel), id);
+            return (TModel) CreateModel(typeof(TModel), id);
         }
 
         private object CreateModel(Type type, Guid id)
@@ -396,8 +445,13 @@ namespace RedArrow.Argo.Client.Session
             if (!PatchContexts.TryGetValue(id, out context))
             {
                 var resourceType = ModelRegistry.GetResourceType<TModel>();
-                var resource = new Resource { Id = id, Type = resourceType };
-                context = new PatchContext(resource);
+                var patch = new Resource
+                {
+                    Id = id,
+                    Type = resourceType
+                };
+
+                context = new PatchContext(patch);
                 PatchContexts[id] = context;
             }
             return context;

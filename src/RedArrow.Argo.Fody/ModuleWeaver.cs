@@ -83,13 +83,23 @@ namespace RedArrow.Argo
 	        foreach (var modelTypeDef in _modelTypeDefs)
 	        {
 		        LogInfo($"Weaving type {modelTypeDef.FullName}...");
-		        var context = new ModelWeavingContext(modelTypeDef);
-				VerifyIdProperty(context);
-				AddSessionField(context);
-				AddCtor(context);
-				WeaveAttributes(context);
-		        WeaveHasOnes(context);
-                WeaveHasManys(context);
+	            var context = new ModelWeavingContext(
+                    modelTypeDef,
+                    LogDebug,
+                    LogInfo,
+                    LogWarning,
+                    LogWarningPoint,
+                    LogError,
+                    LogWarningPoint);
+                VerifyIdProperty(context);
+	            if (context.IdPropDef != null)
+	            {
+	                AddSessionField(context);
+	                AddCtor(context);
+	                WeaveAttributes(context);
+	                WeaveHasOnes(context);
+	                WeaveHasManys(context);
+	            }
 	        }
         }
 

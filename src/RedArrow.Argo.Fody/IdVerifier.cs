@@ -10,10 +10,9 @@ namespace RedArrow.Argo
         private void VerifyIdProperty(ModelWeavingContext context)
         {
             // if id property doesn't have a setter, try to add one
-            if (context.IdPropDef != null
-                && (context.IdPropDef.SetMethod == null || context.IdPropDef.SetMethod.IsPublic))
+            if (context.IdPropDef != null && context.IdPropDef.SetMethod == null)
             {
-                LogWarning($"{context.ModelTypeRef.FullName} either has no setter, or a public setter.  Attempting to resolve...");
+                LogInfo($"{context.IdPropDef.FullName} has no setter.  Attempting to resolve...");
 
                 var getterBackingField = context
                     .IdPropDef

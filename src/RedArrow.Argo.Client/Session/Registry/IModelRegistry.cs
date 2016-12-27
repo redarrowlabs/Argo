@@ -10,11 +10,19 @@ namespace RedArrow.Argo.Client.Session.Registry
 
         string GetResourceType(Type modelType);
 
+        Type GetModelType(string resourceType);
+
         Guid GetModelId(object model);
+
+        void SetModelId(object model, Guid id);
 
         IEnumerable<AttributeConfiguration> GetModelAttributes<TModel>();
 
         IEnumerable<AttributeConfiguration> GetModelAttributes(Type modelType);
+
+        IEnumerable<HasManyConfiguration> GetCollectionConfigurations<TModel>();
+
+        IEnumerable<HasManyConfiguration> GetCollectionConfigurations(Type modelType);
 
         HasManyConfiguration GetCollectionConfiguration<TModel>(string rltnName);
 

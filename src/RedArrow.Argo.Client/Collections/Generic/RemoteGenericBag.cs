@@ -1,91 +1,124 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using RedArrow.Argo.Client.Extensions;
+using RedArrow.Argo.Client.Collections.Operations;
 using RedArrow.Argo.Client.Infrastructure;
-using RedArrow.Argo.Client.Session;
+using RedArrow.Argo.Client.Session.Patch;
 
 namespace RedArrow.Argo.Client.Collections.Generic
 {
     [DebuggerTypeProxy(typeof(DebuggerCollectionProxy<>))]
-    internal class RemoteGenericBag<T> : AbstractRemoteCollection<T>
+    internal class RemoteGenericBag<T> : AbstractRemoteCollection, ICollection<T>
         where T : class
     {
         protected IList<T> InternalBag { get; set; }
 
         public bool Empty => Count == 0;
 
-        public override int Count => InternalBag?.Count ?? 0; // TODO
-
-        internal RemoteGenericBag()
+        public override int Count
         {
+            get
+            {
+                Initialize();
+                return InternalBag.Count;
+            }
         }
 
-        internal RemoteGenericBag(ICollectionSession session) :
+        protected ICollection<IQueuedOperation> QueuedOperations { get; }
+        
+        internal RemoteGenericBag(Session.Session session) :
             this(session, new List<T>())
         {
         }
 
-        internal RemoteGenericBag(ICollectionSession session, IEnumerable<T> items) :
+        internal RemoteGenericBag(Session.Session session, IEnumerable<T> items) :
             base(session)
         {
+            QueuedOperations = new List<IQueuedOperation>();
             InternalBag = items as IList<T> ?? new List<T>(items);
         }
-
-        public override void Initialize(IEnumerable<T> items)
+        
+        public override void SetItems(IEnumerable items)
         {
-            Initializing = true; // TODO
-
-            items.Each(x => InternalBag.Add(x));
-
-            Initialized = true; // TODO
-            Initializing = false; // TODO
+            foreach (var item in items)
+            {
+                InternalBag.Add((T)item);
+            }
         }
 
-        public override IEnumerator<T> GetEnumerator()
+        public override void Patch(PatchContext patchContext)
         {
-            Read();
+            foreach (var op in QueuedOperations)
+            {
+                op.Patch(patchContext);
+            }
+        }
+
+        public override void Clean()
+        {
+            QueuedOperations.Clear();
+            Dirty = false;
+        }
+
+        IEnumerator<T> IEnumerable<T>.GetEnumerator()
+        {
+            Initialize();
             return InternalBag.GetEnumerator();
         }
 
-        public override void Add(T item)
+        public override IEnumerator GetEnumerator()
         {
-            // TODO: Write()
-            InternalBag.Add(item);
-
-            // TODO: queued operation
+            IEnumerable<T> self = this;
+            return self.GetEnumerator();
         }
 
-        public override void Clear()
+        public void Add(T item)
         {
-            // TODO: queued operation
+            if (item == null)
+            {
+                throw new ArgumentNullException(nameof(item));
+            }
 
-            // TODO: Initialize(true)
+            Initialize();
+            InternalBag.Add(item);
+            QueuedOperations.Add(new QueuedAddOperation(Session.ModelRegistry, Name, item));
+            Dirty = true;
+        }
+
+        public void Clear()
+        {
             if (InternalBag.Count != 0)
             {
+                Initialize();
                 InternalBag.Clear();
+                QueuedOperations.Add(new QueuedClearOperation(Name));
                 Dirty = true;
             }
         }
 
-        public override bool Contains(T item)
+        public bool Contains(T item)
         {
             // TODO: this will not work with paging
             // TODO: cache hit
             return InternalBag.Contains(item);
         }
 
-        public override bool Remove(T item)
+        public bool Remove(T item)
         {
-            // TODO: Initialize(true)
+            Initialize();
             var result = InternalBag.Remove(item);
-            Dirty |= result;
+            if (result)
+            {
+                QueuedOperations.Add(new QueuedRemoveOperation(Session.ModelRegistry, Name, item));
+                Dirty = true;
+            }
             return result;
         }
 
-        public override void CopyTo(T[] array, int index)
+        public void CopyTo(T[] array, int index)
         {
-            Read();
+            Initialize();
             for (var i = index; i < Count; i++)
             {
                 array.SetValue(InternalBag[i], i);
@@ -94,7 +127,7 @@ namespace RedArrow.Argo.Client.Collections.Generic
 
         public override void CopyTo(Array array, int index)
         {
-            Read();
+            Initialize();
             for (var i = index; i < Count; i++)
             {
                 array.SetValue(InternalBag[i], i);

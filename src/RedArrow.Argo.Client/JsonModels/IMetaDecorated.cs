@@ -3,7 +3,7 @@ using Newtonsoft.Json.Linq;
 
 namespace RedArrow.Argo.Client.JsonModels
 {
-    internal interface IMetaDecorated
+    public interface IMetaDecorated
     {
         IDictionary<string, JToken> Meta { get; set; }
     }

@@ -8,10 +8,14 @@ namespace RedArrow.Argo.Client.Session.Registry
     internal class ModelRegistry : IModelRegistry
     {
         private IDictionary<Type, ModelConfiguration> Registry { get; }
+        private IDictionary<string, Type> ResourceTypeToModelType { get; }
 
         internal ModelRegistry(IEnumerable<ModelConfiguration> config)
         {
             Registry = config.ToDictionary(x => x.ModelType, x => x);
+            ResourceTypeToModelType = Registry.ToDictionary(
+                kvp => kvp.Value.ResourceType,
+                kvp => kvp.Key);
         }
 
         public string GetResourceType<TModel>()
@@ -24,10 +28,26 @@ namespace RedArrow.Argo.Client.Session.Registry
             return GetModelConfig(modelType).ResourceType;
         }
 
+        public Type GetModelType(string resourceType)
+        {
+            Type ret;
+            if (ResourceTypeToModelType.TryGetValue(resourceType, out ret))
+            {
+                return ret;
+            }
+            return null;
+        }
+
         public Guid GetModelId(object model)
         {
             var modelType = model.GetType();
             return (Guid)GetModelConfig(modelType).IdProperty.GetValue(model);
+        }
+
+        public void SetModelId(object model, Guid id)
+        {
+            var modelType = model.GetType();
+            GetModelConfig(modelType).IdProperty.SetValue(model, id);
         }
 
         public IEnumerable<AttributeConfiguration> GetModelAttributes<TModel>()
@@ -38,6 +58,16 @@ namespace RedArrow.Argo.Client.Session.Registry
         public IEnumerable<AttributeConfiguration> GetModelAttributes(Type modelType)
         {
             return GetModelConfig(modelType).AttributeProperties.Values;
+        }
+
+        public IEnumerable<HasManyConfiguration> GetCollectionConfigurations<TModel>()
+        {
+            return GetCollectionConfigurations(typeof(TModel));
+        }
+
+        public IEnumerable<HasManyConfiguration> GetCollectionConfigurations(Type modelType)
+        {
+            return GetModelConfig(modelType).HasManyProperties.Values;
         }
 
         public HasManyConfiguration GetCollectionConfiguration<TModel>(string rltnName)

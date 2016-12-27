@@ -38,10 +38,10 @@ namespace RedArrow.Argo.Client.Session.Patch
 
         public bool ContainsAttribute(string attrName)
         {
-            return Resource.Attributes?[attrName] != null;
+            return Resource.Attributes[attrName] != null;
         }
 
-        public void SetReference(string attrName, Guid rltnId, string rltnType, bool persisted)
+        public void SetRelated(string attrName, Guid rltnId, string rltnType, bool persisted)
         {
             if (Resource.Relationships == null)
             {
@@ -64,9 +64,52 @@ namespace RedArrow.Argo.Client.Session.Patch
             };
         }
 
-        public Guid? GetReference(string attrName)
+        public Guid? GetRelated(string attrName)
         {
-            return Resource.Relationships?[attrName]?.Data?.SelectToken("Id")?.Value<Guid>();
+            return GetRelationship(attrName)?.Data?.SelectToken("Id")?.ToObject<Guid>();
+        }
+
+        public Relationship GetRelationship(string rltnName)
+        {
+            Relationship rltn;
+            if (Resource.Relationships != null && Resource.Relationships.TryGetValue(rltnName, out rltn))
+            {
+                return rltn;
+            }
+            return null;
+        }
+
+        public void SetRelationship(string rltnName, Relationship rltn)
+        {
+            if (Resource.Relationships == null)
+            {
+                Resource.Relationships = new Dictionary<string, Relationship>();
+            }
+
+            Resource.Relationships[rltnName] = rltn;
+        }
+
+        public void AddRelated(string rltnName, Guid rltnId, string rltnType, bool persisted)
+        {
+            if (Resource.Relationships == null)
+            {
+                Resource.Relationships = new Dictionary<string, Relationship>();
+            }
+
+            if (persisted && TransientReferences.ContainsKey(rltnName))
+            {
+                TransientReferences.Remove(rltnName);
+            }
+
+            if (!persisted)
+            {
+                TransientReferences[rltnName] = rltnId;
+            }
+
+            Resource.Relationships[rltnName] = new Relationship
+            {
+                Data = JToken.FromObject(new ResourceIdentifier { Id = rltnId, Type = rltnType })
+            };
         }
 
         public IDictionary<string, Guid> GetTransientReferences()

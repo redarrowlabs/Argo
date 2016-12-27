@@ -17,6 +17,6 @@ namespace WovenByFody
         public string LastName { get; set; }
 
         [HasMany]
-        public IEnumerable<Patient> Patients { get; set; }
+        public ICollection<Patient> Patients { get; set; }
     }
 }
