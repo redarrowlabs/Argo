@@ -24,14 +24,9 @@ namespace RedArrow.Argo.Client.Collections.Operations
 
         public override void Patch(PatchContext patchContext)
         {
-            // TODO: better jsonpath query here
-            // according to jsonpath.com...
-            // $.[?(@.id=="{id}" && @.type=="{type}")]
             var id = ModelRegistry.GetModelId(Item);
             GetRelationshipData(patchContext)
-                .SingleOrDefault(x => x
-                    .SelectToken("id")
-                    ?.ToObject<Guid>() == id)
+                .SelectToken($"$.[?(@.id=='{id}')]")
                 ?.Remove();
         }
     }

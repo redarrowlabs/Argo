@@ -16,7 +16,14 @@ namespace RedArrow.Argo.Client.Collections.Generic
 
         public bool Empty => Count == 0;
 
-        public override int Count => InternalBag?.Count ?? 0; // TODO
+        public override int Count
+        {
+            get
+            {
+                Initialize();
+                return InternalBag.Count;
+            }
+        }
 
         protected ICollection<IQueuedOperation> QueuedOperations { get; }
         
@@ -34,15 +41,10 @@ namespace RedArrow.Argo.Client.Collections.Generic
         
         public override void SetItems(IEnumerable items)
         {
-            Initializing = true; // TODO
-
             foreach (var item in items)
             {
                 InternalBag.Add((T)item);
             }
-
-            Initialized = true; // TODO
-            Initializing = false; // TODO
         }
 
         public override void Patch(PatchContext patchContext)

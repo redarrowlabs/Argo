@@ -477,14 +477,71 @@ namespace RedArrow.Argo.Integration
 
                 Assert.NotNull(provider);
                 Assert.NotNull(provider.Patients);
-
-                // TODO: this is not initializing the collection
-                // TODO: because Count returns 0 (I think?)
+                
                 var patients = provider.Patients.ToArray();
 
                 Assert.Equal(2, patients.Length);
                 Assert.Equal(patientIds[0], patients[0].Id);
                 Assert.Equal(patientIds[2], patients[1].Id);
+            }
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                await session.Delete<Provider>(providerId);
+                foreach (var patientId in patientIds)
+                {
+                    await session.Delete<Patient>(patientId);
+                }
+            }
+        }
+
+        [Fact, Trait("Category", "Integration")]
+        public async Task ClearRelated()
+        {
+            var sessionFactory = CreateSessionFactory();
+
+            Guid providerId;
+            IList<Guid> patientIds = new List<Guid>();
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                var provider = await session.Create<Provider>();
+                providerId = provider.Id;
+
+                for (var i = 0; i < 3; i++)
+                {
+                    var patient = await session.Create<Patient>();
+                    patientIds.Add(patient.Id);
+                    provider.Patients.Add(patient);
+                }
+
+                await session.Update(provider);
+            }
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                var provider = await session.Get<Provider>(providerId);
+
+                Assert.NotNull(provider);
+                Assert.NotNull(provider.Patients);
+                Assert.All(patientIds, id => Assert.NotNull(provider.Patients.SingleOrDefault(x => x.Id == id)));
+                
+                Assert.Equal(3, provider.Patients.Count);
+                provider.Patients.Clear();
+
+                await session.Update(provider);
+            }
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                var provider = await session.Get<Provider>(providerId);
+
+                Assert.NotNull(provider);
+                Assert.NotNull(provider.Patients);
+                
+                var patients = provider.Patients.ToArray();
+
+                Assert.Equal(0, patients.Length);
             }
 
             using (var session = sessionFactory.CreateSession())

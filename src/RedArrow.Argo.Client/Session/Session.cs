@@ -82,9 +82,7 @@ namespace RedArrow.Argo.Client.Session
 
             var createPayload = HttpRequestBuilder.CreateResource(modelType, model);
 
-            Log.Info(
-                () =>
-                    $"JSORM||creating resource {createPayload.ResourceType} from model {modelType} {JsonConvert.SerializeObject(model)}");
+            Log.Info(() => $"JSORM||creating resource {createPayload.ResourceType} from model {modelType} {JsonConvert.SerializeObject(model)}");
 
             var response = await HttpClient.SendAsync(createPayload.Request);
 
@@ -346,8 +344,6 @@ namespace RedArrow.Argo.Client.Session
                 {
                     return;
                 }
-
-                // TODO: clean this up
 
                 var items = root.Data.Select(x =>
                 {

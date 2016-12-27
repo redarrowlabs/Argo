@@ -32,7 +32,12 @@ namespace RedArrow.Argo.Client.Collections
             if (Initialized) return;
             if (Initializing) throw new Exception("TODO");
 
+            Initializing = true;
+
             Session.InitializeCollection(this);
+
+            Initializing = false;
+            Initialized = true;
         }
 
         public abstract void SetItems(IEnumerable items);
