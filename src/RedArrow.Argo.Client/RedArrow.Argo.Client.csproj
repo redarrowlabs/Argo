@@ -73,7 +73,6 @@
     <Compile Include="Http\IHttpRequestBuilder.cs" />
     <Compile Include="Http\RequestBuilder.cs" />
     <Compile Include="Http\RequestContext.cs" />
-    <Compile Include="Infrastructure\DebuggerCollectionProxy.cs" />
     <Compile Include="Infrastructure\JsormException.cs" />
     <Compile Include="Infrastructure\ModelNotRegisteredException.cs" />
     <Compile Include="Infrastructure\ModelTypeMismatchException.cs" />
@@ -83,6 +82,7 @@
     <Compile Include="JsonModels\ErrorSource.cs" />
     <Compile Include="JsonModels\IMetaDecorated.cs" />
     <Compile Include="JsonModels\JModel.cs" />
+    <Compile Include="JsonModels\JModelExtensions.cs" />
     <Compile Include="JsonModels\Link.cs" />
     <Compile Include="JsonModels\Relationship.cs" />
     <Compile Include="JsonModels\Resource.cs" />

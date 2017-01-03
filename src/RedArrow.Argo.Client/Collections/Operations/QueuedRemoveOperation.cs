@@ -1,33 +1,33 @@
 ﻿using System;
 using System.Linq;
-using Newtonsoft.Json.Linq;
-using RedArrow.Argo.Client.JsonModels;
+using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Session.Patch;
-using RedArrow.Argo.Client.Session.Registry;
 
 namespace RedArrow.Argo.Client.Collections.Operations
 {
     public class QueuedRemoveOperation : AbstractQueuedOperation
     {
-        private IModelRegistry ModelRegistry { get; }
-        private object Item { get; }
+        protected Guid ItemId { get; }
 
         public QueuedRemoveOperation(
-            IModelRegistry modelRegistry,
             string rltnName,
-            object item) :
+            Guid itemId) :
             base(rltnName)
         {
-            ModelRegistry = modelRegistry;
-            Item = item;
+            if(itemId == Guid.Empty) throw new ArgumentException("TODO", nameof(itemId));
+
+            ItemId = itemId;
         }
 
         public override void Patch(PatchContext patchContext)
         {
-            var id = ModelRegistry.GetModelId(Item);
+            // it is slightly safer to do SelectTokens (plural) instead of 
+            // SelectToken (singular) in case there is a problem with the data.
+            // just remove all matches
             GetRelationshipData(patchContext)
-                .SelectToken($"$.[?(@.id=='{id}')]")
-                ?.Remove();
+                .SelectTokens($"$.[?(@.id=='{ItemId}')]")
+                .ToArray()
+                .Each(x => x.Remove());
         }
     }
 }

@@ -13,6 +13,8 @@ namespace RedArrow.Argo.Client.Session.Patch
 
         internal PatchContext(Resource resource)
         {
+            if(resource == null) throw new ArgumentNullException(nameof(resource));
+
             Resource = resource;
             TransientReferences = new Dictionary<string, Guid>();
         }
@@ -41,32 +43,35 @@ namespace RedArrow.Argo.Client.Session.Patch
             return Resource.Attributes[attrName] != null;
         }
 
-        public void SetRelated(string attrName, Guid rltnId, string rltnType, bool persisted)
+        public void SetRelated(string attrName, ResourceIdentifier resourceIdentifier, bool transient)
         {
             if (Resource.Relationships == null)
             {
                 Resource.Relationships = new Dictionary<string, Relationship>();
             }
 
-            if (persisted && TransientReferences.ContainsKey(attrName))
+            if ((!transient || resourceIdentifier == null) && TransientReferences.ContainsKey(attrName))
             {
                 TransientReferences.Remove(attrName);
             }
 
-            if (!persisted)
+            if (transient && resourceIdentifier != null)
             {
-                TransientReferences[attrName] = rltnId;
+                TransientReferences[attrName] = resourceIdentifier.Id;
             }
 
             Resource.Relationships[attrName] = new Relationship
             {
-                Data = JToken.FromObject(new ResourceIdentifier { Id = rltnId, Type = rltnType })
+                Data = resourceIdentifier.ToJToken()
             };
         }
 
         public Guid? GetRelated(string attrName)
         {
-            return GetRelationship(attrName)?.Data?.SelectToken("Id")?.ToObject<Guid>();
+            return GetRelationship(attrName)
+                ?.Data
+                ?.SelectToken("id")
+                ?.Value<Guid>();
         }
 
         public Relationship GetRelationship(string rltnName)

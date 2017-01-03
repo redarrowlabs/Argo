@@ -10,8 +10,7 @@ namespace RedArrow.Argo.Client.Collections.Operations
 
         public override void Patch(PatchContext patchContext)
         {
-            GetRelationshipData(patchContext)
-                .RemoveAll();
+            GetRelationshipData(patchContext).RemoveAll();
         }
     }
 }

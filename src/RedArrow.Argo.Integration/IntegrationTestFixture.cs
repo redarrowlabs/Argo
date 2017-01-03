@@ -10,7 +10,7 @@ namespace RedArrow.Argo.Integration
 {
     public class IntegrationTestFixture : IDisposable
     {
-        public string Host = "http://titan-test.centralus.cloudapp.azure.com/api";
+        public string Host = "https://test.redarrow.io/api";
         public string AccessToken { get; }
 
         public IntegrationTestFixture()

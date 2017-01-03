@@ -11,6 +11,8 @@ namespace RedArrow.Argo.Client.Collections.Operations
 
         protected AbstractQueuedOperation(string rltnName)
         {
+            if(string.IsNullOrWhiteSpace(rltnName)) throw new ArgumentNullException(nameof(rltnName));
+
             RltnName = rltnName;
         }
 

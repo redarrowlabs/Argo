@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Ploeh.AutoFixture.Xunit2;
 using RedArrow.Argo.Client.Config;
-using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Session;
 using WovenByFody;
 using Xunit;
@@ -251,7 +250,7 @@ namespace RedArrow.Argo.Integration
             // create the provider
             using (var client = new HttpClient())
             {
-                client.BaseAddress = new Uri("http://titan-test.centralus.cloudapp.azure.com/api/data/");
+                client.BaseAddress = new Uri("https://test.redarrow.io/api/data/");
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken);
 
                 var body = new
@@ -306,7 +305,7 @@ namespace RedArrow.Argo.Integration
             {
                 using (var client = new HttpClient())
                 {
-                    client.BaseAddress = new Uri("http://titan-test.centralus.cloudapp.azure.com/api/data/");
+                    client.BaseAddress = new Uri("https://test.redarrow.io/api/data/");
                     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken);
 
                     var body = new
@@ -335,7 +334,7 @@ namespace RedArrow.Argo.Integration
             // create the provider
             using (var client = new HttpClient())
             {
-                client.BaseAddress = new Uri("http://titan-test.centralus.cloudapp.azure.com/api/data/");
+                client.BaseAddress = new Uri("https://test.redarrow.io/api/data/");
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken);
 
                 var body = new
@@ -551,6 +550,25 @@ namespace RedArrow.Argo.Integration
                 {
                     await session.Delete<Patient>(patientId);
                 }
+            }
+        }
+
+        [Fact, Trait("Category", "Integration")]
+        public async Task SetNullReferenceToNull()
+        {
+            var sessionFactory = CreateSessionFactory();
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                var patient = await session.Create<Patient>();
+
+                Assert.NotNull(patient);
+                Assert.Null(patient.Provider);
+
+                // previously threw exception
+                patient.Provider = null;
+
+                await session.Delete(patient);
             }
         }
 

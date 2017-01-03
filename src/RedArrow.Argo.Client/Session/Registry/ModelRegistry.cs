@@ -89,14 +89,7 @@ namespace RedArrow.Argo.Client.Session.Registry
         private ModelConfiguration GetModelConfig(Type modelType)
         {
             ThrowIfNotRegistered(modelType);
-            ModelConfiguration config;
-            if (Registry.TryGetValue(modelType, out config))
-            {
-                return config;
-            }
-
-            // TODO: ModelNotRegisteredException
-            throw new Exception("JSORM||model not registered");
+            return Registry[modelType];
         }
 
         private void ThrowIfNotRegistered(Type type)

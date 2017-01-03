@@ -300,21 +300,30 @@ namespace RedArrow.Argo.Client.Session
         {
             ThrowIfDisposed();
 
+            var context = GetPatchContext<TModel>(id);
+
+            if (rltn == null)
+            {
+                context.SetRelated(
+                    rltnName,
+                    null,
+                    false);
+                return;
+            }
+
             var rltnId = ModelRegistry.GetModelId(rltn);
             var rltnType = ModelRegistry.GetResourceType<TRltn>();
 
-            var context = GetPatchContext<TModel>(id);
-            var persisted = rltnId != Guid.Empty;
-            if (!persisted)
+            var transient = rltnId == Guid.Empty;
+            if (transient)
             {
                 rltnId = context.GetRelated(rltnName) ?? Guid.NewGuid();
             }
 
             context.SetRelated(
                 rltnName,
-                rltnId,
-                rltnType,
-                persisted);
+                new ResourceIdentifier {Id = rltnId, Type = rltnType},
+                transient);
             Cache.Update(rltnId, rltn);
         }
 

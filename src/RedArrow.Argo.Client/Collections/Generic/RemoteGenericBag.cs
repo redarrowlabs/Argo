@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using RedArrow.Argo.Client.Collections.Operations;
-using RedArrow.Argo.Client.Infrastructure;
 using RedArrow.Argo.Client.Session.Patch;
 
 namespace RedArrow.Argo.Client.Collections.Generic
 {
-    [DebuggerTypeProxy(typeof(DebuggerCollectionProxy<>))]
     internal class RemoteGenericBag<T> : AbstractRemoteCollection, ICollection<T>
         where T : class
     {
@@ -75,14 +72,13 @@ namespace RedArrow.Argo.Client.Collections.Generic
 
         public void Add(T item)
         {
-            if (item == null)
-            {
-                throw new ArgumentNullException(nameof(item));
-            }
+            if (item == null) return;
 
             Initialize();
             InternalBag.Add(item);
-            QueuedOperations.Add(new QueuedAddOperation(Session.ModelRegistry, Name, item));
+            var itemId = Session.ModelRegistry.GetModelId(item);
+            var itemResourceType = Session.ModelRegistry.GetResourceType(item.GetType());
+            QueuedOperations.Add(new QueuedAddOperation(Name, itemId, itemResourceType));
             Dirty = true;
         }
 
@@ -99,17 +95,22 @@ namespace RedArrow.Argo.Client.Collections.Generic
 
         public bool Contains(T item)
         {
+            if (item == null) return false;
+
             Initialize();
             return InternalBag.Contains(item);
         }
 
         public bool Remove(T item)
         {
+            if (item == null) return true;
+
             Initialize();
             var result = InternalBag.Remove(item);
             if (result)
             {
-                QueuedOperations.Add(new QueuedRemoveOperation(Session.ModelRegistry, Name, item));
+                var itemId = Session.ModelRegistry.GetModelId(item);
+                QueuedOperations.Add(new QueuedRemoveOperation(Name, itemId));
                 Dirty = true;
             }
             return result;
