@@ -20,7 +20,7 @@ namespace RedArrow.Argo.Client.Config
         internal void Configure(SessionFactoryConfiguration config)
         {
             ScanAssemblies.SelectMany(x => x.ExportedTypes)
-                .Where(IsJsormModel)
+                .Where(IsArgoModel)
                 .Select(x => new ModelConfiguration(x))
                 .Each(config.Register);
         }
@@ -37,7 +37,7 @@ namespace RedArrow.Argo.Client.Config
             return this;
         }
 
-        private static bool IsJsormModel(Type modelType)
+        private static bool IsArgoModel(Type modelType)
         {
             var typeInfo = modelType.GetTypeInfo();
             return typeInfo.IsClass

@@ -2,21 +2,21 @@
 
 namespace RedArrow.Argo.Client.Infrastructure
 {
-    public class JsormException : Exception
+    public class ArgoException : Exception
     {
         private Type Type { get; }
 
-        public JsormException(Type type)
+        public ArgoException(Type type)
         {
             Type = type;
         }
 
-        public JsormException(string message, Type type) : base(message)
+        public ArgoException(string message, Type type) : base(message)
         {
             Type = type;
         }
 
-        public JsormException(string message, Exception innerException, Type type) : base(message, innerException)
+        public ArgoException(string message, Exception innerException, Type type) : base(message, innerException)
         {
             Type = type;
         }

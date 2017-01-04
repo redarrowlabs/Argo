@@ -19,7 +19,7 @@ namespace RedArrow.Argo
              || _session_GetGenericCollection == null
              || _session_SetGenericCollection == null)
             {
-                throw new Exception("Jsorm relationship weaving failed unexpectedly");
+                throw new Exception("Argo relationship weaving failed unexpectedly");
             }
 
             foreach (var propertyDef in context.MappedHasManys)
@@ -42,7 +42,7 @@ namespace RedArrow.Argo
                 }
                 else
                 {
-                    throw new Exception($"Jsorm encountered a HasMany relationship on non IEnumerable<T> or ICollection<T> property {propertyDef.FullName}");
+                    throw new Exception($"Argo encountered a HasMany relationship on non IEnumerable<T> or ICollection<T> property {propertyDef.FullName}");
                 }
 
                 // get the backing field
@@ -100,7 +100,7 @@ namespace RedArrow.Argo
             proc.Emit(OpCodes.Ldarg_0);
 
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
-            proc.Emit(OpCodes.Ldfld, context.SessionField); // load __jsorm__generated_session field from 'this'
+            proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
             proc.Emit(OpCodes.Ldarg_0); // load 'this'
             proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
             proc.Emit(OpCodes.Ldstr, rltnName); // load attrName onto stack
@@ -134,9 +134,9 @@ namespace RedArrow.Argo
 
             // set
             // {
-            //     if (this.__jsorm__generated_session != null)
+            //     if (this.__argo__generated_session != null)
             //     {
-            //         this.<[PropName]>k__BackingField = this.__jsorm__generated_session.Set<[ModelType], [ElementType]>(this.Id, "[RltnName]", this.<[PropName]>k__BackingField);
+            //         this.<[PropName]>k__BackingField = this.__argo__generated_session.Set<[ModelType], [ElementType]>(this.Id, "[RltnName]", this.<[PropName]>k__BackingField);
             //     }
             //     else
             //     {
@@ -149,15 +149,15 @@ namespace RedArrow.Argo
             var ret = proc.Create(OpCodes.Ret);
 
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-            proc.Emit(OpCodes.Ldfld, context.SessionField); // load __jsorm__generated_session field from 'this'
+            proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
 
-            // if __jsorm__generated_session == null
+            // if __argo__generated_session == null
             proc.Emit(OpCodes.Brfalse_S, endif);
 
             proc.Emit(OpCodes.Ldarg_0);
 
             proc.Emit(OpCodes.Ldarg_0);
-            proc.Emit(OpCodes.Ldfld, context.SessionField); // load __jsorm__generated_session field from 'this'
+            proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
             proc.Emit(OpCodes.Ldarg_0); // load 'this'
             proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
             proc.Emit(OpCodes.Ldstr, rltnName); // load attrName onto stack

@@ -15,7 +15,7 @@ namespace RedArrow.Argo
             // Ctor(Guid id, IModelSession session)
             // {
             //   Id = id;
-            //   _jsorm_generated_session = session;
+            //   _argo_generated_session = session;
             //  }
             var ctor = new MethodDefinition(
                 ".ctor",
@@ -40,7 +40,7 @@ namespace RedArrow.Argo
             // public Patient(Guid id, IModelSession session)
             // {
             //   this.Id = id;
-            //   this._jsorm_generated_session = session;
+            //   this._argo_generated_session = session;
             // }
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
             proc.Emit(OpCodes.Call, objectCtor); // call base ctor on 'this'
@@ -49,9 +49,9 @@ namespace RedArrow.Argo
             proc.Emit(OpCodes.Callvirt, context.IdPropDef.SetMethod); // this.Id = id;
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
             proc.Emit(OpCodes.Ldarg_2); // load 'session' onto stack
-            proc.Emit(OpCodes.Stfld, context.SessionField); // this.__jsorm__generated_session = session;
+            proc.Emit(OpCodes.Stfld, context.SessionField); // this.__argo__generated_session = session;
 
-            // this._attrBackingField = this.__jsorm__generated_session.GetAttribute
+            // this._attrBackingField = this.__argo__generated_session.GetAttribute
             WeaveAttributeFieldInitializers(context, proc, context.MappedAttributes);
 
             proc.Emit(OpCodes.Ret); // return
@@ -85,7 +85,7 @@ namespace RedArrow.Argo
                 proc.Emit(OpCodes.Ldarg_0);
 
                 proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
-                proc.Emit(OpCodes.Ldfld, context.SessionField); // load __jsorm__generated_session field from 'this'
+                proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
                 proc.Emit(OpCodes.Ldarg_0); // load 'this'
                 proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
                 proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack

@@ -18,16 +18,16 @@ namespace RedArrow.Argo.Client.Http
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var hash = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
-            Log.Debug(() => $"JSORM||request [{hash}]: {request}");
+            Log.Debug(() => $"request [{hash}]: {request}");
             try
             {
                 var response = await base.SendAsync(request, cancellationToken);
-                Log.Debug(() => $"JSORM||response [{hash}]: {response}");
+                Log.Debug(() => $"response [{hash}]: {response}");
                 return response;
             }
             catch (Exception ex)
             {
-                Log.FatalException("JSORM||request [{0}] failed unexpectedly", ex, hash);
+                Log.FatalException("request [{0}] failed unexpectedly", ex, hash);
                 throw;
             }
 

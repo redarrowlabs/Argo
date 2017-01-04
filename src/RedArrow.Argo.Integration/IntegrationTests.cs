@@ -193,6 +193,28 @@ namespace RedArrow.Argo.Integration
         }
 
         [Fact, Trait("Category", "Integration")]
+        public async Task GetNullValueRelationship()
+        {
+            var sessionFactory = CreateSessionFactory();
+
+            Guid patientId;
+            using (var session = sessionFactory.CreateSession())
+            {
+                var patient = await session.Create<Patient>();
+                patientId = patient.Id;
+                //explicityly set the provider to null to set up the NullValue JToken
+                patient.Provider = null;
+                await session.Update(patient);
+            }
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                var patient = await session.Get<Patient>(patientId);
+                Assert.Null(patient.Provider);
+            }
+        }
+
+        [Fact, Trait("Category", "Integration")]
         public async Task GetNonNullRelationship()
         {
             var sessionFactory = CreateSessionFactory();
@@ -569,6 +591,52 @@ namespace RedArrow.Argo.Integration
                 patient.Provider = null;
 
                 await session.Delete(patient);
+            }
+        }
+
+        [Fact, Trait("Category", "Integration")]
+        public async Task ForEachLoopOverCollection()
+        {
+            var sessionFactory = CreateSessionFactory();
+
+            Guid providerId;
+            ICollection<Guid> patientIds;
+            using (var session = sessionFactory.CreateSession())
+            {
+                var provider = await session.Create<Provider>();
+                providerId = provider.Id;
+
+                var patientA = await session.Create<Patient>();
+                var patientB = await session.Create<Patient>();
+                var patientC = await session.Create<Patient>();
+
+                patientIds = new List<Guid> {patientA.Id, patientB.Id, patientC.Id};
+
+                provider.Patients.Add(patientA);
+                provider.Patients.Add(patientB);
+                provider.Patients.Add(patientC);
+
+                await session.Update(provider);
+            }
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                var provider = await session.Get<Provider>(providerId);
+
+                // previously threw exception
+                foreach (var patient in provider.Patients)
+                {
+                    Assert.NotNull(patient);
+                    Assert.NotEqual(Guid.Empty, patient.Id);
+                }
+            }
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                var deleteProviderTask = session.Delete<Provider>(providerId);
+                var deletePatientsTask = Task.WhenAll(patientIds.Select(x => session.Delete<Patient>(x)).ToArray());
+
+                await Task.WhenAll(deleteProviderTask, deletePatientsTask);
             }
         }
 

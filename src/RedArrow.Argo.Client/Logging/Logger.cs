@@ -43,10 +43,10 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage("Microsoft.Design", "CA1020:AvoidNamespacesWithFewTypes", Scope = "namespace", Target = "RedArrow.Argo.Client.Logging")]
 [assembly: SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed", Scope = "member", Target = "RedArrow.Argo.Client.Logging.Logger.#Invoke(RedArrow.Argo.Client.Logging.LogLevel,System.Func`1<System.String>,System.Exception,System.Object[])")]
 
-// If you copied this file manually, you need to change all "RedArrow.Jsorm" so not to clash with other libraries
+// If you copied this file manually, you need to change all "RedArrow.Argo" so not to clash with other libraries
 // that use LibLog
 #if LIBLOG_PROVIDERS_ONLY
-namespace RedArrow.Jsorm.LibLog
+namespace RedArrow.Argo.LibLog
 #else
 
 namespace RedArrow.Argo.Client.Logging
@@ -56,7 +56,7 @@ namespace RedArrow.Argo.Client.Logging
     using System.Diagnostics.CodeAnalysis;
 
 #if LIBLOG_PROVIDERS_ONLY
-    using RedArrow.Jsorm.LibLog.LogProviders;
+    using RedArrow.Argo.LibLog.LogProviders;
 #else
 
     using RedArrow.Argo.Client.Logging.LogProviders;
@@ -745,7 +745,7 @@ namespace RedArrow.Argo.Client.Logging
 }
 
 #if LIBLOG_PROVIDERS_ONLY
-namespace RedArrow.Jsorm.LibLog.LogProviders
+namespace RedArrow.Argo.LibLog.LogProviders
 #else
 
 namespace RedArrow.Argo.Client.Logging.LogProviders

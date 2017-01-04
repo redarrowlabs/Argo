@@ -3,13 +3,13 @@
   <metadata>
     <id>$id$</id>
     <version>$version$</version>
-    <title>RedArrow.Jsorm.Client</title>
+    <title>RedArrow.Argo.Client</title>
     <authors>Red Arrow</authors>
     <owners>Red Arrow</owners>
     <iconUrl>https://lh4.googleusercontent.com/-IX4S3LmTNGk/VR8Y7WO8aVI/AAAAAAAAADs/jEsjdiuysxo/s32-no/ral-logo-32x32.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
     <copyright>Copyright 2016</copyright>
-    <tags>jsorm json orm client</tags>
+    <tags>argo json orm client</tags>
   </metadata>
 </package>

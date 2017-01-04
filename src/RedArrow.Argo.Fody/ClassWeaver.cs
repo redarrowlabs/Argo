@@ -7,7 +7,7 @@ namespace RedArrow.Argo
         private void AddSessionField(ModelWeavingContext context)
         {
             // [NonSerialized]
-            // private readonly ISession __jsorm__generated_session
+            // private readonly ISession __argo__generated_session
             context.SessionField = new FieldDefinition(
                     "__argo__generated_session",
                     FieldAttributes.Private | FieldAttributes.NotSerialized,

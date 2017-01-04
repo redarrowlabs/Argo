@@ -81,7 +81,7 @@ namespace RedArrow.Argo.Client.Session.Registry
             if (!GetModelConfig(modelType).HasManyProperties.TryGetValue(rltnName, out ret))
             {
                 // TODO: RelationNotRegisteredExecption
-                throw new Exception($"JSORM||has-many configuration named {rltnName} not found");
+                throw new Exception($"has-many configuration named {rltnName} not found");
             }
             return ret;
         }
@@ -97,7 +97,7 @@ namespace RedArrow.Argo.Client.Session.Registry
             if (!Registry.ContainsKey(type))
             {
                 // TODO: ModelNotRegisteredException
-                throw new Exception("JSORM||model not registered");
+                throw new Exception("model not registered");
             }
         }
     }

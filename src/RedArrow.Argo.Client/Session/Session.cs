@@ -82,7 +82,7 @@ namespace RedArrow.Argo.Client.Session
 
             var createPayload = HttpRequestBuilder.CreateResource(modelType, model);
 
-            Log.Info(() => $"JSORM||creating resource {createPayload.ResourceType} from model {modelType} {JsonConvert.SerializeObject(model)}");
+            Log.Info(() => $"creating resource {createPayload.ResourceType} from model {modelType} {JsonConvert.SerializeObject(model)}");
 
             var response = await HttpClient.SendAsync(createPayload.Request);
 
@@ -259,7 +259,7 @@ namespace RedArrow.Argo.Client.Session
             ThrowIfDisposed();
 
             //TODO: check patch context for delta rltn
-
+            
             Resource resource;
             if (ResourceState.TryGetValue(id, out resource))
             {
@@ -267,6 +267,12 @@ namespace RedArrow.Argo.Client.Session
                 if (resource.Relationships != null && resource.Relationships.TryGetValue(rltnName, out relationship))
                 {
                     var rltnData = relationship.Data;
+
+                    if (rltnData?.Type == JTokenType.Null)
+                    {
+                        return default(TRltn);
+                    }
+
                     if (rltnData?.Type != JTokenType.Object)
                     {
                         throw new Exception("TODO");
@@ -282,7 +288,7 @@ namespace RedArrow.Argo.Client.Session
                         }
                         catch (Exception ex)
                         {
-                            Log.FatalException("JSORM||an unexpected error occurred while retrieving a relationship", ex);
+                            Log.FatalException("an unexpected error occurred while retrieving a relationship", ex);
                             throw;
                         }
                     }).Result;
@@ -443,7 +449,7 @@ namespace RedArrow.Argo.Client.Session
 
         private object CreateModel(Type type, Guid id)
         {
-            Log.Debug(() => $"JSORM||instantiating new session-managed instance of {type} with id {id}");
+            Log.Debug(() => $"instantiating new session-managed instance of {type} with id {id}");
             return Activator.CreateInstance(type, id, this);
         }
 

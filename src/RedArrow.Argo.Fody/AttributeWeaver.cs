@@ -22,7 +22,7 @@ namespace RedArrow.Argo
 
             if (sessionGetAttrGeneric == null || sessionSetAttrGeneric == null)
             {
-                throw new Exception("Jsorm attribute weaving failed unexpectedly");
+                throw new Exception("Argo attribute weaving failed unexpectedly");
             }
 
             foreach (var propertyDef in context.MappedAttributes)
@@ -61,9 +61,9 @@ namespace RedArrow.Argo
 
             // set
             // {
-            //     if (this.__jsorm__generated_session != null && this.<[PropName]>k__BackingField != value)
+            //     if (this.__argo__generated_session != null && this.<[PropName]>k__BackingField != value)
             //     {
-            //         this.__jsorm__generated_session.SetRelationship<[ModelType], [ReturnType]>(this.Id, "[AttrName]", value);
+            //         this.__argo__generated_session.SetRelationship<[ModelType], [ReturnType]>(this.Id, "[AttrName]", value);
             //     }
             //     this.<[PropName]>k__BackingField = value;
             // }
@@ -72,13 +72,13 @@ namespace RedArrow.Argo
             var endif = proc.Create(OpCodes.Ldarg_0);
 
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-            proc.Emit(OpCodes.Ldfld, context.SessionField); // load __jsorm__generated_session field from 'this'
-            proc.Emit(OpCodes.Brfalse_S, endif); // if __jsorm__generated_session != null continue, else return
+            proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
+            proc.Emit(OpCodes.Brfalse_S, endif); // if __argo__generated_session != null continue, else return
 
             EmitInequalityCheck(context, proc, backingField, endif);
 
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
-            proc.Emit(OpCodes.Ldfld, context.SessionField); // load __jsorm__generated_session field from 'this'
+            proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
             proc.Emit(OpCodes.Ldarg_0); // load 'this'
             proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
             proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack
@@ -103,7 +103,7 @@ namespace RedArrow.Argo
             if (returnType == TypeSystem.String)
             {
                 proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-                proc.Emit(OpCodes.Ldfld, backingField); // load __jsorm__generated_session field from 'this'
+                proc.Emit(OpCodes.Ldfld, backingField); // load __argo__generated_session field from 'this'
                 proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
                 proc.Emit(OpCodes.Ldc_I4, _stringComparison_ordinal); // load 'StringComparison.Ordinal' onto stack
                 proc.Emit(OpCodes.Call, context.ImportReference(_string_equals));
@@ -115,7 +115,7 @@ namespace RedArrow.Argo
                 if (typeIneqOp != null)
                 {
                     proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-                    proc.Emit(OpCodes.Ldfld, backingField); // load __jsorm__generated_session field from 'this'
+                    proc.Emit(OpCodes.Ldfld, backingField); // load __argo__generated_session field from 'this'
                     proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
                     proc.Emit(OpCodes.Call, context.ImportReference(typeIneqOp));
                     proc.Emit(OpCodes.Brfalse_S, endif);
@@ -125,7 +125,7 @@ namespace RedArrow.Argo
                     if (returnType.SupportsCeq() && returnType.IsValueType)
                     {
                         proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-                        proc.Emit(OpCodes.Ldfld, backingField); // load __jsorm__generated_session field from 'this'
+                        proc.Emit(OpCodes.Ldfld, backingField); // load __argo__generated_session field from 'this'
                         proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
                         proc.Emit(OpCodes.Ceq); // compare 'this'.<backing field> == 'value' and push result onto stack
                     }
@@ -147,14 +147,14 @@ namespace RedArrow.Argo
                         proc.Emit(OpCodes.Nop);
                         proc.Emit(OpCodes.Call, getDefaultMethRef);
                         proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-                        proc.Emit(OpCodes.Ldfld, backingField); // load __jsorm__generated_session field from 'this'
+                        proc.Emit(OpCodes.Ldfld, backingField); // load __argo__generated_session field from 'this'
                         proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
                         proc.Emit(OpCodes.Callvirt, equalsMethRef);
                     }
                     else if (returnType.IsValueType || returnType.IsGenericParameter)
                     {
                         proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-                        proc.Emit(OpCodes.Ldfld, backingField); // load __jsorm__generated_session field from 'this'
+                        proc.Emit(OpCodes.Ldfld, backingField); // load __argo__generated_session field from 'this'
                         proc.Emit(OpCodes.Box, returnType);
                         proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
                         proc.Emit(OpCodes.Box, returnType);
@@ -163,7 +163,7 @@ namespace RedArrow.Argo
                     else
                     {
                         proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-                        proc.Emit(OpCodes.Ldfld, backingField); // load __jsorm__generated_session field from 'this'
+                        proc.Emit(OpCodes.Ldfld, backingField); // load __argo__generated_session field from 'this'
                         proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
                         proc.Emit(OpCodes.Call, context.ImportReference(_object_equals));
                     }

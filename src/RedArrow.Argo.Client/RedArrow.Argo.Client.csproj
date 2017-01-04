@@ -73,7 +73,7 @@
     <Compile Include="Http\IHttpRequestBuilder.cs" />
     <Compile Include="Http\RequestBuilder.cs" />
     <Compile Include="Http\RequestContext.cs" />
-    <Compile Include="Infrastructure\JsormException.cs" />
+    <Compile Include="Infrastructure\ArgoException.cs" />
     <Compile Include="Infrastructure\ModelNotRegisteredException.cs" />
     <Compile Include="Infrastructure\ModelTypeMismatchException.cs" />
     <Compile Include="JsonModels\BaseResourceRoot.cs" />

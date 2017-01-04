@@ -22,8 +22,8 @@ namespace RedArrow.Argo
 
         private void LoadTypeDefinitions()
         {
-            var jsormAssemblyDef = AssemblyResolver.Resolve("RedArrow.Argo");
-            _sessionTypeDef = jsormAssemblyDef.MainModule.GetType("RedArrow.Argo.Session.IModelSession");
+            var argoAssemblyDef = AssemblyResolver.Resolve("RedArrow.Argo");
+            _sessionTypeDef = argoAssemblyDef.MainModule.GetType("RedArrow.Argo.Session.IModelSession");
 
             _session_GetGenericEnumerable = _sessionTypeDef
                 .Methods
