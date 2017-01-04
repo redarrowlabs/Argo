@@ -453,7 +453,7 @@ namespace RedArrow.Argo.Integration
         }
 
         [Fact, Trait("Category", "Integration")]
-        public async Task RemoveRelated()
+        public async Task RemoveRelatedInCollection()
         {
             var sessionFactory = CreateSessionFactory();
 
@@ -499,6 +499,74 @@ namespace RedArrow.Argo.Integration
                 Assert.NotNull(provider);
                 Assert.NotNull(provider.Patients);
                 
+                var patients = provider.Patients.ToArray();
+
+                Assert.Equal(2, patients.Length);
+                Assert.Equal(patientIds[0], patients[0].Id);
+                Assert.Equal(patientIds[2], patients[1].Id);
+            }
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                await session.Delete<Provider>(providerId);
+                foreach (var patientId in patientIds)
+                {
+                    await session.Delete<Patient>(patientId);
+                }
+            }
+        }
+
+        [Fact, Trait("Category", "Integration")]
+        public async Task RemoveRelatedFetchedSeparately()
+        {
+            var sessionFactory = CreateSessionFactory();
+
+            Guid providerId;
+            IList<Guid> patientIds = new List<Guid>();
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                var provider = await session.Create<Provider>();
+                providerId = provider.Id;
+
+                for (var i = 0; i < 3; i++)
+                {
+                    var patient = await session.Create<Patient>();
+                    patientIds.Add(patient.Id);
+                    provider.Patients.Add(patient);
+                }
+
+                await session.Update(provider);
+            }
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                var provider = await session.Get<Provider>(providerId);
+
+                Assert.NotNull(provider);
+                Assert.NotNull(provider.Patients);
+                Assert.All(patientIds, id => Assert.NotNull(provider.Patients.SingleOrDefault(x => x.Id == id)));
+
+                var patients = provider.Patients.ToArray();
+
+                Assert.Equal(3, patients.Length);
+                var patient = patients[1];
+
+                //get the patient separately
+                var patientToRemove = await session.Get<Patient>(patient.Id);
+
+                provider.Patients.Remove(patientToRemove);
+
+                await session.Update(provider);
+            }
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                var provider = await session.Get<Provider>(providerId);
+
+                Assert.NotNull(provider);
+                Assert.NotNull(provider.Patients);
+
                 var patients = provider.Patients.ToArray();
 
                 Assert.Equal(2, patients.Length);

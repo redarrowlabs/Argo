@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using RedArrow.Argo.Client.Collections.Operations;
+using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Session.Patch;
 
 namespace RedArrow.Argo.Client.Collections.Generic
@@ -9,7 +11,7 @@ namespace RedArrow.Argo.Client.Collections.Generic
     internal class RemoteGenericBag<T> : AbstractRemoteCollection, ICollection<T>
         where T : class
     {
-        protected IList<T> InternalBag { get; set; }
+        protected IDictionary<Guid, T> InternalIndex { get; set; }
 
         public bool Empty => Count == 0;
 
@@ -18,30 +20,23 @@ namespace RedArrow.Argo.Client.Collections.Generic
             get
             {
                 Initialize();
-                return InternalBag.Count;
+                return InternalIndex.Count;
             }
         }
 
         protected ICollection<IQueuedOperation> QueuedOperations { get; }
         
-        internal RemoteGenericBag(Session.Session session) :
-            this(session, new List<T>())
-        {
-        }
-
-        internal RemoteGenericBag(Session.Session session, IEnumerable<T> items) :
+        internal RemoteGenericBag(Session.Session session, IEnumerable<T> items = null) :
             base(session)
         {
             QueuedOperations = new List<IQueuedOperation>();
-            InternalBag = items as IList<T> ?? new List<T>(items);
+            InternalIndex = new Dictionary<Guid, T>();
+            IndexItems(items);
         }
         
         public override void SetItems(IEnumerable items)
         {
-            foreach (var item in items)
-            {
-                InternalBag.Add((T)item);
-            }
+            IndexItems(items?.OfType<T>());
         }
 
         public override void Patch(PatchContext patchContext)
@@ -61,7 +56,7 @@ namespace RedArrow.Argo.Client.Collections.Generic
         IEnumerator<T> IEnumerable<T>.GetEnumerator()
         {
             Initialize();
-            return InternalBag.GetEnumerator();
+            return InternalIndex.Values.GetEnumerator();
         }
 
         public override IEnumerator GetEnumerator()
@@ -75,7 +70,8 @@ namespace RedArrow.Argo.Client.Collections.Generic
             if (item == null) return;
 
             Initialize();
-            InternalBag.Add(item);
+
+            IndexItems(item);
             var itemId = Session.ModelRegistry.GetModelId(item);
             var itemResourceType = Session.ModelRegistry.GetResourceType(item.GetType());
             QueuedOperations.Add(new QueuedAddOperation(Name, itemId, itemResourceType));
@@ -84,10 +80,10 @@ namespace RedArrow.Argo.Client.Collections.Generic
 
         public void Clear()
         {
-            if (InternalBag.Count != 0)
+            if (InternalIndex.Count != 0)
             {
                 Initialize();
-                InternalBag.Clear();
+                InternalIndex.Clear();
                 QueuedOperations.Add(new QueuedClearOperation(Name));
                 Dirty = true;
             }
@@ -98,7 +94,8 @@ namespace RedArrow.Argo.Client.Collections.Generic
             if (item == null) return false;
 
             Initialize();
-            return InternalBag.Contains(item);
+            
+            return InternalIndex.ContainsKey(GetItemId(item));
         }
 
         public bool Remove(T item)
@@ -106,12 +103,20 @@ namespace RedArrow.Argo.Client.Collections.Generic
             if (item == null) return true;
 
             Initialize();
-            var result = InternalBag.Remove(item);
-            if (result)
+
+            var result = false;
+
+            var itemId = Session.ModelRegistry.GetModelId(item);
+
+            T itemToRemove;
+            if (InternalIndex.TryGetValue(itemId, out itemToRemove))
             {
-                var itemId = Session.ModelRegistry.GetModelId(item);
-                QueuedOperations.Add(new QueuedRemoveOperation(Name, itemId));
-                Dirty = true;
+                result = InternalIndex.Remove(itemId);
+                if (result)
+                {
+                    QueuedOperations.Add(new QueuedRemoveOperation(Name, itemId));
+                    Dirty = true;
+                }
             }
             return result;
         }
@@ -119,19 +124,36 @@ namespace RedArrow.Argo.Client.Collections.Generic
         public void CopyTo(T[] array, int index)
         {
             Initialize();
+            var bag = InternalIndex.Values.ToList();
             for (var i = index; i < Count; i++)
             {
-                array.SetValue(InternalBag[i], i);
+                array.SetValue(bag[i], i);
             }
         }
 
         public override void CopyTo(Array array, int index)
         {
             Initialize();
+            var bag = InternalIndex.Values.ToList();
             for (var i = index; i < Count; i++)
             {
-                array.SetValue(InternalBag[i], i);
+                array.SetValue(bag[i], i);
             }
+        }
+
+        private Guid GetItemId(T item)
+        {
+            return Session.ModelRegistry.GetModelId(item);
+        }
+
+        private void IndexItems(IEnumerable<T> items)
+        {
+            IndexItems(items?.ToArray());
+        }
+
+        private void IndexItems(params T[] items)
+        {
+            items?.Each(x => InternalIndex[GetItemId(x)] = x);
         }
     }
 }
