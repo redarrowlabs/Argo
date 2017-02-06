@@ -439,7 +439,7 @@ namespace RedArrow.Argo.Integration
                 Assert.NotNull(provider);
                 Assert.NotNull(provider.Patients);
 
-                var patient = provider.Patients.First();
+                var patient = provider.Patients.FirstOrDefault();
 
                 Assert.NotNull(patient);
                 Assert.Equal(patientId, patient.Id);

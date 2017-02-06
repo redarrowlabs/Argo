@@ -20,6 +20,10 @@ namespace RedArrow.Argo.Client.Session.Registry
 
         IEnumerable<AttributeConfiguration> GetModelAttributes(Type modelType);
 
+        IEnumerable<HasOneConfiguration> GetSingleConfigurations<TModel>();
+
+        IEnumerable<HasOneConfiguration> GetSingleConfigurations(Type modelType);
+
         IEnumerable<HasManyConfiguration> GetCollectionConfigurations<TModel>();
 
         IEnumerable<HasManyConfiguration> GetCollectionConfigurations(Type modelType);

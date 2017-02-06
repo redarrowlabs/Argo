@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -24,9 +25,18 @@ namespace RedArrow.Argo.Client.Http
         {
             var resourceType = ModelRegistry.GetResourceType(modelType);
 
+
+            // TODO: easiest approach, replace when needed.
+            var sparseFieldsets = new List<string>();
+            sparseFieldsets.AddRange(ModelRegistry.GetModelAttributes(modelType).Select(x => x.AttributeName));
+            sparseFieldsets.AddRange(ModelRegistry.GetCollectionConfigurations(modelType).Select(x => x.AttributeName));
+            sparseFieldsets.AddRange(ModelRegistry.GetSingleConfigurations(modelType).Select(x => x.AttributeName));
+            var sparseFieldsetsQueryParam = $"fields[{resourceType}]={string.Join(",", sparseFieldsets)}";
+
             return new RequestContext
             {
-                Request = new HttpRequestMessage(HttpMethod.Get, $"{resourceType}/{id}"),
+                Request = new HttpRequestMessage(HttpMethod.Get, $"{resourceType}/{id}?{sparseFieldsetsQueryParam}"),
+
 
                 ResourceId = id,
                 ResourceType = resourceType
@@ -81,12 +91,12 @@ namespace RedArrow.Argo.Client.Http
 
             var resourceType = ModelRegistry.GetResourceType(model.GetType());
             var root = ResourceRootSingle.FromResource(patchContext.Resource);
-            
+
             return new RequestContext
             {
                 Request = new HttpRequestMessage(new HttpMethod("PATCH"), $"{resourceType}/{id}")
                 {
-                  Content  = BuildHttpContent(root.ToJson())
+                    Content = BuildHttpContent(root.ToJson())
                 },
 
                 ResourceId = id,
