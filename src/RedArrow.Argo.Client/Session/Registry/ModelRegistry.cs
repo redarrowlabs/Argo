@@ -60,6 +60,16 @@ namespace RedArrow.Argo.Client.Session.Registry
             return GetModelConfig(modelType).AttributeProperties.Values;
         }
 
+        public IEnumerable<HasOneConfiguration> GetSingleConfigurations<TModel>()
+        {
+            return GetSingleConfigurations(typeof(TModel));
+        }
+
+        public IEnumerable<HasOneConfiguration> GetSingleConfigurations(Type modelType)
+        {
+            return GetModelConfig(modelType).HasOneProperties.Values;
+        }
+
         public IEnumerable<HasManyConfiguration> GetCollectionConfigurations<TModel>()
         {
             return GetCollectionConfigurations(typeof(TModel));
