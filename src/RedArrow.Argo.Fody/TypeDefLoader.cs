@@ -38,15 +38,10 @@ namespace RedArrow.Argo
                 .Methods
                 .SingleOrDefault(x => x.Name == "SetGenericCollection");
 
-            _guidTypeDef = argoAssemblyDef.MainModule
-                .ImportReference(typeof(System.Guid))
-                .Resolve();
-            _genericIEnumerableTypeDef = argoAssemblyDef.MainModule
-                .ImportReference(typeof(System.Collections.Generic.IEnumerable<>))
-                .Resolve();
-            _genericICollectionTypeDef = argoAssemblyDef.MainModule
-                .ImportReference(typeof(System.Collections.Generic.ICollection<>))
-                .Resolve();
+            var msCoreAssemblyDef = AssemblyResolver.Resolve("mscorlib");
+            _guidTypeDef = msCoreAssemblyDef.MainModule.GetType("System.Guid");
+            _genericIEnumerableTypeDef = msCoreAssemblyDef.MainModule.GetType("System.Collections.Generic.IEnumerable`1");
+            _genericICollectionTypeDef = msCoreAssemblyDef.MainModule.GetType("System.Collections.Generic.ICollection`1");
 
             _string_equals = ModuleDefinition
                 .TypeSystem
@@ -60,16 +55,12 @@ namespace RedArrow.Argo
                             x.Parameters[1].ParameterType.Name == "String" &&
                             x.Parameters[2].ParameterType.Name == "StringComparison");
 
-            _stringComparison_ordinal = (int)argoAssemblyDef.MainModule
-                .ImportReference(typeof(System.StringComparison))
-                .Resolve()
+            _stringComparison_ordinal = (int)msCoreAssemblyDef.MainModule.GetType("System.StringComparison")
                 .Fields
                 .First(x => x.Name == "Ordinal")
                 .Constant;
 
-            _equalityComparerTypeDef = argoAssemblyDef.MainModule
-                .ImportReference(typeof(System.Collections.Generic.EqualityComparer<>))
-                .Resolve();
+            _equalityComparerTypeDef = msCoreAssemblyDef.MainModule.GetType("System.Collections.Generic.EqualityComparer`1");
 
             _object_equals = ModuleDefinition
                 .TypeSystem
