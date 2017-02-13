@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>fcb40715-399e-41af-938c-dd333a6eab0b</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>WovenByFody</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)AllPropertyTypes.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IdPropertyTestModels.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patient.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Provider.cs" />
+  </ItemGroup>
+</Project>
