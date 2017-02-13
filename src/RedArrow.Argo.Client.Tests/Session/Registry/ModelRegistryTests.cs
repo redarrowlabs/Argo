@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Ploeh.AutoFixture.Xunit2;
-using RedArrow.Argo.Attributes;
 using RedArrow.Argo.Client.Config.Model;
 using RedArrow.Argo.Client.Session.Registry;
 using WovenByFody;

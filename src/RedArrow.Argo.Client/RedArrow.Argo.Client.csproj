@@ -104,7 +104,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RedArrow.Argo\RedArrow.Argo.csproj">
-      <Project>{f540b5ca-b7c2-4799-9eb2-b5401bd1f28c}</Project>
+      <Project>{4b02e326-91b9-482f-8a8b-6708aa5b534e}</Project>
       <Name>RedArrow.Argo</Name>
     </ProjectReference>
   </ItemGroup>

@@ -132,13 +132,9 @@
       <Project>{82812774-13b2-4733-a029-89252e6e6df4}</Project>
       <Name>RedArrow.Argo.TestUtils</Name>
     </ProjectReference>
-    <ProjectReference Include="..\RedArrow.Argo\RedArrow.Argo.csproj">
-      <Project>{f540b5ca-b7c2-4799-9eb2-b5401bd1f28c}</Project>
-      <Name>RedArrow.Argo</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\WovenByFody\WovenByFody.csproj">
-      <Project>{2aa3dfdf-f71d-4ace-bfd5-0100ec753bc8}</Project>
-      <Name>WovenByFody</Name>
+    <ProjectReference Include="..\WovenByFody.Fx\WovenByFody.Fx.csproj">
+      <Project>{94454f12-c643-40b8-be6c-47017084ce7f}</Project>
+      <Name>WovenByFody.Fx</Name>
     </ProjectReference>
   </ItemGroup>
   <Choose>
