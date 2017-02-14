@@ -11,6 +11,7 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)AllPropertyTypes.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IdPropertyTestModels.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ObjectWithCollectionsAndComplexTypesAsProperties.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Patient.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Provider.cs" />
   </ItemGroup>
