@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using RedArrow.Argo.Client.Session.Patch;
 
 namespace RedArrow.Argo.Client.Http

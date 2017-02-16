@@ -23,5 +23,8 @@ namespace WovenByFody
 
         [HasOne]
         public Provider Provider { get; set; }
+
+        [HasOne]
+        public Company Insurance { get; set; }
     }
 }

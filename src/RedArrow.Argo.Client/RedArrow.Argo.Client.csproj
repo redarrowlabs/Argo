@@ -62,6 +62,7 @@
     <Compile Include="Config\Model\HasManyConfiguration.cs" />
     <Compile Include="Config\Model\HasOneConfiguration.cs" />
     <Compile Include="Config\Model\ModelConfiguration.cs" />
+    <Compile Include="Config\Model\RelationshipConfiguration.cs" />
     <Compile Include="Config\SessionFactoryConfiguration.cs" />
     <Compile Include="Extensions\EnumerableExtensions.cs" />
     <Compile Include="Extensions\ExpressionExtensions.cs" />
@@ -69,6 +70,11 @@
     <Compile Include="Extensions\HttpResponseMessage.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
+    <Compile Include="Flurl\Shared\Util\CommonExtensions.cs" />
+    <Compile Include="Flurl\Shared\QueryParamCollection.cs" />
+    <Compile Include="Flurl\Shared\QueryParameter.cs" />
+    <Compile Include="Flurl\Shared\StringExtensions.cs" />
+    <Compile Include="Flurl\Shared\Url.cs" />
     <Compile Include="Http\DefaultHttpMessageHandler.cs" />
     <Compile Include="Http\IHttpRequestBuilder.cs" />
     <Compile Include="Http\RequestBuilder.cs" />
@@ -93,6 +99,10 @@
     <Compile Include="JsonModels\ResourceRootSingle.cs" />
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\Includes\IIncludeResourcesService.cs" />
+    <Compile Include="Services\Includes\IncludeResourcesService.cs" />
+    <Compile Include="Services\Relationships\IRelateResources.cs" />
+    <Compile Include="Services\Relationships\RelateResources.cs" />
     <Compile Include="Session\ICollectionSession.cs" />
     <Compile Include="Session\ISession.cs" />
     <Compile Include="Session\ISessionFactory.cs" />
@@ -107,6 +117,11 @@
       <Project>{f540b5ca-b7c2-4799-9eb2-b5401bd1f28c}</Project>
       <Name>RedArrow.Argo</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Mono.Cecil.Mdb">
+      <HintPath>..\packages\FodyCecil.1.29.4\lib\net40\Mono.Cecil.Mdb.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

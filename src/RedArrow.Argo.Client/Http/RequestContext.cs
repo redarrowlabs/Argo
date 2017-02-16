@@ -14,6 +14,7 @@ namespace RedArrow.Argo.Client.Http
         public string ResourceType { get; set; }
         public JObject Attributes { get; set; }
         public IDictionary<string, Relationship> Relationships { get; set; }
+        public IEnumerable<Resource> Included { get; set; }
 
         internal RequestContext() { }
     }

@@ -93,6 +93,7 @@ namespace RedArrow.Argo.Client.Session.Registry
                 // TODO: RelationNotRegisteredExecption
                 throw new Exception($"has-many configuration named {rltnName} not found");
             }
+
             return ret;
         }
 

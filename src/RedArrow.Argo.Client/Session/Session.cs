@@ -62,13 +62,13 @@ namespace RedArrow.Argo.Client.Session
         public async Task<TModel> Create<TModel>()
             where TModel : class
         {
-            return (TModel) await CreateResource(typeof(TModel), null);
+            return (TModel)await CreateResource(typeof(TModel), null);
         }
 
         public async Task<TModel> Create<TModel>(TModel model)
             where TModel : class
         {
-            return (TModel) await CreateResource(typeof(TModel), model);
+            return (TModel)await CreateResource(typeof(TModel), model);
         }
 
         public Task<object> Create(Type modelType, object model)
@@ -93,9 +93,11 @@ namespace RedArrow.Argo.Client.Session
             {
                 Id = id,
                 Type = createPayload.ResourceType,
-                Attributes = createPayload.Attributes
+                Attributes = createPayload.Attributes,
+                Relationships = createPayload.Relationships
             };
 
+            // TODO: if resource state contains id, then managed resource
             model = CreateModel(modelType, id);
             Cache.Update(id, model);
 
@@ -110,7 +112,7 @@ namespace RedArrow.Argo.Client.Session
             var model = Cache.Retrieve(id);
             if (model != null)
             {
-                return (TModel) model;
+                return (TModel)model;
             }
 
             var requestContext = HttpRequestBuilder.GetResource(id, typeof(TModel));
@@ -128,7 +130,7 @@ namespace RedArrow.Argo.Client.Session
             model = CreateModel<TModel>(id);
             Cache.Update(id, model);
 
-            return (TModel) model;
+            return (TModel)model;
         }
 
         public async Task Update<TModel>(TModel model)
@@ -259,7 +261,7 @@ namespace RedArrow.Argo.Client.Session
             ThrowIfDisposed();
 
             //TODO: check patch context for delta rltn
-            
+
             Resource resource;
             if (ResourceState.TryGetValue(id, out resource))
             {
@@ -328,7 +330,7 @@ namespace RedArrow.Argo.Client.Session
 
             context.SetRelated(
                 rltnName,
-                new ResourceIdentifier {Id = rltnId, Type = rltnType},
+                new ResourceIdentifier { Id = rltnId, Type = rltnType },
                 transient);
             Cache.Update(rltnId, rltn);
         }
@@ -444,7 +446,7 @@ namespace RedArrow.Argo.Client.Session
 
         private TModel CreateModel<TModel>(Guid id)
         {
-            return (TModel) CreateModel(typeof(TModel), id);
+            return (TModel)CreateModel(typeof(TModel), id);
         }
 
         private object CreateModel(Type type, Guid id)
