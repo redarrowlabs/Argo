@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -19,6 +20,60 @@ namespace RedArrow.Argo.Client.Tests.Session
                 .MinimumLevel.Verbose()
                 .WriteTo.XunitTestOutput(outputHelper)
                 .CreateLogger();
+        }
+
+        [Fact]
+        public async Task Create__WithCollectionAsProperty__Then_PostAndCacheNewModel()
+        {
+            var basePath = "http://www.test.com/";
+
+            var resourceType = "test-property-collection";
+            var expectedId = Guid.NewGuid();
+
+            var fakeHandler = new FakeResponseHandler();
+            fakeHandler.AddFakeResponse(
+                new Uri($"{basePath}{resourceType}"),
+                new HttpResponseMessage(HttpStatusCode.Accepted)
+                {
+                    Headers = { Location = new Uri($"{resourceType}/{expectedId}", UriKind.Relative) }
+                });
+
+            var sessionFactory = Fluently.Configure(basePath)
+                .Remote()
+                    .Create(() => new HttpClient(fakeHandler))
+                    .Configure(x => x.BaseAddress = new Uri(basePath))
+                .Models()
+                    .Configure(x => x.AssemblyOf<ObjectWithCollectionsAndComplexTypesAsProperties>())
+                .BuildSessionFactory();
+
+            var session = sessionFactory.CreateSession();
+            var result = await session.Create(new ObjectWithCollectionsAndComplexTypesAsProperties
+            {
+                TestingDescription = new InnerObject
+                {
+                    Value = "A complex type used as a Property"
+                },
+                TestingDescriptions = new List<InnerObject>
+                {
+                    new InnerObject
+                    {
+                        Value = "A complex type in a collection used as a Property"
+                    },
+                    new InnerObject
+                    {
+                        Value = "Value Two"
+                    },
+                    new InnerObject
+                    {
+                        Value = "Value Three"
+                    }
+                }
+            });
+
+            Assert.NotNull(result);
+            Assert.IsType<ObjectWithCollectionsAndComplexTypesAsProperties>(result);
+
+            Assert.NotEqual(Guid.Empty, result.Id);
         }
 
         [Fact]

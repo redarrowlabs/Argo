@@ -241,7 +241,7 @@ namespace RedArrow.Argo.Client.Session
                 && resource.Attributes != null
                 && resource.Attributes.TryGetValue(attrName, out jValue))
             {
-                return jValue.Value<TAttr>();
+                return jValue.ToObject<TAttr>();
             }
             return default(TAttr);
         }
