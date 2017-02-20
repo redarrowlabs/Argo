@@ -133,10 +133,6 @@ namespace RedArrow.Argo.Integration
             using (var session = sessionFactory.CreateSession())
             {
                 await session.Delete<Patient>(crossSessionId);
-
-                var patient = await session.Get<Patient>(crossSessionId);
-
-                Assert.Null(patient);
             }
         }
 
@@ -272,8 +268,10 @@ namespace RedArrow.Argo.Integration
             // create the provider
             using (var client = new HttpClient())
             {
-                client.BaseAddress = new Uri("https://test.redarrow.io/api/data/");
+                client.BaseAddress = new Uri($"{Fixture.Host}/data/");
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken);
+                client.DefaultRequestHeaders.Add("api-version", "2");
+                client.DefaultRequestHeaders.Add("Titan-Data-Segmentation-Key", "10000000-1000-0000-0000-000000000000");
 
                 var body = new
                 {
@@ -327,8 +325,10 @@ namespace RedArrow.Argo.Integration
             {
                 using (var client = new HttpClient())
                 {
-                    client.BaseAddress = new Uri("https://test.redarrow.io/api/data/");
+                    client.BaseAddress = new Uri($"{Fixture.Host}/data/");
                     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken);
+                    client.DefaultRequestHeaders.Add("api-version", "2");
+                    client.DefaultRequestHeaders.Add("Titan-Data-Segmentation-Key", "10000000-1000-0000-0000-000000000000");
 
                     var body = new
                     {
@@ -356,8 +356,10 @@ namespace RedArrow.Argo.Integration
             // create the provider
             using (var client = new HttpClient())
             {
-                client.BaseAddress = new Uri("https://test.redarrow.io/api/data/");
+                client.BaseAddress = new Uri($"{Fixture.Host}/data/");
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken);
+                client.DefaultRequestHeaders.Add("api-version", "2");
+                client.DefaultRequestHeaders.Add("Titan-Data-Segmentation-Key", "10000000-1000-0000-0000-000000000000");
 
                 var body = new
                 {
@@ -783,14 +785,14 @@ namespace RedArrow.Argo.Integration
             return Fluently.Configure($"{Fixture.Host}/data/")
                 .Remote()
                     .Configure(httpClient =>
-                {
-                    httpClient
-                        .DefaultRequestHeaders
-                        .Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken);
+                    {
+                        httpClient
+                            .DefaultRequestHeaders
+                            .Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken);
 
-                    httpClient.DefaultRequestHeaders.Add("api-version", "2");
-                    httpClient.DefaultRequestHeaders.Add("Titan-Data-Segmentation-Key", "10000000-1000-0000-0000-000000000000");
-                })
+                        httpClient.DefaultRequestHeaders.Add("api-version", "2");
+                        httpClient.DefaultRequestHeaders.Add("Titan-Data-Segmentation-Key", "10000000-1000-0000-0000-000000000000");
+                    })
                 .Models()
                     .Configure(scan => scan.AssemblyOf<Patient>())
                 .BuildSessionFactory();

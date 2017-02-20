@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace RedArrow.Argo.Client.Extensions
@@ -11,6 +12,21 @@ namespace RedArrow.Argo.Client.Extensions
             {
                 each(item);
             }
+        }
+
+        public static bool IsNullOrEmpty(this IEnumerable @this)
+        {
+            if (@this != null)
+                return !@this.GetEnumerator().MoveNext();
+            return true;
+        }
+
+        public static void ForEach<T>(this IEnumerable<T> items, Action<T> action)
+        {
+            if (items == null)
+                return;
+            foreach (T obj in items)
+                action(obj);
         }
     }
 }

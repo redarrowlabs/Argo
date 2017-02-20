@@ -103,6 +103,8 @@
     <Compile Include="Services\Includes\IncludeResourcesService.cs" />
     <Compile Include="Services\Relationships\IRelateResources.cs" />
     <Compile Include="Services\Relationships\RelateResources.cs" />
+    <Compile Include="Services\SparseFieldsets\ISparseFieldsetService.cs" />
+    <Compile Include="Services\SparseFieldsets\SparseFieldsetService.cs" />
     <Compile Include="Session\ICollectionSession.cs" />
     <Compile Include="Session\ISession.cs" />
     <Compile Include="Session\ISessionFactory.cs" />
@@ -123,6 +125,7 @@
       <HintPath>..\packages\FodyCecil.1.29.4\lib\net40\Mono.Cecil.Mdb.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

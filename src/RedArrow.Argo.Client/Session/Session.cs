@@ -266,7 +266,7 @@ namespace RedArrow.Argo.Client.Session
             if (ResourceState.TryGetValue(id, out resource))
             {
                 Relationship relationship;
-                if (resource.Relationships != null && resource.Relationships.TryGetValue(rltnName, out relationship))
+                if (resource?.Relationships != null && resource.Relationships.TryGetValue(rltnName, out relationship))
                 {
                     var rltnData = relationship.Data;
 
@@ -328,10 +328,18 @@ namespace RedArrow.Argo.Client.Session
                 rltnId = context.GetRelated(rltnName) ?? Guid.NewGuid();
             }
 
+            // TODO: refactor these two steps to work together, not separately
             context.SetRelated(
                 rltnName,
                 new ResourceIdentifier { Id = rltnId, Type = rltnType },
                 transient);
+            var resource = ResourceState[id];
+            resource.Relationships[rltnName] = new Relationship
+            {
+                Data = JObject.FromObject(new ResourceIdentifier { Id = rltnId, Type = rltnType })
+            };
+            // =====
+
             Cache.Update(rltnId, rltn);
         }
 

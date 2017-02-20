@@ -13,11 +13,11 @@ namespace RedArrow.Argo.Attributes
         {
         }
 
-        internal HasManyAttribute(LoadStrategy strategy)
+        public HasManyAttribute(LoadStrategy strategy)
         {
         }
 
-        internal HasManyAttribute(string rltnName, LoadStrategy strategy)
+        public HasManyAttribute(string rltnName, LoadStrategy strategy)
         {
         }
     }

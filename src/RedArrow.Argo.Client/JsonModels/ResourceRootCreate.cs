@@ -16,9 +16,9 @@ namespace RedArrow.Argo.Client.JsonModels
                 {
                     Type = type,
                     Attributes = attributes,
-                    Relationships = relationships
+                    Relationships = relationships ?? new Dictionary<string, Relationship>()
                 },
-                Included = included.ToList()
+                Included = included ?? new List<Resource>()
             };
         }
     }
