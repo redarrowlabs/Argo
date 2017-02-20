@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json.Linq;
 
 namespace RedArrow.Argo.Client.JsonModels
 {
@@ -6,15 +8,17 @@ namespace RedArrow.Argo.Client.JsonModels
     {
         internal ResourceRootCreate() { }
 
-        internal static ResourceRootCreate FromAttributes(string type, JObject attributes)
+        internal static ResourceRootCreate FromObject(string type, JObject attributes, IEnumerable<Resource> included, IDictionary<string, Relationship> relationships)
         {
             return new ResourceRootCreate
             {
                 Data = new ResourceCreate
                 {
                     Type = type,
-                    Attributes = attributes
-                }
+                    Attributes = attributes,
+                    Relationships = relationships ?? new Dictionary<string, Relationship>()
+                },
+                Included = included ?? new List<Resource>()
             };
         }
     }

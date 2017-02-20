@@ -133,10 +133,6 @@ namespace RedArrow.Argo.Integration
             using (var session = sessionFactory.CreateSession())
             {
                 await session.Delete<Patient>(crossSessionId);
-
-                var patient = await session.Get<Patient>(crossSessionId);
-
-                Assert.Null(patient);
             }
         }
 
@@ -272,8 +268,10 @@ namespace RedArrow.Argo.Integration
             // create the provider
             using (var client = new HttpClient())
             {
-                client.BaseAddress = new Uri("https://test.redarrow.io/api/data/");
+                client.BaseAddress = new Uri($"{Fixture.Host}/data/");
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken);
+                client.DefaultRequestHeaders.Add("api-version", "2");
+                client.DefaultRequestHeaders.Add("Titan-Data-Segmentation-Key", "10000000-1000-0000-0000-000000000000");
 
                 var body = new
                 {
@@ -327,8 +325,10 @@ namespace RedArrow.Argo.Integration
             {
                 using (var client = new HttpClient())
                 {
-                    client.BaseAddress = new Uri("https://test.redarrow.io/api/data/");
+                    client.BaseAddress = new Uri($"{Fixture.Host}/data/");
                     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken);
+                    client.DefaultRequestHeaders.Add("api-version", "2");
+                    client.DefaultRequestHeaders.Add("Titan-Data-Segmentation-Key", "10000000-1000-0000-0000-000000000000");
 
                     var body = new
                     {
@@ -356,8 +356,10 @@ namespace RedArrow.Argo.Integration
             // create the provider
             using (var client = new HttpClient())
             {
-                client.BaseAddress = new Uri("https://test.redarrow.io/api/data/");
+                client.BaseAddress = new Uri($"{Fixture.Host}/data/");
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken);
+                client.DefaultRequestHeaders.Add("api-version", "2");
+                client.DefaultRequestHeaders.Add("Titan-Data-Segmentation-Key", "10000000-1000-0000-0000-000000000000");
 
                 var body = new
                 {
@@ -409,6 +411,76 @@ namespace RedArrow.Argo.Integration
 
                 await session.Delete<Provider>(providerId);
                 await Task.WhenAll(patientIds.Select(x => session.Delete<Patient>(x)));
+            }
+        }
+
+        [Fact, Trait("Category", "Integration")]
+        public async Task AddIncluded()
+        {
+            var sessionFactory = CreateSessionFactory();
+
+            Guid providerId;
+            Guid patientId;
+
+            var stubInsuranceCompany = new Company
+            {
+                Name = "Primo Insurance Brah!",
+                Address = "123 Main St",
+                PhoneNumber = "800-555-1234",
+            };
+
+            var stubPatient1 = new Patient
+            {
+                FirstName = "Deltron",
+                LastName = "3030",
+                Age = 45,
+                AccountBalance = (decimal)15.99,
+                Insurance = stubInsuranceCompany
+            };
+
+            var stubPatient2 = new Patient
+            {
+                FirstName = "Del",
+                LastName = "The Funky Homosapien",
+                Age = 35,
+                AccountBalance = (decimal)125.99,
+                Insurance = stubInsuranceCompany
+            };
+
+            var stubProvider = new Provider
+            {
+                FirstName = "Bob",
+                LastName = "Dobblena",
+                Patients = new List<Patient> { stubPatient1, stubPatient2 }
+            };
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                var provider = await session.Create(stubProvider);
+                providerId = provider.Id;
+                patientId = provider.Patients.First().Id;
+
+                await session.Update(provider);
+            }
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                var provider = await session.Get<Provider>(providerId);
+
+                Assert.NotNull(provider);
+                Assert.NotNull(provider.Patients);
+
+                var patient = provider.Patients.FirstOrDefault();
+
+                Assert.NotNull(patient);
+                Assert.Equal(patientId, patient.Id);
+            }
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                await session.Delete<Provider>(providerId);
+                await session.Delete<Patient>(patientId);
+                //await session.Delete<Company>(companyId);
             }
         }
 
@@ -498,7 +570,7 @@ namespace RedArrow.Argo.Integration
 
                 Assert.NotNull(provider);
                 Assert.NotNull(provider.Patients);
-                
+
                 var patients = provider.Patients.ToArray();
 
                 Assert.Equal(2, patients.Length);
@@ -614,7 +686,7 @@ namespace RedArrow.Argo.Integration
                 Assert.NotNull(provider);
                 Assert.NotNull(provider.Patients);
                 Assert.All(patientIds, id => Assert.NotNull(provider.Patients.SingleOrDefault(x => x.Id == id)));
-                
+
                 Assert.Equal(3, provider.Patients.Count);
                 provider.Patients.Clear();
 
@@ -627,7 +699,7 @@ namespace RedArrow.Argo.Integration
 
                 Assert.NotNull(provider);
                 Assert.NotNull(provider.Patients);
-                
+
                 var patients = provider.Patients.ToArray();
 
                 Assert.Equal(0, patients.Length);
@@ -678,7 +750,7 @@ namespace RedArrow.Argo.Integration
                 var patientB = await session.Create<Patient>();
                 var patientC = await session.Create<Patient>();
 
-                patientIds = new List<Guid> {patientA.Id, patientB.Id, patientC.Id};
+                patientIds = new List<Guid> { patientA.Id, patientB.Id, patientC.Id };
 
                 provider.Patients.Add(patientA);
                 provider.Patients.Add(patientB);
@@ -712,9 +784,15 @@ namespace RedArrow.Argo.Integration
         {
             return Fluently.Configure($"{Fixture.Host}/data/")
                 .Remote()
-                    .Configure(httpClient => httpClient
-                        .DefaultRequestHeaders
-                        .Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken))
+                    .Configure(httpClient =>
+                    {
+                        httpClient
+                            .DefaultRequestHeaders
+                            .Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken);
+
+                        httpClient.DefaultRequestHeaders.Add("api-version", "2");
+                        httpClient.DefaultRequestHeaders.Add("Titan-Data-Segmentation-Key", "10000000-1000-0000-0000-000000000000");
+                    })
                 .Models()
                     .Configure(scan => scan.AssemblyOf<Patient>())
                 .BuildSessionFactory();

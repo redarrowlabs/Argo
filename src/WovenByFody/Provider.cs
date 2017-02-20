@@ -9,14 +9,14 @@ namespace WovenByFody
     {
         [Id]
         public Guid Id { get; protected set; }
-        
+
         [Property]
         public string FirstName { get; set; }
 
         [Property]
         public string LastName { get; set; }
 
-        [HasMany]
+        [HasMany(LoadStrategy.Eager)]
         public ICollection<Patient> Patients { get; set; }
     }
 }

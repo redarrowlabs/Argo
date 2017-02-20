@@ -12,13 +12,12 @@ namespace RedArrow.Argo.Attributes
         public HasOneAttribute(string rltnName)
         {
         }
-
-        // lazy/eager config will be "made publich" later...
-        internal HasOneAttribute(LoadStrategy strategy)
+        
+        public HasOneAttribute(LoadStrategy strategy)
         {
         }
 
-        internal HasOneAttribute(string rltnName, LoadStrategy strategy)
+        public HasOneAttribute(string rltnName, LoadStrategy strategy)
         {
         }
     }

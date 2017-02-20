@@ -3,8 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
+using RedArrow.Argo.Client.Flurl.Shared;
 using RedArrow.Argo.Client.JsonModels;
+using RedArrow.Argo.Client.Services.Includes;
+using RedArrow.Argo.Client.Services.Relationships;
+using RedArrow.Argo.Client.Services.SparseFieldsets;
 using RedArrow.Argo.Client.Session.Patch;
 using RedArrow.Argo.Client.Session.Registry;
 
@@ -16,28 +21,29 @@ namespace RedArrow.Argo.Client.Http
 
         private IModelRegistry ModelRegistry { get; }
 
+        private ISparseFieldsetService SparseFieldsetService { get; }
+        private IIncludeResourcesService IncludeResources { get; }
+        private IRelateResources RelateResources { get; }
+
         internal HttpRequestBuilder(IModelRegistry modelRegistry)
         {
             ModelRegistry = modelRegistry;
+            SparseFieldsetService = new SparseFieldsetService(ModelRegistry);
+            IncludeResources = new IncludeResourcesService(ModelRegistry);
+            RelateResources = new RelateResources(ModelRegistry);
         }
 
         public RequestContext GetResource(Guid id, Type modelType)
         {
             var resourceType = ModelRegistry.GetResourceType(modelType);
+            var url = $"{resourceType}/{id}";
 
-
-            // TODO: easiest approach, replace when needed.
-            var sparseFieldsets = new List<string>();
-            sparseFieldsets.AddRange(ModelRegistry.GetModelAttributes(modelType).Select(x => x.AttributeName));
-            sparseFieldsets.AddRange(ModelRegistry.GetCollectionConfigurations(modelType).Select(x => x.AttributeName));
-            sparseFieldsets.AddRange(ModelRegistry.GetSingleConfigurations(modelType).Select(x => x.AttributeName));
-            var sparseFieldsetsQueryParam = $"fields[{resourceType}]={string.Join(",", sparseFieldsets)}";
+            url = SparseFieldsetService.BuildSparseFieldsetUrl(modelType, url).Result;
+            url = IncludeResources.BuildIncludesUrl(modelType, url).Result;
 
             return new RequestContext
             {
-                Request = new HttpRequestMessage(HttpMethod.Get, $"{resourceType}/{id}?{sparseFieldsetsQueryParam}"),
-
-
+                Request = new HttpRequestMessage(HttpMethod.Get, url),
                 ResourceId = id,
                 ResourceType = resourceType
             };
@@ -59,51 +65,67 @@ namespace RedArrow.Argo.Client.Http
 
         public RequestContext CreateResource(Type modelType, object model)
         {
-            var resourceType = ModelRegistry.GetResourceType(modelType);
-            var attributes = model != null
-                ? JObject.FromObject(ModelRegistry
-                    .GetModelAttributes(modelType)
-                    .ToDictionary(
-                        x => x.AttributeName,
-                        x => x.Property.GetValue(model)))
-                : null;
-
-            var root = ResourceRootCreate.FromAttributes(resourceType, attributes);
-
-            return new RequestContext
+            return Task.Run(async () =>
             {
-                Request = new HttpRequestMessage(HttpMethod.Post, resourceType)
-                {
-                    Content = BuildHttpContent(root.ToJson())
-                },
+                var resourceType = ModelRegistry.GetResourceType(modelType);
+                var attributes = model != null
+                    ? JObject.FromObject(ModelRegistry
+                        .GetModelAttributes(modelType)
+                        .ToDictionary(
+                            x => x.AttributeName,
+                            x => x.Property.GetValue(model)))
+                    : null;
 
-                ResourceType = resourceType,
-                Attributes = attributes
-            };
+                var included = model != null ? await IncludeResources.Process(modelType, model) : new List<Resource>();
+                var relationships = model != null ? RelateResources.Process(modelType, model) : new Dictionary<string, Relationship>();
+
+                var root = ResourceRootCreate.FromObject(resourceType, attributes, included, relationships);
+
+                return new RequestContext
+                {
+                    Request = new HttpRequestMessage(HttpMethod.Post, resourceType)
+                    {
+                        Content = BuildHttpContent(root.ToJson()),
+                    },
+                    ResourceType = resourceType,
+                    Attributes = attributes,
+                    Included = included,
+                    Relationships = relationships
+                };
+            }).Result;
+
         }
 
         public RequestContext UpdateResource(Guid id, object model, PatchContext patchContext)
         {
-            if (model == null)
+            return Task.Run(async () =>
             {
-                throw new ArgumentNullException(nameof(model));
-            }
-
-            var resourceType = ModelRegistry.GetResourceType(model.GetType());
-            var root = ResourceRootSingle.FromResource(patchContext.Resource);
-
-            return new RequestContext
-            {
-                Request = new HttpRequestMessage(new HttpMethod("PATCH"), $"{resourceType}/{id}")
+                if (model == null)
                 {
-                    Content = BuildHttpContent(root.ToJson())
-                },
+                    throw new ArgumentNullException(nameof(model));
+                }
 
-                ResourceId = id,
-                ResourceType = resourceType,
-                Attributes = patchContext.Resource?.Attributes,
-                Relationships = patchContext.Resource?.Relationships
-            };
+                var resourceType = ModelRegistry.GetResourceType(model.GetType());
+
+                var included = model != null ? await IncludeResources.Process(model.GetType(), model) : new List<Resource>();
+                var relationships = model != null ? RelateResources.Process(model.GetType(), model) : new Dictionary<string, Relationship>();
+
+                var root = ResourceRootSingle.FromResource(patchContext.Resource);
+
+                return new RequestContext
+                {
+                    Request = new HttpRequestMessage(new HttpMethod("PATCH"), $"{resourceType}/{id}")
+                    {
+                        Content = BuildHttpContent(root.ToJson())
+                    },
+
+                    ResourceId = id,
+                    ResourceType = resourceType,
+                    Attributes = patchContext.Resource?.Attributes,
+                    Relationships = patchContext.Resource?.Relationships
+                    //TODO: add included stuff here
+                };
+            }).Result;
         }
 
         private static HttpContent BuildHttpContent(string content)

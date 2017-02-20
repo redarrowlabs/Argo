@@ -36,5 +36,20 @@ namespace RedArrow.Argo.Client.JsonModels
         {
             return Links ?? (Links = new Dictionary<string, JToken>());
         }
+
     }
+
+    public static class ResourceExtensions
+    {
+        internal static ResourceIdentifier ToResourceIdentifier(this Resource resource)
+        {
+            return new ResourceIdentifier
+            {
+                Type = resource.Type,
+                Id = resource.Id,
+                Meta = resource.Meta
+            };
+        }
+    }
+
 }

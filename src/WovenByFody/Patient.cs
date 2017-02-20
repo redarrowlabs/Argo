@@ -21,7 +21,10 @@ namespace WovenByFody
         [Property]
         public decimal AccountBalance { get; set; }
 
-        [HasOne]
+        [HasOne(LoadStrategy.Eager)]
         public Provider Provider { get; set; }
+
+        [HasOne(LoadStrategy.Eager)]
+        public Company Insurance { get; set; }
     }
 }

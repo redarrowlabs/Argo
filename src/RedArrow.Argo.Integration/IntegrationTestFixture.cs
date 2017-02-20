@@ -11,17 +11,18 @@ namespace RedArrow.Argo.Integration
     public class IntegrationTestFixture : IDisposable
     {
         public string Host = "https://test.redarrow.io/api";
+        //public string Host = "http://localhost/api";
         public string AccessToken { get; }
 
         public IntegrationTestFixture()
         {
-            using (var authClient = new HttpClient { BaseAddress = new Uri($"{Host}/security/") })
+            using (var authClient = new HttpClient { BaseAddress = new Uri($"{Host}/security/")})
             {
                 var reqBody = new StringContent(JsonConvert.SerializeObject(new
                 {
                     accountId = Guid.Parse("10000000-0000-0000-0000-000000000000"),
                     applicationId = Guid.Parse("10000000-0000-0000-0000-200000000000"),
-                    email = "redarrowqa+account1user1@gmail.com",
+                    email = "redarrowqa+adminboth@gmail.com",
                     password = "Testing1234"
                 }), Encoding.UTF8, "application/json");
                 var response = authClient.PostAsync("authenticate", reqBody).GetAwaiter().GetResult();

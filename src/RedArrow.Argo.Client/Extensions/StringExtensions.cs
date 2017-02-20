@@ -1,4 +1,7 @@
-﻿namespace RedArrow.Argo.Client.Extensions
+﻿using System;
+using System.Collections.Generic;
+
+namespace RedArrow.Argo.Client.Extensions
 {
     public static class StringExtensions
     {

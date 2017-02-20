@@ -22,7 +22,7 @@ namespace RedArrow.Argo.Client.JsonModels
         public IDictionary<string, JToken> Links { get; set; }
 
         [JsonProperty("included", NullValueHandling = NullValueHandling.Ignore)]
-        public IList<Resource> Included { get; set; }
+        public IEnumerable<Resource> Included { get; set; }
         
         internal static ResourceRootSingle FromJson(string json)
         {

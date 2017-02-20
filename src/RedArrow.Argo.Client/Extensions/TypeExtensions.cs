@@ -64,7 +64,7 @@ namespace RedArrow.Argo.Client.Extensions
                 .Where(prop => prop.IsDefined(typeof(HasOneAttribute)))
                 .Select(prop => new HasOneConfiguration(prop))
                 .ToDictionary(
-                    has1Cfg => has1Cfg.AttributeName,
+                    has1Cfg => has1Cfg.RelationshipName,
                     has1Cfg => has1Cfg);
         }
 
@@ -75,7 +75,7 @@ namespace RedArrow.Argo.Client.Extensions
                 .Where(prop => prop.IsDefined(typeof(HasManyAttribute)))
                 .Select(prop => new HasManyConfiguration(prop))
                 .ToDictionary(
-                    hasMCfg => hasMCfg.AttributeName,
+                    hasMCfg => hasMCfg.RelationshipName,
                     hasMCfg => hasMCfg);
         }
     }
