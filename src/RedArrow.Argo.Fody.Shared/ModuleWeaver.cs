@@ -99,7 +99,7 @@ namespace RedArrow.Argo
 	                WeaveAttributes(context);
 	                WeaveHasOnes(context);
 	                WeaveHasManys(context);
-	            }
+                }
 	        }
         }
 

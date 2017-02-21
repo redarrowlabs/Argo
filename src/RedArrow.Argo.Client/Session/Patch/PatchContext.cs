@@ -40,7 +40,7 @@ namespace RedArrow.Argo.Client.Session.Patch
 
         public bool ContainsAttribute(string attrName)
         {
-            return Resource.Attributes[attrName] != null;
+            return Resource.Attributes?[attrName] != null;
         }
 
         public void SetRelated(string attrName, ResourceIdentifier resourceIdentifier, bool transient)

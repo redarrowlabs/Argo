@@ -25,6 +25,8 @@ namespace RedArrow.Argo
 
         public PropertyDefinition IdPropDef { get; private set; }
 
+        public PropertyDefinition PropertyBagPropDef { get; private set; }
+
         public IEnumerable<PropertyDefinition> MappedAttributes { get; }
         public IEnumerable<PropertyDefinition> MappedHasOnes { get; }
         public IEnumerable<PropertyDefinition> MappedHasManys { get; }
@@ -57,6 +59,7 @@ namespace RedArrow.Argo
             LogErrorPoint = logErrorPoint;
             
             GetMappedIdProperty();
+            GetMappedPropertyBagProperty();
 
             MappedAttributes = GetMappedProperties(Constants.Attributes.Property);
             MappedHasOnes = GetMappedProperties(Constants.Attributes.HasOne);
@@ -65,16 +68,28 @@ namespace RedArrow.Argo
 
         private void GetMappedIdProperty()
         {
-            IdPropDef = Properties.SingleOrDefault(x => x.CustomAttributes.ContainsAttribute(Constants.Attributes.Id));
+            var idProperties = GetMappedProperties(Constants.Attributes.Id);
+            if (!idProperties.Any())
+            {
+                LogError($"{ModelTypeDef.FullName} does not have an [Id] property mapped");
+            }
+            else if (idProperties.Count() > 1)
+            {
+                LogError($"{ModelTypeDef.FullName} has multiple [Id]s defined - only one is allowed per model");
+            }
 
-            if (IdPropDef == null)
+            IdPropDef = idProperties.Single();
+        }
+
+        private void GetMappedPropertyBagProperty()
+        {
+            var propertyBags = GetMappedProperties(Constants.Attributes.PropertyBag);
+            if (propertyBags.Count() > 1)
             {
-                LogError($"{ModelTypeDef.FullName} does not have an id property mapped");
+                LogError($"{ModelTypeDef.FullName} has multiple [PropertyBag]s defined - only one is allowed per model");
             }
-            else if (IdPropDef.GetMethod?.ReturnType.FullName != "System.Guid")
-            {
-                LogError($"{ModelTypeDef} id property must have a System.Guid getter");
-            }
+
+            PropertyBagPropDef = propertyBags.SingleOrDefault();
         }
 
         private IEnumerable<PropertyDefinition> GetMappedProperties(string attrFullName)

@@ -1,4 +1,5 @@
 ﻿using System;
+using Newtonsoft.Json.Linq;
 using RedArrow.Argo.Attributes;
 
 namespace WovenByFody
@@ -26,5 +27,8 @@ namespace WovenByFody
 
         [HasOne(LoadStrategy.Eager)]
         public Company Insurance { get; set; }
+
+        [PropertyBag]
+        public JObject Unmapped { get; set; }
     }
 }

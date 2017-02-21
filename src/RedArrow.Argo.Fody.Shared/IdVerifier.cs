@@ -9,6 +9,11 @@ namespace RedArrow.Argo
     {
         private void VerifyIdProperty(ModelWeavingContext context)
         {
+            if (context.IdPropDef != null && context.IdPropDef.GetMethod?.ReturnType.Resolve() != _guidTypeDef)
+            {
+                LogError($"{context.IdPropDef.FullName} [Id] property must have a System.Guid getter");
+            }
+
             // if id property doesn't have a setter, try to add one
             if (context.IdPropDef != null && context.IdPropDef.SetMethod == null)
             {
@@ -48,7 +53,7 @@ namespace RedArrow.Argo
                 }
                 else
                 {
-                    throw new Exception($"Model {context.ModelTypeRef.FullName} id property '{context.IdPropDef?.Name}' has no setter. This property must have a private or protected setter");
+                    throw new Exception($"Model {context.ModelTypeRef.FullName} [Id] property '{context.IdPropDef?.Name}' has no setter. This property must have a private or protected setter");
                 }
 
                 LogInfo($"Successfully added private setter to {context.IdPropDef}");

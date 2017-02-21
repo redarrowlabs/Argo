@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Flurl.Shared;
@@ -28,14 +27,14 @@ namespace RedArrow.Argo.Client.Services.Includes
             ObjectHash = new HashSet<object>();
         }
 
-        public Task<Url> BuildIncludesUrl(Type modelType, string url)
+        public Url BuildIncludesUrl(Type modelType, string url)
         {
             var nodeMap = new List<string>();
             ExtractIncludeType(
                 modelType,
                 modelType.Name.ToLower(),
                 nodeMap);
-            return Task.FromResult(url.SetQueryParam($"include", string.Join(",", nodeMap)));
+            return url.SetQueryParam("include", string.Join(",", nodeMap));
         }
 
         private void ExtractIncludeType(Type modelType, string currentLevel, List<string> nodeMap = null)
@@ -89,19 +88,23 @@ namespace RedArrow.Argo.Client.Services.Includes
             }
         }
 
-        public async Task<IEnumerable<Resource>> Process(Type modelType, object model, IDictionary<Guid, Resource> resourceState)
+        public IEnumerable<Resource> Process(Type modelType, object model, IDictionary<Guid, Resource> resourceState)
         {
             IDictionary<string, ICollection<Resource>> included = new Dictionary<string, ICollection<Resource>>();
-            await AssembleIncluded(modelType, model, included, resourceState);
+            AssembleIncluded(modelType, model, included, resourceState);
 
             return included.Any() ? included.SelectMany(x => x.Value).ToList() : null;
         }
 
-        private Task HandleHasManyConfigurations(Type modelType, object model, IDictionary<string, ICollection<Resource>> included, IDictionary<Guid, Resource> resourceState)
+        private void HandleHasManyConfigurations(
+            Type modelType,
+            object model,
+            IDictionary<string, ICollection<Resource>> included,
+            IDictionary<Guid, Resource> resourceState)
         {
             ModelRegistry
                 .GetCollectionConfigurations(modelType)
-                ?.ForEach(x =>
+                ?.Each(x =>
                 {
                     var value = x.PropertyInfo.GetValue(model);
                     if (value != null)
@@ -120,14 +123,17 @@ namespace RedArrow.Argo.Client.Services.Includes
                         }
                     }
                 });
-            return Task.CompletedTask;
         }
 
-        private Task HandleHasSingleConfiguration(Type modelType, object model, IDictionary<string, ICollection<Resource>> included, IDictionary<Guid, Resource> resourceState)
+        private void HandleHasSingleConfiguration(
+            Type modelType,
+            object model,
+            IDictionary<string, ICollection<Resource>> included,
+            IDictionary<Guid, Resource> resourceState)
         {
             ModelRegistry
                .GetSingleConfigurations(modelType)
-               ?.ForEach(x =>
+               ?.Each(x =>
                {
                    var value = x.PropertyInfo.GetValue(model);
                    if (value != null)
@@ -146,14 +152,12 @@ namespace RedArrow.Argo.Client.Services.Includes
                        }
                    }
                });
-
-            return Task.CompletedTask;
         }
 
-        private async Task AssembleIncluded(Type modelType, object model, IDictionary<string, ICollection<Resource>> included, IDictionary<Guid, Resource> resourceState)
+        private void AssembleIncluded(Type modelType, object model, IDictionary<string, ICollection<Resource>> included, IDictionary<Guid, Resource> resourceState)
         {
-            await HandleHasManyConfigurations(modelType, model, included, resourceState);
-            await HandleHasSingleConfiguration(modelType, model, included, resourceState);
+            HandleHasManyConfigurations(modelType, model, included, resourceState);
+            HandleHasSingleConfiguration(modelType, model, included, resourceState);
         }
 
         private void BuildIncludesTree(object model, string rltnName, IDictionary<string, ICollection<Resource>> included, IDictionary<Guid, Resource> resourceState)
@@ -165,7 +169,7 @@ namespace RedArrow.Argo.Client.Services.Includes
                 included[rltnName] = resources;
             }
 
-            AssembleIncluded(model.GetType(), model, included, resourceState).Wait();
+            AssembleIncluded(model.GetType(), model, included, resourceState);
 
             var modelId = ModelRegistry.GetModelId(model);
             if (modelId.Equals(Guid.Empty) && !resourceState.ContainsKey(modelId))

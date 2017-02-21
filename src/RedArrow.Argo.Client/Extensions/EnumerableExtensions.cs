@@ -6,11 +6,12 @@ namespace RedArrow.Argo.Client.Extensions
 {
     public static class EnumerableExtensions
     {
-        public static void Each<T>(this IEnumerable<T> enumerable, Action<T> each)
+        public static void Each<T>(this IEnumerable<T> enumerable, Action<T> action)
         {
+            if (enumerable == null) return;
             foreach (var item in enumerable)
             {
-                each(item);
+                action(item);
             }
         }
 
@@ -19,14 +20,6 @@ namespace RedArrow.Argo.Client.Extensions
             if (@this != null)
                 return !@this.GetEnumerator().MoveNext();
             return true;
-        }
-
-        public static void ForEach<T>(this IEnumerable<T> items, Action<T> action)
-        {
-            if (items == null)
-                return;
-            foreach (T obj in items)
-                action(obj);
         }
     }
 }
