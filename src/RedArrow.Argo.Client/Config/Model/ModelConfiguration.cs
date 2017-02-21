@@ -12,6 +12,8 @@ namespace RedArrow.Argo.Client.Config.Model
 
         public PropertyInfo IdProperty { get; }
 
+        public PropertyInfo AttributeBagProperty { get; }
+
         // resource attribute name => model property
         public IDictionary<string, AttributeConfiguration> AttributeProperties { get; }
 
@@ -26,6 +28,7 @@ namespace RedArrow.Argo.Client.Config.Model
             ModelType = modelType;
             ResourceType = modelType.GetModelResourceType();
             IdProperty = modelType.GetModelIdProperty();
+            AttributeBagProperty = modelType.GetPropertyBagProperty();
             AttributeProperties = modelType.GetModelAttributeConfigurations();
             HasOneProperties = modelType.GetModelHasOneConfigurations();
             HasManyProperties = modelType.GetModelHasManyConfigurations();

@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
-using RedArrow.Argo.Client.Flurl.Shared;
 using RedArrow.Argo.Client.JsonModels;
 using RedArrow.Argo.Client.Services.Includes;
 using RedArrow.Argo.Client.Services.Relationships;
@@ -39,7 +37,7 @@ namespace RedArrow.Argo.Client.Http
             var url = $"{resourceType}/{id}";
 
             url = SparseFieldsetService.BuildSparseFieldsetUrl(modelType, url).Result;
-            url = IncludeResources.BuildIncludesUrl(modelType, url).Result;
+            url = IncludeResources.BuildIncludesUrl(modelType, url);
 
             return new RequestContext
             {
@@ -65,67 +63,83 @@ namespace RedArrow.Argo.Client.Http
 
         public RequestContext CreateResource(Type modelType, object model)
         {
-            return Task.Run(async () =>
+            var resourceType = ModelRegistry.GetResourceType(modelType);
+
+            JObject attributes = null;
+            if (model != null)
             {
-                var resourceType = ModelRegistry.GetResourceType(modelType);
-                var attributes = model != null
-                    ? JObject.FromObject(ModelRegistry
+                attributes = new JObject();
+                var attributeBag = ModelRegistry.GetModelAttributeBag(model);
+                if (attributeBag != null)
+                {
+                    attributes.Merge(attributeBag);
+                }
+
+                attributes.Merge(
+                    JObject.FromObject(ModelRegistry
                         .GetModelAttributes(modelType)
                         .ToDictionary(
                             x => x.AttributeName,
-                            x => x.Property.GetValue(model)))
-                    : null;
-
-                var included = model != null ? await IncludeResources.Process(modelType, model) : new List<Resource>();
-                var relationships = model != null ? RelateResources.Process(modelType, model) : new Dictionary<string, Relationship>();
-
-                var root = ResourceRootCreate.FromObject(resourceType, attributes, included, relationships);
-
-                return new RequestContext
-                {
-                    Request = new HttpRequestMessage(HttpMethod.Post, resourceType)
+                            x => x.Property.GetValue(model))),
+                    new JsonMergeSettings
                     {
-                        Content = BuildHttpContent(root.ToJson()),
-                    },
-                    ResourceType = resourceType,
-                    Attributes = attributes,
-                    Included = included,
-                    Relationships = relationships
-                };
-            }).Result;
+                        MergeNullValueHandling = MergeNullValueHandling.Ignore,
+                        MergeArrayHandling = MergeArrayHandling.Replace
+                    });
+            }
 
+            var included = model != null ? IncludeResources.Process(modelType, model) : new List<Resource>();
+            var relationships = model != null
+                ? RelateResources.Process(modelType, model)
+                : new Dictionary<string, Relationship>();
+
+            var root = ResourceRootCreate.FromObject(resourceType, attributes, included, relationships);
+
+            return new RequestContext
+            {
+                Request = new HttpRequestMessage(HttpMethod.Post, resourceType)
+                {
+                    Content = BuildHttpContent(root.ToJson()),
+                },
+                ResourceType = resourceType,
+                Attributes = attributes,
+                Included = included,
+                Relationships = relationships
+            };
         }
 
         public RequestContext UpdateResource(Guid id, object model, PatchContext patchContext)
         {
-            return Task.Run(async () =>
+            if (model == null)
             {
-                if (model == null)
+                throw new ArgumentNullException(nameof(model));
+            }
+
+            var resourceType = ModelRegistry.GetResourceType(model.GetType());
+
+            var included = model != null
+                ? IncludeResources.Process(model.GetType(), model)
+                : new List<Resource>();
+
+            var relationships = model != null
+                ? RelateResources.Process(model.GetType(), model)
+                : new Dictionary<string, Relationship>();
+
+            var root = ResourceRootSingle.FromResource(patchContext.Resource);
+            
+            return new RequestContext
+            {
+                Request = new HttpRequestMessage(new HttpMethod("PATCH"), $"{resourceType}/{id}")
                 {
-                    throw new ArgumentNullException(nameof(model));
-                }
+                    Content = BuildHttpContent(root.ToJson())
+                },
 
-                var resourceType = ModelRegistry.GetResourceType(model.GetType());
-
-                var included = model != null ? await IncludeResources.Process(model.GetType(), model) : new List<Resource>();
-                var relationships = model != null ? RelateResources.Process(model.GetType(), model) : new Dictionary<string, Relationship>();
-
-                var root = ResourceRootSingle.FromResource(patchContext.Resource);
-
-                return new RequestContext
-                {
-                    Request = new HttpRequestMessage(new HttpMethod("PATCH"), $"{resourceType}/{id}")
-                    {
-                        Content = BuildHttpContent(root.ToJson())
-                    },
-
-                    ResourceId = id,
-                    ResourceType = resourceType,
-                    Attributes = patchContext.Resource?.Attributes,
-                    Relationships = patchContext.Resource?.Relationships
-                    //TODO: add included stuff here
-                };
-            }).Result;
+                ResourceId = id,
+                ResourceType = resourceType,
+                Attributes = patchContext.Resource?.Attributes,
+                Relationships = patchContext.Resource?.Relationships
+                //TODO: add included stuff here
+            };
         }
 
         private static HttpContent BuildHttpContent(string content)

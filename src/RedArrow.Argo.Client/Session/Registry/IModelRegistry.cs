@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 using RedArrow.Argo.Client.Config.Model;
 
 namespace RedArrow.Argo.Client.Session.Registry
@@ -19,6 +20,10 @@ namespace RedArrow.Argo.Client.Session.Registry
         IEnumerable<AttributeConfiguration> GetModelAttributes<TModel>();
 
         IEnumerable<AttributeConfiguration> GetModelAttributes(Type modelType);
+
+        JObject GetModelAttributeBag(object model);
+
+        void SetModelAttributeBag(object model, JObject attributes);
 
         IEnumerable<HasOneConfiguration> GetSingleConfigurations<TModel>();
 

@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Flurl.Shared;
@@ -28,14 +27,14 @@ namespace RedArrow.Argo.Client.Services.Includes
             ObjectHash = new HashSet<object>();
         }
 
-        public Task<Url> BuildIncludesUrl(Type modelType, string url)
+        public Url BuildIncludesUrl(Type modelType, string url)
         {
             var nodeMap = new List<string>();
             ExtractIncludeType(
                 modelType,
                 modelType.Name.ToLower(),
                 nodeMap);
-            return Task.FromResult(url.SetQueryParam($"include", string.Join(",", nodeMap)));
+            return url.SetQueryParam("include", string.Join(",", nodeMap));
         }
 
         private void ExtractIncludeType(Type modelType, string currentLevel, List<string> nodeMap = null)
@@ -89,19 +88,19 @@ namespace RedArrow.Argo.Client.Services.Includes
             }
         }
 
-        public async Task<IEnumerable<Resource>> Process(Type modelType, object model)
+        public IEnumerable<Resource> Process(Type modelType, object model)
         {
             IDictionary<string, ICollection<Resource>> included = new Dictionary<string, ICollection<Resource>>();
-            await AssembleIncluded(modelType, model, included);
+            AssembleIncluded(modelType, model, included);
 
             return included.Any() ? included.SelectMany(x => x.Value).ToList() : null;
         }
 
-        private Task HandleHasManyConfigurations(Type modelType, object model, IDictionary<string, ICollection<Resource>> included)
+        private void HandleHasManyConfigurations(Type modelType, object model, IDictionary<string, ICollection<Resource>> included)
         {
             ModelRegistry
                 .GetCollectionConfigurations(modelType)
-                ?.ForEach(x =>
+                ?.Each(x =>
                 {
                     var value = x.PropertyInfo.GetValue(model);
                     if (value != null)
@@ -120,14 +119,13 @@ namespace RedArrow.Argo.Client.Services.Includes
                         }
                     }
                 });
-            return Task.CompletedTask;
         }
 
-        private Task HandleHasSingleConfiguration(Type modelType, object model, IDictionary<string, ICollection<Resource>> included)
+        private void HandleHasSingleConfiguration(Type modelType, object model, IDictionary<string, ICollection<Resource>> included)
         {
             ModelRegistry
                .GetSingleConfigurations(modelType)
-               ?.ForEach(x =>
+               ?.Each(x =>
                {
                    var value = x.PropertyInfo.GetValue(model);
                    if (value != null)
@@ -146,14 +144,12 @@ namespace RedArrow.Argo.Client.Services.Includes
                        }
                    }
                });
-
-            return Task.CompletedTask;
         }
 
-        private async Task AssembleIncluded(Type modelType, object model, IDictionary<string, ICollection<Resource>> included)
+        private void AssembleIncluded(Type modelType, object model, IDictionary<string, ICollection<Resource>> included)
         {
-            await HandleHasManyConfigurations(modelType, model, included);
-            await HandleHasSingleConfiguration(modelType, model, included);
+            HandleHasManyConfigurations(modelType, model, included);
+            HandleHasSingleConfiguration(modelType, model, included);
         }
 
         private void BuildIncludesTree(object model, string rltnName, IDictionary<string, ICollection<Resource>> included)
@@ -165,7 +161,7 @@ namespace RedArrow.Argo.Client.Services.Includes
                 included[rltnName] = resources;
             }
 
-            AssembleIncluded(model.GetType(), model, included).Wait();
+            AssembleIncluded(model.GetType(), model, included);
 
             var resource = AssembleResource(model);
 

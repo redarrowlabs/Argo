@@ -128,6 +128,7 @@ namespace RedArrow.Argo.Client.Session
 
             ResourceState[id] = root.Data;
             model = CreateModel<TModel>(id);
+            ModelRegistry.SetModelAttributeBag(model, root.Data?.Attributes);
             Cache.Update(id, model);
 
             return (TModel)model;
@@ -140,61 +141,70 @@ namespace RedArrow.Argo.Client.Session
 
             var id = ModelRegistry.GetModelId(model);
             var resourceType = ModelRegistry.GetResourceType(typeof(TModel));
-
-            var dirtyCollections = ModelRegistry
-                .GetCollectionConfigurations<TModel>()
-                .Select(x => x.PropertyInfo.GetValue(model))
-                .OfType<IRemoteCollection>()
-                .Where(x => x.Dirty)
-                .ToArray();
-
+            
+            // this occurs when the model was updated via [HasOne], [HasMany], or [PropertyBag]
             PatchContext context;
             if (!PatchContexts.TryGetValue(id, out context))
             {
-                if (dirtyCollections.Any() && ResourceState.ContainsKey(id))
+                if (ResourceState.ContainsKey(id))
                 {
                     context = new PatchContext(new Resource
                     {
                         Id = id,
                         Type = resourceType
                     });
-
-                    dirtyCollections.Each(x =>
-                    {
-                        var relationship = ResourceState[id]
-                            .GetRelationships()
-                            .ContainsKey(x.Name)
-                                ? ResourceState[id].Relationships[x.Name]
-                                : new Relationship();
-                        context.SetRelationship(x.Name, relationship);
-                    });
                     PatchContexts[id] = context;
-                }
-                else
-                {
-                    return;
                 }
             }
 
-            // flush collection ops to patch context
-            ModelRegistry
+            // flush dirty collections to patch context
+            var dirtyCollections = ModelRegistry
                 .GetCollectionConfigurations<TModel>()
                 .Select(x => x.PropertyInfo.GetValue(model))
                 .OfType<IRemoteCollection>()
-                .Each(x => x.Patch(context));
+                .Where(x => x.Dirty)
+                .ToArray();
+            dirtyCollections.Each(x =>
+            {
+                var relationship = ResourceState[id]
+                    .GetRelationships()
+                    .ContainsKey(x.Name)
+                    ? ResourceState[id].Relationships[x.Name]
+                    : new Relationship();
+                context.SetRelationship(x.Name, relationship);
+                x.Patch(context);
+            });
+
+            // flush unmapped attributes to patch context
+            var bag = ModelRegistry.GetModelAttributeBag(model);
+            if (!bag.IsNullOrEmpty())
+            {
+                foreach (var kvp in bag)
+                {
+                    if (!context.ContainsAttribute(kvp.Key))
+                    {
+                        context.SetAttriute(kvp.Key, kvp.Value);
+                    }
+                }
+            }
 
             var requestContext = HttpRequestBuilder.UpdateResource(id, model, context);
+            // nothing to update?  don't hit the server
+            if (requestContext.Attributes.IsNullOrEmpty() && requestContext.Relationships.IsNullOrEmpty())
+            {
+                return;
+            }
             var response = await HttpClient.SendAsync(requestContext.Request);
             response.EnsureSuccessStatusCode();
 
             Resource resource;
             if (ResourceState.TryGetValue(id, out resource))
             {
-                // this updateds the locally-cached resource
+                // this updates the locally-cached resource
                 // TODO: we need a better solution here
                 if (requestContext.Attributes != null)
                 {
-                    resource.Attributes.Merge(requestContext.Attributes, new JsonMergeSettings
+                    resource.GetAttributes().Merge(requestContext.Attributes, new JsonMergeSettings
                     {
                         MergeNullValueHandling = MergeNullValueHandling.Merge,
                         MergeArrayHandling = MergeArrayHandling.Replace

@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Mono.Cecil;
 
 namespace RedArrow.Argo
@@ -12,6 +14,7 @@ namespace RedArrow.Argo
         private MethodDefinition _session_SetGenericCollection;
 
         private TypeDefinition _guidTypeDef;
+        private TypeDefinition _propBagTypeDef;
         private TypeDefinition _genericIEnumerableTypeDef;
         private TypeDefinition _genericICollectionTypeDef;
 
@@ -37,15 +40,19 @@ namespace RedArrow.Argo
             _session_SetGenericCollection = _sessionTypeDef
                 .Methods
                 .SingleOrDefault(x => x.Name == "SetGenericCollection");
+            
+            _propBagTypeDef = argoAssemblyDef.MainModule
+                .ImportReference(typeof(IDictionary<string, object>))
+                .Resolve();
 
             _guidTypeDef = argoAssemblyDef.MainModule
-                .ImportReference(typeof(System.Guid))
+                .ImportReference(typeof(Guid))
                 .Resolve();
             _genericIEnumerableTypeDef = argoAssemblyDef.MainModule
-                .ImportReference(typeof(System.Collections.Generic.IEnumerable<>))
+                .ImportReference(typeof(IEnumerable<>))
                 .Resolve();
             _genericICollectionTypeDef = argoAssemblyDef.MainModule
-                .ImportReference(typeof(System.Collections.Generic.ICollection<>))
+                .ImportReference(typeof(ICollection<>))
                 .Resolve();
 
             _string_equals = ModuleDefinition
@@ -61,14 +68,14 @@ namespace RedArrow.Argo
                             x.Parameters[2].ParameterType.Name == "StringComparison");
 
             _stringComparison_ordinal = (int)argoAssemblyDef.MainModule
-                .ImportReference(typeof(System.StringComparison))
+                .ImportReference(typeof(StringComparison))
                 .Resolve()
                 .Fields
                 .First(x => x.Name == "Ordinal")
                 .Constant;
 
             _equalityComparerTypeDef = argoAssemblyDef.MainModule
-                .ImportReference(typeof(System.Collections.Generic.EqualityComparer<>))
+                .ImportReference(typeof(EqualityComparer<>))
                 .Resolve();
 
             _object_equals = ModuleDefinition

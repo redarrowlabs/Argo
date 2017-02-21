@@ -53,11 +53,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WovenByFody.NETStandard14",
 		{E447B66C-DACE-41E3-97EE-2B4E02F3FE2F} = {E447B66C-DACE-41E3-97EE-2B4E02F3FE2F}
 	EndProjectSection
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "RedArrow.Argo.Fody.Shared", "RedArrow.Argo.Fody.Shared\RedArrow.Argo.Fody.Shared.shproj", "{08771A46-2734-466E-BA0D-DDEC49301EEA}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		RedArrow.Argo.Fody.Shared\RedArrow.Argo.Fody.Shared.projitems*{08771a46-2734-466e-ba0d-ddec49301eea}*SharedItemsImports = 13
 		WovenByFody\WovenByFody.projitems*{14153e37-e5bf-46bc-8635-1b473148a8bf}*SharedItemsImports = 4
 		WovenByFody\WovenByFody.projitems*{686d9227-964c-4073-aaff-a26ccec1ca48}*SharedItemsImports = 13
+		RedArrow.Argo.Fody.Shared\RedArrow.Argo.Fody.Shared.projitems*{bd5259a0-0735-456a-9b93-c665aa0a3353}*SharedItemsImports = 4
 		WovenByFody\WovenByFody.projitems*{d7da07d0-aab7-44d5-b69b-46a7555c64f1}*SharedItemsImports = 4
+		RedArrow.Argo.Fody.Shared\RedArrow.Argo.Fody.Shared.projitems*{e447b66c-dace-41e3-97ee-2b4e02f3fe2f}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -135,5 +140,6 @@ Global
 		{686D9227-964C-4073-AAFF-A26CCEC1CA48} = {AD3337CD-2C78-4F77-BB79-F34F0A91E452}
 		{D7DA07D0-AAB7-44D5-B69B-46A7555C64F1} = {AD3337CD-2C78-4F77-BB79-F34F0A91E452}
 		{14153E37-E5BF-46BC-8635-1B473148A8BF} = {AD3337CD-2C78-4F77-BB79-F34F0A91E452}
+		{08771A46-2734-466E-BA0D-DDEC49301EEA} = {1F076D25-FB41-4D5D-BAF0-5E43403A4F6B}
 	EndGlobalSection
 EndGlobal

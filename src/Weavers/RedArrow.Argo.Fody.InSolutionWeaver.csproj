@@ -61,56 +61,7 @@
   <ItemGroup>
     <Folder Include="Properties\" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="..\RedArrow.Argo.Fody\AttributeWeaver.cs">
-      <Link>AttributeWeaver.cs</Link>
-    </Compile>
-    <Compile Include="..\RedArrow.Argo.Fody\ClassWeaver.cs">
-      <Link>ClassWeaver.cs</Link>
-    </Compile>
-    <Compile Include="..\RedArrow.Argo.Fody\Constants.cs">
-      <Link>Constants.cs</Link>
-    </Compile>
-    <Compile Include="..\RedArrow.Argo.Fody\CtorWeaver.cs">
-      <Link>CtorWeaver.cs</Link>
-    </Compile>
-    <Compile Include="..\RedArrow.Argo.Fody\Extensions\CecilExtensions.cs">
-      <Link>CecilExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\RedArrow.Argo.Fody\Extensions\MethodReferenceExtensions.cs">
-      <Link>MethodReferenceExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\RedArrow.Argo.Fody\Extensions\PropertyDefinitionExtensions.cs">
-      <Link>PropertyDefinitionExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\RedArrow.Argo.Fody\Extensions\StringExtensions.cs">
-      <Link>StringExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\RedArrow.Argo.Fody\Extensions\TypeReferenceExtensions.cs">
-      <Link>TypeReferenceExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\RedArrow.Argo.Fody\HasManyWeaver.cs">
-      <Link>HasManyWeaver.cs</Link>
-    </Compile>
-    <Compile Include="..\RedArrow.Argo.Fody\HasOneWeaver.cs">
-      <Link>HasOneWeaver.cs</Link>
-    </Compile>
-    <Compile Include="..\RedArrow.Argo.Fody\IdVerifier.cs">
-      <Link>IdVerifier.cs</Link>
-    </Compile>
-    <Compile Include="..\RedArrow.Argo.Fody\ModelFinder.cs">
-      <Link>ModelFinder.cs</Link>
-    </Compile>
-    <Compile Include="..\RedArrow.Argo.Fody\ModelWeavingContext.cs">
-      <Link>ModelWeavingContext.cs</Link>
-    </Compile>
-    <Compile Include="..\RedArrow.Argo.Fody\ModuleWeaver.cs">
-      <Link>ModuleWeaver.cs</Link>
-    </Compile>
-    <Compile Include="..\RedArrow.Argo.Fody\TypeDefLoader.cs">
-      <Link>TypeDefLoader.cs</Link>
-    </Compile>
-  </ItemGroup>
+  <Import Project="..\RedArrow.Argo.Fody.Shared\RedArrow.Argo.Fody.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

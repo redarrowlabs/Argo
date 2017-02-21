@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 using RedArrow.Argo.Attributes;
 
 namespace WovenByTest
@@ -18,5 +19,8 @@ namespace WovenByTest
 
         [HasMany]
         public IEnumerable<Patient> Patients { get; set; }
+
+        [PropertyBag]
+        public IDictionary<string, JToken> Bag { get; set; }
     }
 }

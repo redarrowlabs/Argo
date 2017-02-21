@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>08771a46-2734-466e-ba0d-ddec49301eea</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>RedArrow.Argo.Fody.Shared</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)AttributeWeaver.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ClassWeaver.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Constants.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CtorWeaver.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\CecilExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\MethodReferenceExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\PropertyDefinitionExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\StringExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\TypeReferenceExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)HasManyWeaver.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)HasOneWeaver.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IdVerifier.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ModelFinder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ModelWeavingContext.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ModuleWeaver.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)TypeDefLoader.cs" />
+  </ItemGroup>
+</Project>

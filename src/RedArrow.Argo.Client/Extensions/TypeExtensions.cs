@@ -46,6 +46,13 @@ namespace RedArrow.Argo.Client.Extensions
                 .SingleOrDefault(prop => prop.IsDefined(typeof(IdAttribute)));
         }
 
+        internal static PropertyInfo GetPropertyBagProperty(this Type type)
+        {
+            return type.GetTypeInfo()
+                .DeclaredProperties
+                .SingleOrDefault(prop => prop.IsDefined(typeof(PropertyBagAttribute)));
+        }
+
         internal static IDictionary<string, AttributeConfiguration> GetModelAttributeConfigurations(this Type type)
         {
             return type.GetTypeInfo()

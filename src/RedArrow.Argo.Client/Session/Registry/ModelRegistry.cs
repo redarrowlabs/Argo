@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using RedArrow.Argo.Client.Config.Model;
 
 namespace RedArrow.Argo.Client.Session.Registry
@@ -60,6 +62,29 @@ namespace RedArrow.Argo.Client.Session.Registry
             return GetModelConfig(modelType).AttributeProperties.Values;
         }
 
+        public JObject GetModelAttributeBag(object model)
+        {
+            var modelType = model.GetType();
+            var attributeBag = GetModelConfig(modelType).AttributeBagProperty?.GetValue(model);
+
+            return attributeBag != null
+                ? JObject.FromObject(attributeBag)
+                : null;
+        }
+
+        public void SetModelAttributeBag(object model, JObject attributes)
+        {
+            var modelType = model.GetType();
+            var attrBagProp = GetModelConfig(modelType).AttributeBagProperty;
+
+            if (attrBagProp == null) return;
+
+            var mappedAttrNames = GetModelAttributes(modelType).Select(x => x.AttributeName);
+            var unmappedAttrs = (attributes ?? new JObject()).Properties().Where(x => !mappedAttrNames.Contains(x.Name));
+            var jAttrBag = new JObject(unmappedAttrs);
+            attrBagProp.SetValue(model, jAttrBag.ToObject(attrBagProp.PropertyType));
+        }
+
         public IEnumerable<HasOneConfiguration> GetSingleConfigurations<TModel>()
         {
             return GetSingleConfigurations(typeof(TModel));
@@ -91,7 +116,7 @@ namespace RedArrow.Argo.Client.Session.Registry
             if (!GetModelConfig(modelType).HasManyProperties.TryGetValue(rltnName, out ret))
             {
                 // TODO: RelationNotRegisteredExecption
-                throw new Exception($"has-many configuration named {rltnName} not found");
+                throw new Exception($"[HasMany] configuration named {rltnName} not found");
             }
 
             return ret;
@@ -108,7 +133,7 @@ namespace RedArrow.Argo.Client.Session.Registry
             if (!Registry.ContainsKey(type))
             {
                 // TODO: ModelNotRegisteredException
-                throw new Exception("model not registered");
+                throw new Exception($"model {type.FullName} not registered - does this type have a [Model] attribute?");
             }
         }
     }

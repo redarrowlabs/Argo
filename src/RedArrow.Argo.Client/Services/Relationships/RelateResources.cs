@@ -71,7 +71,7 @@ namespace RedArrow.Argo.Client.Services.Relationships
         {
             ModelRegistry
                 .GetCollectionConfigurations(modelType)
-                ?.ForEach(x =>
+                ?.Each(x =>
                 {
                     var value = x.PropertyInfo.GetValue(model);
                     if (value != null)
@@ -96,7 +96,7 @@ namespace RedArrow.Argo.Client.Services.Relationships
         {
             ModelRegistry
                 .GetSingleConfigurations(modelType)
-                ?.ForEach(x =>
+                ?.Each(x =>
                 {
                     var value = x.PropertyInfo.GetValue(model);
                     if (value != null)

@@ -57,26 +57,11 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="ClassWeaver.cs" />
-    <Compile Include="Constants.cs" />
-    <Compile Include="AttributeWeaver.cs" />
-    <Compile Include="Extensions\CecilExtensions.cs" />
-    <Compile Include="CtorWeaver.cs" />
-    <Compile Include="Extensions\MethodReferenceExtensions.cs" />
-    <Compile Include="Extensions\PropertyDefinitionExtensions.cs" />
-    <Compile Include="Extensions\TypeReferenceExtensions.cs" />
-    <Compile Include="HasManyWeaver.cs" />
-    <Compile Include="HasOneWeaver.cs" />
-    <Compile Include="IdVerifier.cs" />
-    <Compile Include="ModelWeavingContext.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ModuleWeaver.cs" />
-    <Compile Include="ModelFinder.cs" />
-    <Compile Include="Extensions\StringExtensions.cs" />
-    <Compile Include="TypeDefLoader.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <Import Project="..\RedArrow.Argo.Fody.Shared\RedArrow.Argo.Fody.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
