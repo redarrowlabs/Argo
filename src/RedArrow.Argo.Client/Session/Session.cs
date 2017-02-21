@@ -80,7 +80,7 @@ namespace RedArrow.Argo.Client.Session
         {
             ThrowIfDisposed();
 
-            var createPayload = HttpRequestBuilder.CreateResource(modelType, model);
+            var createPayload = HttpRequestBuilder.CreateResource(modelType, model, ResourceState);
 
             Log.Info(() => $"creating resource {createPayload.ResourceType} from model {modelType} {JsonConvert.SerializeObject(model)}");
 
@@ -183,7 +183,7 @@ namespace RedArrow.Argo.Client.Session
                 .OfType<IRemoteCollection>()
                 .Each(x => x.Patch(context));
 
-            var requestContext = HttpRequestBuilder.UpdateResource(id, model, context);
+            var requestContext = HttpRequestBuilder.UpdateResource(id, model, context, ResourceState);
             var response = await HttpClient.SendAsync(requestContext.Request);
             response.EnsureSuccessStatusCode();
 

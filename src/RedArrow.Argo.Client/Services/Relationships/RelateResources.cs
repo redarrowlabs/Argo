@@ -47,17 +47,38 @@ namespace RedArrow.Argo.Client.Services.Relationships
             var relationships = new Dictionary<string, Relationship>();
             var relatedResources = new Dictionary<string, ICollection<ResourceIdentifier>>();
 
+            CreateRelationshipsMap(modelType, model, relationships);
+
             HandleHasSingleConfiguration(modelType, model, relatedResources);
             HandleHasManyConfigurations(modelType, model, relatedResources);
 
             foreach (var relatedResource in relatedResources)
             {
-                var relationship = new Relationship
-                {
-                    Data = JToken.FromObject(relatedResource.Value)
-                };
+                Relationship relationship = new Relationship();
+                var singleConfigurations = ModelRegistry.GetSingleConfigurations(modelType)
+                    .Select(x => x.HasOneType)
+                    .ToList();
 
-                relationships.Add(relatedResource.Key, relationship);
+                foreach (var resourceIdentifier in relatedResource.Value)
+                {
+                    var resourceType = ModelRegistry.GetModelType(resourceIdentifier.Type);
+                    if (singleConfigurations.Contains(resourceType))
+                    {
+                        relationship = new Relationship
+                        {
+                            Data = JToken.FromObject(resourceIdentifier)
+                        };
+                    }
+                    else
+                    {
+                        relationship = new Relationship
+                        {
+                            Data = JToken.FromObject(relatedResource.Value)
+                        };
+                    }
+                }
+
+                relationships[relatedResource.Key] = relationship;
             }
 
             if (relationships.Any())
@@ -65,6 +86,29 @@ namespace RedArrow.Argo.Client.Services.Relationships
                 return relationships;
             }
             return null;
+        }
+
+        private void CreateRelationshipsMap(Type modelType, object model, Dictionary<string, Relationship> relationships)
+        {
+            if (relationships == null)
+            {
+                relationships = new Dictionary<string, Relationship>();
+            }
+
+            var configurations = ModelRegistry
+                .GetSingleConfigurations(modelType)
+                ?.Select(x => x.RelationshipName)
+                .Concat(ModelRegistry
+                .GetCollectionConfigurations(modelType)
+                ?.Select(x => x.RelationshipName));
+
+            foreach (var configuration in configurations)
+            {
+                if (!relationships.ContainsKey(configuration))
+                {
+                    relationships[configuration] = new Relationship();
+                }
+            }
         }
 
         private void HandleHasManyConfigurations(Type modelType, object model, IDictionary<string, ICollection<ResourceIdentifier>> resourceIdentifiers)
