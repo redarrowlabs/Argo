@@ -7,7 +7,7 @@ namespace RedArrow.Argo.Client.Services.Includes
 {
     public interface IIncludeResourcesService
     {
-        IEnumerable<Resource> Process(Type modelType, object model);
+        IEnumerable<Resource> Process(Type modelType, object model, IDictionary<Guid, Resource> resourceState);
         Url BuildIncludesUrl(Type modelType, string url);
     }
 }

@@ -188,7 +188,7 @@ namespace RedArrow.Argo.Client.Session
                 }
             }
 
-            var requestContext = HttpRequestBuilder.UpdateResource(id, model, context);
+            var requestContext = HttpRequestBuilder.UpdateResource(id, model, context, ResourceState);
             // nothing to update?  don't hit the server
             if (requestContext.Attributes.IsNullOrEmpty() && requestContext.Relationships.IsNullOrEmpty())
             {

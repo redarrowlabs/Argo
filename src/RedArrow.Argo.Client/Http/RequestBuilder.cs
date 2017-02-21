@@ -88,7 +88,7 @@ namespace RedArrow.Argo.Client.Http
                     });
             }
 
-                var included = model != null ? await IncludeResources.Process(modelType, model, resourceState) : new List<Resource>();
+                var included = model != null ? IncludeResources.Process(modelType, model, resourceState) : new List<Resource>();
                 var relationships = model != null ? RelateResources.Process(modelType, model) : new Dictionary<string, Relationship>();
 
             var root = ResourceRootCreate.FromObject(resourceType, attributes, included, relationships);
@@ -115,7 +115,7 @@ namespace RedArrow.Argo.Client.Http
 
             var resourceType = ModelRegistry.GetResourceType(model.GetType());
 
-                var included = model != null ? await IncludeResources.Process(model.GetType(), model, resourceState) : new List<Resource>();
+                var included = model != null ? IncludeResources.Process(model.GetType(), model, resourceState) : new List<Resource>();
                 var relationships = model != null ? RelateResources.Process(model.GetType(), model) : new Dictionary<string, Relationship>();
 
                 patchContext.Resource.Relationships = relationships;
@@ -134,7 +134,6 @@ namespace RedArrow.Argo.Client.Http
                     Relationships = patchContext.Resource?.Relationships,
                     Included = included
                 };
-            }).Result;
         }
 
         private static HttpContent BuildHttpContent(string content)
