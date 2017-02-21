@@ -80,7 +80,7 @@ namespace RedArrow.Argo.Client.Session
         {
             ThrowIfDisposed();
 
-            var createPayload = HttpRequestBuilder.CreateResource(modelType, model);
+            var createPayload = HttpRequestBuilder.CreateResource(modelType, model, ResourceState);
 
             Log.Info(() => $"creating resource {createPayload.ResourceType} from model {modelType} {JsonConvert.SerializeObject(model)}");
 

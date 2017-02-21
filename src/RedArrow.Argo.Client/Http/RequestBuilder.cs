@@ -61,7 +61,7 @@ namespace RedArrow.Argo.Client.Http
             };
         }
 
-        public RequestContext CreateResource(Type modelType, object model)
+        public RequestContext CreateResource(Type modelType, object model, IDictionary<Guid, Resource> resourceState)
         {
             var resourceType = ModelRegistry.GetResourceType(modelType);
 
@@ -88,10 +88,8 @@ namespace RedArrow.Argo.Client.Http
                     });
             }
 
-            var included = model != null ? IncludeResources.Process(modelType, model) : new List<Resource>();
-            var relationships = model != null
-                ? RelateResources.Process(modelType, model)
-                : new Dictionary<string, Relationship>();
+                var included = model != null ? await IncludeResources.Process(modelType, model, resourceState) : new List<Resource>();
+                var relationships = model != null ? RelateResources.Process(modelType, model) : new Dictionary<string, Relationship>();
 
             var root = ResourceRootCreate.FromObject(resourceType, attributes, included, relationships);
 
@@ -108,7 +106,7 @@ namespace RedArrow.Argo.Client.Http
             };
         }
 
-        public RequestContext UpdateResource(Guid id, object model, PatchContext patchContext)
+        public RequestContext UpdateResource(Guid id, object model, PatchContext patchContext, IDictionary<Guid, Resource> resourceState)
         {
             if (model == null)
             {
@@ -117,29 +115,26 @@ namespace RedArrow.Argo.Client.Http
 
             var resourceType = ModelRegistry.GetResourceType(model.GetType());
 
-            var included = model != null
-                ? IncludeResources.Process(model.GetType(), model)
-                : new List<Resource>();
+                var included = model != null ? await IncludeResources.Process(model.GetType(), model, resourceState) : new List<Resource>();
+                var relationships = model != null ? RelateResources.Process(model.GetType(), model) : new Dictionary<string, Relationship>();
 
-            var relationships = model != null
-                ? RelateResources.Process(model.GetType(), model)
-                : new Dictionary<string, Relationship>();
+                patchContext.Resource.Relationships = relationships;
+                var root = ResourceRootSingle.FromResource(patchContext.Resource, included);
 
-            var root = ResourceRootSingle.FromResource(patchContext.Resource);
-            
-            return new RequestContext
-            {
-                Request = new HttpRequestMessage(new HttpMethod("PATCH"), $"{resourceType}/{id}")
+                return new RequestContext
                 {
-                    Content = BuildHttpContent(root.ToJson())
-                },
+                    Request = new HttpRequestMessage(new HttpMethod("PATCH"), $"{resourceType}/{id}")
+                    {
+                        Content = BuildHttpContent(root.ToJson())
+                    },
 
-                ResourceId = id,
-                ResourceType = resourceType,
-                Attributes = patchContext.Resource?.Attributes,
-                Relationships = patchContext.Resource?.Relationships
-                //TODO: add included stuff here
-            };
+                    ResourceId = id,
+                    ResourceType = resourceType,
+                    Attributes = patchContext.Resource?.Attributes,
+                    Relationships = patchContext.Resource?.Relationships,
+                    Included = included
+                };
+            }).Result;
         }
 
         private static HttpContent BuildHttpContent(string content)

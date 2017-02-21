@@ -88,15 +88,15 @@ namespace RedArrow.Argo.Client.Services.Includes
             }
         }
 
-        public IEnumerable<Resource> Process(Type modelType, object model)
+        public async Task<IEnumerable<Resource>> Process(Type modelType, object model, IDictionary<Guid, Resource> resourceState)
         {
             IDictionary<string, ICollection<Resource>> included = new Dictionary<string, ICollection<Resource>>();
-            AssembleIncluded(modelType, model, included);
+            await AssembleIncluded(modelType, model, included);
 
             return included.Any() ? included.SelectMany(x => x.Value).ToList() : null;
         }
 
-        private void HandleHasManyConfigurations(Type modelType, object model, IDictionary<string, ICollection<Resource>> included)
+        private Task HandleHasManyConfigurations(Type modelType, object model, IDictionary<string, ICollection<Resource>> included)
         {
             ModelRegistry
                 .GetCollectionConfigurations(modelType)
@@ -110,18 +110,18 @@ namespace RedArrow.Argo.Client.Services.Includes
                         {
                             foreach (var val in (IEnumerable)value)
                             {
-                                BuildIncludesTree(val, rltnName, included);
+                                BuildIncludesTree(val, rltnName, included, resourceState);
                             }
                         }
                         else
                         {
-                            BuildIncludesTree(value, rltnName, included);
+                            BuildIncludesTree(value, rltnName, included, resourceState);
                         }
                     }
                 });
         }
 
-        private void HandleHasSingleConfiguration(Type modelType, object model, IDictionary<string, ICollection<Resource>> included)
+        private Task HandleHasSingleConfiguration(Type modelType, object model, IDictionary<string, ICollection<Resource>> included)
         {
             ModelRegistry
                .GetSingleConfigurations(modelType)
@@ -135,24 +135,24 @@ namespace RedArrow.Argo.Client.Services.Includes
                        {
                            foreach (var val in (IEnumerable)value)
                            {
-                               BuildIncludesTree(val, rltnName, included);
+                               BuildIncludesTree(val, rltnName, included, resourceState);
                            }
                        }
                        else
                        {
-                           BuildIncludesTree(value, rltnName, included);
+                           BuildIncludesTree(value, rltnName, included, resourceState);
                        }
                    }
                });
         }
 
-        private void AssembleIncluded(Type modelType, object model, IDictionary<string, ICollection<Resource>> included)
+        private async Task AssembleIncluded(Type modelType, object model, IDictionary<string, ICollection<Resource>> included)
         {
-            HandleHasManyConfigurations(modelType, model, included);
-            HandleHasSingleConfiguration(modelType, model, included);
+            await HandleHasManyConfigurations(modelType, model, included);
+            await HandleHasSingleConfiguration(modelType, model, included);
         }
 
-        private void BuildIncludesTree(object model, string rltnName, IDictionary<string, ICollection<Resource>> included)
+        private void BuildIncludesTree(object model, string rltnName, IDictionary<string, ICollection<Resource>> included, IDictionary<Guid, Resource> resourceState)
         {
             ICollection<Resource> resources;
             if (!included.TryGetValue(rltnName, out resources))
@@ -161,14 +161,18 @@ namespace RedArrow.Argo.Client.Services.Includes
                 included[rltnName] = resources;
             }
 
-            AssembleIncluded(model.GetType(), model, included);
+            AssembleIncluded(model.GetType(), model, included).Wait();
 
-            var resource = AssembleResource(model);
+            var modelId = ModelRegistry.GetModelId(model);
+            if (modelId.Equals(Guid.Empty) && !resourceState.ContainsKey(modelId))
+            {
+                var resource = AssembleResource(model);
 
-            if (resources.Any(x => x.Id == resource.Id)) return;
+                if (resources.Any(x => x.Id == resource.Id)) return;
 
-            resources.Add(resource);
-            included[rltnName] = resources;
+                resources.Add(resource);
+                included[rltnName] = resources;
+            }
         }
 
         private Resource AssembleResource(object obj)
