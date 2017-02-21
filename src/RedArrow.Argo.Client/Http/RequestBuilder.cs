@@ -63,7 +63,7 @@ namespace RedArrow.Argo.Client.Http
             };
         }
 
-        public RequestContext CreateResource(Type modelType, object model)
+        public RequestContext CreateResource(Type modelType, object model, IDictionary<Guid, Resource> resourceState)
         {
             return Task.Run(async () =>
             {
@@ -76,7 +76,7 @@ namespace RedArrow.Argo.Client.Http
                             x => x.Property.GetValue(model)))
                     : null;
 
-                var included = model != null ? await IncludeResources.Process(modelType, model) : new List<Resource>();
+                var included = model != null ? await IncludeResources.Process(modelType, model, resourceState) : new List<Resource>();
                 var relationships = model != null ? RelateResources.Process(modelType, model) : new Dictionary<string, Relationship>();
 
                 var root = ResourceRootCreate.FromObject(resourceType, attributes, included, relationships);
@@ -96,7 +96,7 @@ namespace RedArrow.Argo.Client.Http
 
         }
 
-        public RequestContext UpdateResource(Guid id, object model, PatchContext patchContext)
+        public RequestContext UpdateResource(Guid id, object model, PatchContext patchContext, IDictionary<Guid, Resource> resourceState)
         {
             return Task.Run(async () =>
             {
@@ -107,10 +107,11 @@ namespace RedArrow.Argo.Client.Http
 
                 var resourceType = ModelRegistry.GetResourceType(model.GetType());
 
-                var included = model != null ? await IncludeResources.Process(model.GetType(), model) : new List<Resource>();
+                var included = model != null ? await IncludeResources.Process(model.GetType(), model, resourceState) : new List<Resource>();
                 var relationships = model != null ? RelateResources.Process(model.GetType(), model) : new Dictionary<string, Relationship>();
 
-                var root = ResourceRootSingle.FromResource(patchContext.Resource);
+                patchContext.Resource.Relationships = relationships;
+                var root = ResourceRootSingle.FromResource(patchContext.Resource, included);
 
                 return new RequestContext
                 {
@@ -122,8 +123,8 @@ namespace RedArrow.Argo.Client.Http
                     ResourceId = id,
                     ResourceType = resourceType,
                     Attributes = patchContext.Resource?.Attributes,
-                    Relationships = patchContext.Resource?.Relationships
-                    //TODO: add included stuff here
+                    Relationships = patchContext.Resource?.Relationships,
+                    Included = included
                 };
             }).Result;
         }

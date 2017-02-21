@@ -421,6 +421,7 @@ namespace RedArrow.Argo.Integration
 
             Guid providerId;
             Guid patientId;
+            Guid companyId;
 
             var stubInsuranceCompany = new Company
             {
@@ -459,8 +460,6 @@ namespace RedArrow.Argo.Integration
                 var provider = await session.Create(stubProvider);
                 providerId = provider.Id;
                 patientId = provider.Patients.First().Id;
-
-                await session.Update(provider);
             }
 
             using (var session = sessionFactory.CreateSession())
@@ -470,7 +469,8 @@ namespace RedArrow.Argo.Integration
                 Assert.NotNull(provider);
                 Assert.NotNull(provider.Patients);
 
-                var patient = provider.Patients.FirstOrDefault();
+                var patient = provider.Patients.First();
+                companyId = patient.Insurance.Id;
 
                 Assert.NotNull(patient);
                 Assert.Equal(patientId, patient.Id);
@@ -480,7 +480,7 @@ namespace RedArrow.Argo.Integration
             {
                 await session.Delete<Provider>(providerId);
                 await session.Delete<Patient>(patientId);
-                //await session.Delete<Company>(companyId);
+                await session.Delete<Company>(companyId);
             }
         }
 
