@@ -4,7 +4,7 @@ using System.Linq;
 using Newtonsoft.Json.Linq;
 using Ploeh.AutoFixture.Xunit2;
 using RedArrow.Argo.Client.Collections.Operations;
-using RedArrow.Argo.Client.JsonModels;
+using RedArrow.Argo.Client.Model;
 using RedArrow.Argo.Client.Session.Patch;
 using Xunit;
 

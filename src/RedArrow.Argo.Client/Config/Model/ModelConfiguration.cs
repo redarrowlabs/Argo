@@ -10,6 +10,9 @@ namespace RedArrow.Argo.Client.Config.Model
         public Type ModelType { get; }
         public string ResourceType { get; }
 
+        public PropertyInfo ResourceProperty { get; }
+        public PropertyInfo PatchProperty { get; }
+
         public PropertyInfo IdProperty { get; }
 
         public PropertyInfo AttributeBagProperty { get; }
@@ -27,11 +30,18 @@ namespace RedArrow.Argo.Client.Config.Model
         {
             ModelType = modelType;
             ResourceType = modelType.GetModelResourceType();
+
+            ResourceProperty = modelType.GetModelResourceProperty();
+            PatchProperty = modelType.GetModelPatchProperty();
+
             IdProperty = modelType.GetModelIdProperty();
-            AttributeBagProperty = modelType.GetPropertyBagProperty();
+
             AttributeProperties = modelType.GetModelAttributeConfigurations();
+
             HasOneProperties = modelType.GetModelHasOneConfigurations();
             HasManyProperties = modelType.GetModelHasManyConfigurations();
+
+            AttributeBagProperty = modelType.GetPropertyBagProperty();
         }
     }
 }

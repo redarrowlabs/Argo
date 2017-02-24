@@ -95,6 +95,9 @@ namespace RedArrow.Argo
 	            if (context.IdPropDef != null)
 	            {
 	                AddSessionField(context);
+                    AddResourceIdentifierProperty(context);
+                    AddPatchProperty(context);
+                    AddSessionManagedProperty(context);
 	                AddCtor(context);
 	                WeaveAttributes(context);
 	                WeaveHasOnes(context);

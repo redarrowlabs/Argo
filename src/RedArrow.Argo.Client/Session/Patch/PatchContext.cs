@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Newtonsoft.Json.Linq;
-using RedArrow.Argo.Client.JsonModels;
+using RedArrow.Argo.Client.Model;
 
 namespace RedArrow.Argo.Client.Session.Patch
 {

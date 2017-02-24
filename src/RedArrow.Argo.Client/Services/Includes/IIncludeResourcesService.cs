@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using RedArrow.Argo.Client.Flurl.Shared;
-using RedArrow.Argo.Client.JsonModels;
+using RedArrow.Argo.Client.Model;
 
 namespace RedArrow.Argo.Client.Services.Includes
 {

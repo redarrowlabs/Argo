@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RedArrow.Argo.Client.Config.Model;
+using RedArrow.Argo.Client.Exceptions;
 
 namespace RedArrow.Argo.Client.Session.Registry
 {
@@ -40,29 +41,74 @@ namespace RedArrow.Argo.Client.Session.Registry
             return null;
         }
 
-        public Guid GetModelId(object model)
+        public Guid GetId(object model)
         {
             var modelType = model.GetType();
             return (Guid)GetModelConfig(modelType).IdProperty.GetValue(model);
         }
 
-        public void SetModelId(object model, Guid id)
+        public void SetId(object model, Guid id)
         {
             var modelType = model.GetType();
             GetModelConfig(modelType).IdProperty.SetValue(model, id);
         }
 
-        public IEnumerable<AttributeConfiguration> GetModelAttributes<TModel>()
+        public IEnumerable<AttributeConfiguration> GetAttributeConfigs<TModel>()
         {
-            return GetModelAttributes(typeof(TModel));
+            return GetAttributeConfigs(typeof(TModel));
         }
 
-        public IEnumerable<AttributeConfiguration> GetModelAttributes(Type modelType)
+        public IEnumerable<AttributeConfiguration> GetAttributeConfigs(Type modelType)
         {
             return GetModelConfig(modelType).AttributeProperties.Values;
         }
 
-        public JObject GetModelAttributeBag(object model)
+        public JObject GetAttributeValues(object model)
+        {
+            if (model == null) return null;
+            return new JObject(GetAttributeConfigs(model.GetType())
+                .ToDictionary(
+                    x => x.AttributeName,
+                    x => x.Property.GetValue(model)));
+        }
+
+        public IEnumerable<HasOneConfiguration> GetHasOneConfigs<TModel>()
+        {
+            return GetHasOneConfigs(typeof(TModel));
+        }
+
+        public IEnumerable<HasOneConfiguration> GetHasOneConfigs(Type modelType)
+        {
+            return GetModelConfig(modelType).HasOneProperties.Values;
+        }
+
+        public IEnumerable<HasManyConfiguration> GetHasManyConfigs<TModel>()
+        {
+            return GetHasManyConfigs(typeof(TModel));
+        }
+
+        public IEnumerable<HasManyConfiguration> GetHasManyConfigs(Type modelType)
+        {
+            return GetModelConfig(modelType).HasManyProperties.Values;
+        }
+
+        public HasManyConfiguration GetHasManyConfig<TModel>(string rltnName)
+        {
+            return GetHasManyConfig(typeof(TModel), rltnName);
+        }
+
+        public HasManyConfiguration GetHasManyConfig(Type modelType, string rltnName)
+        {
+            HasManyConfiguration ret;
+            if (!GetModelConfig(modelType).HasManyProperties.TryGetValue(rltnName, out ret))
+            {
+                throw new RelationshipNotRegisteredExecption(rltnName, modelType);
+            }
+
+            return ret;
+        }
+
+        public JObject GetAttributeBag(object model)
         {
             var modelType = model.GetType();
             var attributeBag = GetModelConfig(modelType).AttributeBagProperty?.GetValue(model);
@@ -72,54 +118,17 @@ namespace RedArrow.Argo.Client.Session.Registry
                 : null;
         }
 
-        public void SetModelAttributeBag(object model, JObject attributes)
+        public void SetAttributeBag(object model, JObject attributes)
         {
             var modelType = model.GetType();
             var attrBagProp = GetModelConfig(modelType).AttributeBagProperty;
 
             if (attrBagProp == null) return;
 
-            var mappedAttrNames = GetModelAttributes(modelType).Select(x => x.AttributeName);
+            var mappedAttrNames = GetAttributeConfigs(modelType).Select(x => x.AttributeName);
             var unmappedAttrs = (attributes ?? new JObject()).Properties().Where(x => !mappedAttrNames.Contains(x.Name));
             var jAttrBag = new JObject(unmappedAttrs);
             attrBagProp.SetValue(model, jAttrBag.ToObject(attrBagProp.PropertyType));
-        }
-
-        public IEnumerable<HasOneConfiguration> GetSingleConfigurations<TModel>()
-        {
-            return GetSingleConfigurations(typeof(TModel));
-        }
-
-        public IEnumerable<HasOneConfiguration> GetSingleConfigurations(Type modelType)
-        {
-            return GetModelConfig(modelType).HasOneProperties.Values;
-        }
-
-        public IEnumerable<HasManyConfiguration> GetCollectionConfigurations<TModel>()
-        {
-            return GetCollectionConfigurations(typeof(TModel));
-        }
-
-        public IEnumerable<HasManyConfiguration> GetCollectionConfigurations(Type modelType)
-        {
-            return GetModelConfig(modelType).HasManyProperties.Values;
-        }
-
-        public HasManyConfiguration GetCollectionConfiguration<TModel>(string rltnName)
-        {
-            return GetCollectionConfiguration(typeof(TModel), rltnName);
-        }
-
-        public HasManyConfiguration GetCollectionConfiguration(Type modelType, string rltnName)
-        {
-            HasManyConfiguration ret;
-            if (!GetModelConfig(modelType).HasManyProperties.TryGetValue(rltnName, out ret))
-            {
-                // TODO: RelationNotRegisteredExecption
-                throw new Exception($"[HasMany] configuration named {rltnName} not found");
-            }
-
-            return ret;
         }
 
         private ModelConfiguration GetModelConfig(Type modelType)
@@ -132,9 +141,33 @@ namespace RedArrow.Argo.Client.Session.Registry
         {
             if (!Registry.ContainsKey(type))
             {
-                // TODO: ModelNotRegisteredException
-                throw new Exception($"model {type.FullName} not registered - does this type have a [Model] attribute?");
+                throw new ModelNotRegisteredException(type);
             }
+        }
+
+        public IEnumerable<object> GetIncludedModels(object model)
+        {
+            return model == null ? null : GetIncludedModels(model, new [] {model});
+        }
+
+        private IEnumerable<object> GetIncludedModels(object model, IEnumerable<object> parentModels)
+        {
+            var modelType = model.GetType();
+            var relatedModels = GetHasOneConfigs(modelType)
+                .Select(hasOne => hasOne.PropertyInfo.GetValue(model))
+                .Where(item => item != null)
+                .Union(GetHasManyConfigs(modelType)
+                    .Select(hasMany => hasMany.PropertyInfo.GetValue(model))
+                    .OfType<IEnumerable>()
+                    .SelectMany(collection => collection.Cast<object>())
+                    .Where(item => item != null))
+                .ToArray();
+
+            var includedModels = parentModels.Union(relatedModels).ToArray();
+
+            return includedModels.Union(relatedModels
+                .Where(x => !parentModels.Contains(x))
+                .SelectMany(x => GetIncludedModels(x, includedModels)));
         }
     }
 }

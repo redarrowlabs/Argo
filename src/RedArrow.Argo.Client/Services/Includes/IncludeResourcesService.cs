@@ -5,7 +5,7 @@ using System.Linq;
 using Newtonsoft.Json.Linq;
 using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Flurl.Shared;
-using RedArrow.Argo.Client.JsonModels;
+using RedArrow.Argo.Client.Model;
 using RedArrow.Argo.Client.Services.Relationships;
 using RedArrow.Argo.Client.Session.Registry;
 
@@ -49,7 +49,7 @@ namespace RedArrow.Argo.Client.Services.Includes
                 nodeMap.Add(currentLevel);
             }
 
-            var collectionConfiguration = ModelRegistry.GetCollectionConfigurations(modelType)
+            var collectionConfiguration = ModelRegistry.GetHasManyConfigs(modelType)
                 .Select(x => x)
                 .ToList();
             if (collectionConfiguration != null && collectionConfiguration.Any())
@@ -68,7 +68,7 @@ namespace RedArrow.Argo.Client.Services.Includes
                 }
             }
 
-            var singleConfiguration = ModelRegistry.GetSingleConfigurations(modelType)
+            var singleConfiguration = ModelRegistry.GetHasOneConfigs(modelType)
                 .Select(x => x)
                 .ToList();
             if (singleConfiguration != null && singleConfiguration.Any())
@@ -96,6 +96,12 @@ namespace RedArrow.Argo.Client.Services.Includes
             return included.Any() ? included.SelectMany(x => x.Value).ToList() : null;
         }
 
+        private void AssembleIncluded(Type modelType, object model, IDictionary<string, ICollection<Resource>> included, IDictionary<Guid, Resource> resourceState)
+        {
+            HandleHasManyConfigurations(modelType, model, included, resourceState);
+            HandleHasSingleConfiguration(modelType, model, included, resourceState);
+        }
+
         private void HandleHasManyConfigurations(
             Type modelType,
             object model,
@@ -103,7 +109,7 @@ namespace RedArrow.Argo.Client.Services.Includes
             IDictionary<Guid, Resource> resourceState)
         {
             ModelRegistry
-                .GetCollectionConfigurations(modelType)
+                .GetHasManyConfigs(modelType)
                 ?.Each(x =>
                 {
                     var value = x.PropertyInfo.GetValue(model);
@@ -132,7 +138,7 @@ namespace RedArrow.Argo.Client.Services.Includes
             IDictionary<Guid, Resource> resourceState)
         {
             ModelRegistry
-               .GetSingleConfigurations(modelType)
+               .GetHasOneConfigs(modelType)
                ?.Each(x =>
                {
                    var value = x.PropertyInfo.GetValue(model);
@@ -154,12 +160,6 @@ namespace RedArrow.Argo.Client.Services.Includes
                });
         }
 
-        private void AssembleIncluded(Type modelType, object model, IDictionary<string, ICollection<Resource>> included, IDictionary<Guid, Resource> resourceState)
-        {
-            HandleHasManyConfigurations(modelType, model, included, resourceState);
-            HandleHasSingleConfiguration(modelType, model, included, resourceState);
-        }
-
         private void BuildIncludesTree(object model, string rltnName, IDictionary<string, ICollection<Resource>> included, IDictionary<Guid, Resource> resourceState)
         {
             ICollection<Resource> resources;
@@ -171,7 +171,7 @@ namespace RedArrow.Argo.Client.Services.Includes
 
             AssembleIncluded(model.GetType(), model, included, resourceState);
 
-            var modelId = ModelRegistry.GetModelId(model);
+            var modelId = ModelRegistry.GetId(model);
             if (modelId.Equals(Guid.Empty) && !resourceState.ContainsKey(modelId))
             {
                 var resource = AssembleResource(model);
@@ -188,9 +188,9 @@ namespace RedArrow.Argo.Client.Services.Includes
             if (!ObjectHash.Contains(obj))
             {
                 ObjectHash.Add(obj);
-                if (ModelRegistry.GetModelId(obj).Equals(Guid.Empty))
+                if (ModelRegistry.GetId(obj).Equals(Guid.Empty))
                 {
-                    ModelRegistry.SetModelId(obj, Guid.NewGuid());
+                    ModelRegistry.SetId(obj, Guid.NewGuid());
                 }
             }
 
@@ -198,12 +198,12 @@ namespace RedArrow.Argo.Client.Services.Includes
             {
                 Attributes = obj != null
                     ? JObject.FromObject(ModelRegistry
-                        .GetModelAttributes(obj.GetType())
+                        .GetAttributeConfigs(obj.GetType())
                         .ToDictionary(
                             x => x.AttributeName,
                             x => x.Property.GetValue(obj)))
                     : null,
-                Id = ModelRegistry.GetModelId(obj),
+                Id = ModelRegistry.GetId(obj),
                 Type = ModelRegistry.GetResourceType(obj.GetType()),
                 Relationships = RelateResources.Process(obj.GetType(), obj)
             };

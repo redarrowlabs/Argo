@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Flurl.Shared;
 using RedArrow.Argo.Client.Session.Registry;
 
@@ -50,7 +49,7 @@ namespace RedArrow.Argo.Client.Services.SparseFieldsets
 
             nodeMap.Add(currentLevel);
 
-            var attributes = ModelRegistry.GetModelAttributes(modelType)
+            var attributes = ModelRegistry.GetAttributeConfigs(modelType)
                 .Select(x => x.AttributeName)
                 .ToList();
             if (attributes != null && attributes.Any())
@@ -67,7 +66,7 @@ namespace RedArrow.Argo.Client.Services.SparseFieldsets
                 }
             }
 
-            var collectionConfiguration = ModelRegistry.GetCollectionConfigurations(modelType)
+            var collectionConfiguration = ModelRegistry.GetHasManyConfigs(modelType)
                 .Select(x => x)
                 .ToList();
             if (collectionConfiguration != null && collectionConfiguration.Any())
@@ -88,7 +87,7 @@ namespace RedArrow.Argo.Client.Services.SparseFieldsets
                 }
             }
 
-            var singleConfiguration = ModelRegistry.GetSingleConfigurations(modelType)
+            var singleConfiguration = ModelRegistry.GetHasOneConfigs(modelType)
                 .Select(x => x)
                 .ToList();
             if (singleConfiguration != null && singleConfiguration.Any())

@@ -115,9 +115,13 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
+    <Compile Include="LazyCollectionTests.cs" />
+    <Compile Include="EagerCollectionTests.cs" />
     <Compile Include="IntegrationTestFixture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="IntegrationTests.cs" />
+    <Compile Include="CrudTests.cs" />
+    <Compile Include="PropertyBagTests.cs" />
+    <Compile Include="SingularRelationshipTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

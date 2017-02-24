@@ -72,7 +72,7 @@ namespace RedArrow.Argo.Client.Collections.Generic
             Initialize();
 
             IndexItems(item);
-            var itemId = Session.ModelRegistry.GetModelId(item);
+            var itemId = Session.ModelRegistry.GetId(item);
             var itemResourceType = Session.ModelRegistry.GetResourceType(item.GetType());
             QueuedOperations.Add(new QueuedAddOperation(Name, itemId, itemResourceType));
             Dirty = true;
@@ -106,7 +106,7 @@ namespace RedArrow.Argo.Client.Collections.Generic
 
             var result = false;
 
-            var itemId = Session.ModelRegistry.GetModelId(item);
+            var itemId = Session.ModelRegistry.GetId(item);
 
             T itemToRemove;
             if (InternalIndex.TryGetValue(itemId, out itemToRemove))
@@ -143,7 +143,7 @@ namespace RedArrow.Argo.Client.Collections.Generic
 
         private Guid GetItemId(T item)
         {
-            return Session.ModelRegistry.GetModelId(item);
+            return Session.ModelRegistry.GetId(item);
         }
 
         private void IndexItems(IEnumerable<T> items)

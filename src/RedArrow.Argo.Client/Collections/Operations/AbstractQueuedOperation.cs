@@ -1,6 +1,6 @@
 ﻿using System;
 using Newtonsoft.Json.Linq;
-using RedArrow.Argo.Client.JsonModels;
+using RedArrow.Argo.Client.Model;
 using RedArrow.Argo.Client.Session.Patch;
 
 namespace RedArrow.Argo.Client.Collections.Operations

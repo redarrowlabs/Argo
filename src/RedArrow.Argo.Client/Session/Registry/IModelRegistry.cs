@@ -13,28 +13,33 @@ namespace RedArrow.Argo.Client.Session.Registry
 
         Type GetModelType(string resourceType);
 
-        Guid GetModelId(object model);
 
-        void SetModelId(object model, Guid id);
+        Guid GetId(object model);
 
-        IEnumerable<AttributeConfiguration> GetModelAttributes<TModel>();
+        void SetId(object model, Guid id);
 
-        IEnumerable<AttributeConfiguration> GetModelAttributes(Type modelType);
 
-        JObject GetModelAttributeBag(object model);
+        IEnumerable<AttributeConfiguration> GetAttributeConfigs<TModel>();
 
-        void SetModelAttributeBag(object model, JObject attributes);
+        IEnumerable<AttributeConfiguration> GetAttributeConfigs(Type modelType);
 
-        IEnumerable<HasOneConfiguration> GetSingleConfigurations<TModel>();
+        JObject GetAttributeValues(object model);
 
-        IEnumerable<HasOneConfiguration> GetSingleConfigurations(Type modelType);
+        IEnumerable<HasOneConfiguration> GetHasOneConfigs(Type modelType);
 
-        IEnumerable<HasManyConfiguration> GetCollectionConfigurations<TModel>();
+        IEnumerable<HasManyConfiguration> GetHasManyConfigs<TModel>();
 
-        IEnumerable<HasManyConfiguration> GetCollectionConfigurations(Type modelType);
+        IEnumerable<HasManyConfiguration> GetHasManyConfigs(Type modelType);
 
-        HasManyConfiguration GetCollectionConfiguration<TModel>(string rltnName);
+        HasManyConfiguration GetHasManyConfig<TModel>(string rltnName);
 
-        HasManyConfiguration GetCollectionConfiguration(Type modelType, string rltnName);
+        HasManyConfiguration GetHasManyConfig(Type modelType, string rltnName);
+
+
+        JObject GetAttributeBag(object model);
+
+        void SetAttributeBag(object model, JObject attributes);
+
+        IEnumerable<object> GetIncludedModels(object model);
     }
 }

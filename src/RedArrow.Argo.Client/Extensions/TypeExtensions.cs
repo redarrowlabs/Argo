@@ -4,7 +4,8 @@ using System.Linq;
 using System.Reflection;
 using RedArrow.Argo.Attributes;
 using RedArrow.Argo.Client.Config.Model;
-using RedArrow.Argo.Client.Infrastructure;
+using RedArrow.Argo.Client.Exceptions;
+using RedArrow.Argo.Model;
 
 namespace RedArrow.Argo.Client.Extensions
 {
@@ -39,18 +40,27 @@ namespace RedArrow.Argo.Client.Extensions
                 .FirstOrDefault() ?? type.Name.Camelize();
         }
 
+        internal static PropertyInfo GetModelResourceProperty(this Type type)
+        {
+            return type.GetTypeInfo()
+                .DeclaredProperties
+                .Where(prop => prop.Name == "__argo__generated_Resource")
+                .Single(prop => prop.PropertyType == typeof(IResourceIdentifier));
+        }
+
+        internal static PropertyInfo GetModelPatchProperty(this Type type)
+        {
+            return type.GetTypeInfo()
+                .DeclaredProperties
+                .Where(prop => prop.Name == "__argo__generated_Patch")
+                .Single(prop => prop.PropertyType == typeof(IResourceIdentifier));
+        }
+
         internal static PropertyInfo GetModelIdProperty(this Type type)
         {
             return type.GetTypeInfo()
                 .DeclaredProperties
-                .SingleOrDefault(prop => prop.IsDefined(typeof(IdAttribute)));
-        }
-
-        internal static PropertyInfo GetPropertyBagProperty(this Type type)
-        {
-            return type.GetTypeInfo()
-                .DeclaredProperties
-                .SingleOrDefault(prop => prop.IsDefined(typeof(PropertyBagAttribute)));
+                .Single(prop => prop.IsDefined(typeof(IdAttribute)));
         }
 
         internal static IDictionary<string, AttributeConfiguration> GetModelAttributeConfigurations(this Type type)
@@ -84,6 +94,13 @@ namespace RedArrow.Argo.Client.Extensions
                 .ToDictionary(
                     hasMCfg => hasMCfg.RelationshipName,
                     hasMCfg => hasMCfg);
+        }
+
+        internal static PropertyInfo GetPropertyBagProperty(this Type type)
+        {
+            return type.GetTypeInfo()
+                .DeclaredProperties
+                .SingleOrDefault(prop => prop.IsDefined(typeof(PropertyBagAttribute)));
         }
     }
 }

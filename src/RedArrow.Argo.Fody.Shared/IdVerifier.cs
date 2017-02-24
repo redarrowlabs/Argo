@@ -9,7 +9,8 @@ namespace RedArrow.Argo
     {
         private void VerifyIdProperty(ModelWeavingContext context)
         {
-            if (context.IdPropDef != null && context.IdPropDef.GetMethod?.ReturnType.Resolve() != _guidTypeDef)
+            if (context.IdPropDef != null &&
+                context.IdPropDef.GetMethod?.ReturnType.Resolve() != context.ImportReference(typeof(Guid)).Resolve())
             {
                 LogError($"{context.IdPropDef.FullName} [Id] property must have a System.Guid getter");
             }

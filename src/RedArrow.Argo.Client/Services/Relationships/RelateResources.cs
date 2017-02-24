@@ -2,10 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using RedArrow.Argo.Client.Extensions;
-using RedArrow.Argo.Client.JsonModels;
+using RedArrow.Argo.Client.Model;
 using RedArrow.Argo.Client.Session.Registry;
 
 namespace RedArrow.Argo.Client.Services.Relationships
@@ -55,7 +54,7 @@ namespace RedArrow.Argo.Client.Services.Relationships
             foreach (var relatedResource in relatedResources)
             {
                 Relationship relationship = new Relationship();
-                var singleConfigurations = ModelRegistry.GetSingleConfigurations(modelType)
+                var singleConfigurations = ModelRegistry.GetHasOneConfigs(modelType)
                     .Select(x => x.HasOneType)
                     .ToList();
 
@@ -96,10 +95,10 @@ namespace RedArrow.Argo.Client.Services.Relationships
             }
 
             var configurations = ModelRegistry
-                .GetSingleConfigurations(modelType)
+                .GetHasOneConfigs(modelType)
                 ?.Select(x => x.RelationshipName)
                 .Concat(ModelRegistry
-                .GetCollectionConfigurations(modelType)
+                .GetHasManyConfigs(modelType)
                 ?.Select(x => x.RelationshipName));
 
             foreach (var configuration in configurations)
@@ -114,7 +113,7 @@ namespace RedArrow.Argo.Client.Services.Relationships
         private void HandleHasManyConfigurations(Type modelType, object model, IDictionary<string, ICollection<ResourceIdentifier>> resourceIdentifiers)
         {
             ModelRegistry
-                .GetCollectionConfigurations(modelType)
+                .GetHasManyConfigs(modelType)
                 ?.Each(x =>
                 {
                     var value = x.PropertyInfo.GetValue(model);
@@ -139,7 +138,7 @@ namespace RedArrow.Argo.Client.Services.Relationships
         private void HandleHasSingleConfiguration(Type modelType, object model, IDictionary<string, ICollection<ResourceIdentifier>> resourceIdentifiers)
         {
             ModelRegistry
-                .GetSingleConfigurations(modelType)
+                .GetHasOneConfigs(modelType)
                 ?.Each(x =>
                 {
                     var value = x.PropertyInfo.GetValue(model);
@@ -173,7 +172,7 @@ namespace RedArrow.Argo.Client.Services.Relationships
 
             resourceIds.Add(new ResourceIdentifier
             {
-                Id = ModelRegistry.GetModelId(model),
+                Id = ModelRegistry.GetId(model),
                 Type = ModelRegistry.GetResourceType(model.GetType())
             });
         }

@@ -13,7 +13,6 @@ namespace RedArrow.Argo
     {
         private void WeaveHasManys(ModelWeavingContext context)
         {
-
             if (_session_GetGenericEnumerable == null
              || _session_SetGenericEnumerable == null
              || _session_GetGenericCollection == null
@@ -30,19 +29,20 @@ namespace RedArrow.Argo
                 MethodReference getRltnMethRef;
                 MethodReference setRltnMethRef;
 
-                if (propertyTypeDef.FullName == _genericIEnumerableTypeDef.FullName)
+                if (propertyTypeDef == context.ImportReference(typeof(IEnumerable<>)).Resolve())
                 {
                     getRltnMethRef = _session_GetGenericEnumerable;
                     setRltnMethRef = _session_SetGenericEnumerable;
                 }
-                else if (propertyTypeDef.FullName == _genericICollectionTypeDef.FullName)
+                else if (propertyTypeDef == context.ImportReference(typeof(ICollection<>)).Resolve())
                 {
                     getRltnMethRef = _session_GetGenericCollection;
                     setRltnMethRef = _session_SetGenericCollection;
                 }
                 else
                 {
-                    throw new Exception($"Argo encountered a HasMany relationship on non IEnumerable<T> or ICollection<T> property {propertyDef.FullName}");
+                    LogError($"Argo encountered a HasMany relationship on non IEnumerable<T> or ICollection<T> property {propertyDef.FullName}");
+                    continue;
                 }
 
                 // get the backing field
@@ -50,7 +50,8 @@ namespace RedArrow.Argo
 
                 if (backingField == null)
                 {
-                    throw new Exception($"Failed to load backing field for property {propertyDef.FullName}");
+                    LogError($"Failed to load backing field for property {propertyDef.FullName}");
+                    continue;
                 }
 
                 // find the rltnName, if there is one

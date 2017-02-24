@@ -39,6 +39,8 @@ namespace RedArrow.Argo
         public Collection<PropertyDefinition> Properties => ModelTypeDef.Properties;
 
         public FieldDefinition SessionField { get; set; }
+        public PropertyDefinition ResourceProperty { get; set; }
+        public PropertyDefinition PatchProperty { get; set; }
 
         public ModelWeavingContext(
             TypeDefinition modelTypeDef,
@@ -98,6 +100,11 @@ namespace RedArrow.Argo
                 .Where(x => x.HasCustomAttributes)
                 .Where(p => p.CustomAttributes.ContainsAttribute(attrFullName))
                 .ToArray();
+        }
+
+        public TypeReference ImportReference(Type type)
+        {
+            return ModelTypeDef.Module.ImportReference(type);
         }
 
         public TypeReference ImportReference(TypeReference typeRef)

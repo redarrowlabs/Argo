@@ -26,7 +26,7 @@ namespace RedArrow.Argo
                 new ParameterDefinition(
                     "id",
                     ParameterAttributes.None,
-                    context.ImportReference(_guidTypeDef)));
+                    context.ImportReference(typeof(Guid))));
             ctor.Parameters.Add(
                 new ParameterDefinition(
                     "session",
