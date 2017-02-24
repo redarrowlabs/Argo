@@ -280,12 +280,12 @@ namespace RedArrow.Argo.Client.Session
                 {
                     var rltnData = relationship.Data;
 
-                    if (rltnData?.Type == JTokenType.Null)
+                    if (rltnData == null || rltnData.Type == JTokenType.Null)
                     {
                         return default(TRltn);
                     }
 
-                    if (rltnData?.Type != JTokenType.Object)
+                    if (rltnData.Type != JTokenType.Object)
                     {
                         throw new Exception("TODO");
                     }
