@@ -15,16 +15,14 @@ namespace RedArrow.Argo.Client.Http
         private const string JsonApiHeader = "application/vnd.api+json";
 
         private IModelRegistry ModelRegistry { get; }
-        private IResourceRegistry ResourceRegistry { get; }
 
         //private ISparseFieldsetService SparseFieldsetService { get; }
         //private IIncludeResourcesService IncludeResources { get; }
         //private IRelateResources RelateResources { get; }
 
-        internal HttpRequestBuilder(IModelRegistry modelRegistry, IResourceRegistry resourceRegistry)
+        internal HttpRequestBuilder(IModelRegistry modelRegistry)
         {
             ModelRegistry = modelRegistry;
-            ResourceRegistry = resourceRegistry;
 
             //SparseFieldsetService = new SparseFieldsetService(ModelRegistry);
             //IncludeResources = new IncludeResourcesService(ModelRegistry);

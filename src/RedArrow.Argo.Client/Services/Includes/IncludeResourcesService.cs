@@ -57,12 +57,12 @@ namespace RedArrow.Argo.Client.Services.Includes
                 foreach (var hasManyConfiguration in collectionConfiguration)
                 {
                     if (!nodeMap.Select(x => x.Split('.'))
-                            .Any(x => x.Contains(hasManyConfiguration.HasManyType.Name.ToLower()))
+                            .Any(x => x.Contains(hasManyConfiguration.RelationshipType.Name.ToLower()))
                             && hasManyConfiguration.Eager)
                     {
                         ExtractIncludeType(
-                        hasManyConfiguration.HasManyType,
-                        $"{currentLevel}.{hasManyConfiguration.HasManyType.Name.ToLower()}",
+                        hasManyConfiguration.RelationshipType,
+                        $"{currentLevel}.{hasManyConfiguration.RelationshipType.Name.ToLower()}",
                         nodeMap);
                     }
                 }
@@ -76,12 +76,12 @@ namespace RedArrow.Argo.Client.Services.Includes
                 foreach (var hasOneConfiguration in singleConfiguration)
                 {
                     if (!nodeMap.Select(x => x.Split('.'))
-                            .Any(x => x.Contains(hasOneConfiguration.HasOneType.Name.ToLower()))
+                            .Any(x => x.Contains(hasOneConfiguration.RelationshipType.Name.ToLower()))
                             && hasOneConfiguration.Eager)
                     {
                         ExtractIncludeType(
-                          hasOneConfiguration.HasOneType,
-                          $"{currentLevel}.{hasOneConfiguration.HasOneType.Name.ToLower()}",
+                          hasOneConfiguration.RelationshipType,
+                          $"{currentLevel}.{hasOneConfiguration.RelationshipType.Name.ToLower()}",
                           nodeMap);
                     }
                 }

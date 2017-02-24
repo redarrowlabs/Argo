@@ -82,24 +82,26 @@ namespace RedArrow.Argo.Client.Extensions
                     attrConfig => attrConfig);
         }
 
-        internal static IDictionary<string, HasOneConfiguration> GetModelHasOneConfigurations(this Type type)
+        internal static IDictionary<string, RelationshipConfiguration> GetModelHasOneConfigurations(this Type type)
         {
             return type.GetTypeInfo()
                 .DeclaredProperties
                 .Where(prop => prop.IsDefined(typeof(HasOneAttribute)))
                 .Select(prop => new HasOneConfiguration(prop))
+				.Cast<RelationshipConfiguration>()
                 .ToDictionary(
                     has1Cfg => has1Cfg.RelationshipName,
                     has1Cfg => has1Cfg);
         }
 
-        internal static IDictionary<string, HasManyConfiguration> GetModelHasManyConfigurations(this Type type)
+        internal static IDictionary<string, RelationshipConfiguration> GetModelHasManyConfigurations(this Type type)
         {
             return type.GetTypeInfo()
                 .DeclaredProperties
                 .Where(prop => prop.IsDefined(typeof(HasManyAttribute)))
                 .Select(prop => new HasManyConfiguration(prop))
-                .ToDictionary(
+				.Cast<RelationshipConfiguration>()
+				.ToDictionary(
                     hasMCfg => hasMCfg.RelationshipName,
                     hasMCfg => hasMCfg);
         }

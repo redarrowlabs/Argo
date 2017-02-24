@@ -1,12 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace RedArrow.Argo.Client.Model
 {
     public class Resource : ResourceIdentifier
-    {
-        [JsonProperty("attributes", NullValueHandling = NullValueHandling.Ignore)]
+	{
+		private static readonly string ArgoVersion = typeof(Resource).GetTypeInfo().Assembly.GetName().Version.ToString();
+
+		[JsonProperty("attributes", NullValueHandling = NullValueHandling.Ignore)]
         public JObject Attributes { get; set; }
 
         [JsonProperty("relationships", NullValueHandling = NullValueHandling.Ignore)]
@@ -21,6 +25,19 @@ namespace RedArrow.Argo.Client.Model
         {
             return JsonConvert.DeserializeObject<Resource>(json);
         }
+
+	    internal static Resource FromType(string type)
+	    {
+		    return new Resource
+		    {
+			    Id = Guid.NewGuid(),
+			    Type = type,
+			    Meta = new Dictionary<string, JToken>
+			    {
+				    {"$ccv", JToken.FromObject(ArgoVersion)} //client created version
+			    }
+		    };
+	    }
 
         public JObject GetAttributes()
         {

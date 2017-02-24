@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
+using RedArrow.Argo.Client.Extensions;
 
 namespace RedArrow.Argo.Client.Model
 {
@@ -9,11 +10,16 @@ namespace RedArrow.Argo.Client.Model
 
         internal static ResourceRootCreate FromResource(Resource resource, IEnumerable<Resource> included)
         {
-            return new ResourceRootCreate
-            {
-                Data = ResourceCreate.FromResource(resource),
-                Included = included
-            };
+			var root = new ResourceRootCreate
+			{
+				Data = ResourceCreate.FromResource(resource)
+			};
+
+	        if (!included.IsNullOrEmpty())
+	        {
+		        root.Included = included;
+	        }
+	        return root;
         }
 
         internal static ResourceRootCreate FromObject(string type, JObject attributes, IEnumerable<Resource> included, IDictionary<string, Relationship> relationships)

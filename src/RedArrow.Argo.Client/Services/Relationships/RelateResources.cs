@@ -55,7 +55,7 @@ namespace RedArrow.Argo.Client.Services.Relationships
             {
                 Relationship relationship = new Relationship();
                 var singleConfigurations = ModelRegistry.GetHasOneConfigs(modelType)
-                    .Select(x => x.HasOneType)
+                    .Select(x => x.RelationshipType)
                     .ToList();
 
                 foreach (var resourceIdentifier in relatedResource.Value)

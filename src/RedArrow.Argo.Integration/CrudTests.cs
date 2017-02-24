@@ -100,36 +100,36 @@ namespace RedArrow.Argo.Integration
 
                 Assert.Same(patient, patientRef);
             }
-            // update!
-            using (var session = sessionFactory.CreateSession())
-            {
-                var patient = await session.Get<Patient>(crossSessionId);
+            //// update!
+            //using (var session = sessionFactory.CreateSession())
+            //{
+            //    var patient = await session.Get<Patient>(crossSessionId);
 
-                Assert.Equal(crossSessionId, patient.Id);
-                Assert.Equal(initialFirstName, patient.FirstName);
-                Assert.Equal(initialLastName, patient.LastName);
+            //    Assert.Equal(crossSessionId, patient.Id);
+            //    Assert.Equal(initialFirstName, patient.FirstName);
+            //    Assert.Equal(initialLastName, patient.LastName);
 
-                patient.LastName = updatedLastName;
+            //    patient.LastName = updatedLastName;
 
-                Assert.Equal(updatedLastName, patient.LastName);
+            //    Assert.Equal(updatedLastName, patient.LastName);
 
-                await session.Update(patient);
-                Assert.Equal(initialFirstName, patient.FirstName);
-                Assert.Equal(updatedLastName, patient.LastName);
+            //    await session.Update(patient);
+            //    Assert.Equal(initialFirstName, patient.FirstName);
+            //    Assert.Equal(updatedLastName, patient.LastName);
 
-                var patient2 = await session.Get<Patient>(crossSessionId);
+            //    var patient2 = await session.Get<Patient>(crossSessionId);
 
-                Assert.Same(patient, patient2);
-            }
-            // later that day...
-            using (var session = sessionFactory.CreateSession())
-            {
-                var patient = await session.Get<Patient>(crossSessionId);
+            //    Assert.Same(patient, patient2);
+            //}
+            //// later that day...
+            //using (var session = sessionFactory.CreateSession())
+            //{
+            //    var patient = await session.Get<Patient>(crossSessionId);
 
-                Assert.Equal(crossSessionId, patient.Id);
-                Assert.Equal(initialFirstName, patient.FirstName);
-                Assert.Equal(updatedLastName, patient.LastName);
-            }
+            //    Assert.Equal(crossSessionId, patient.Id);
+            //    Assert.Equal(initialFirstName, patient.FirstName);
+            //    Assert.Equal(updatedLastName, patient.LastName);
+            //}
             // cleanup
             using (var session = sessionFactory.CreateSession())
             {

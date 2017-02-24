@@ -59,10 +59,10 @@
     <Compile Include="Config\IRemoteConfigurator.cs" />
     <Compile Include="Config\ModelScanner.cs" />
     <Compile Include="Config\Model\AttributeConfiguration.cs" />
-    <Compile Include="Config\Model\HasManyConfiguration.cs" />
     <Compile Include="Config\Model\HasOneConfiguration.cs" />
-    <Compile Include="Config\Model\ModelConfiguration.cs" />
     <Compile Include="Config\Model\RelationshipConfiguration.cs" />
+    <Compile Include="Config\Model\ModelConfiguration.cs" />
+    <Compile Include="Config\Model\HasManyConfiguration.cs" />
     <Compile Include="Config\SessionFactoryConfiguration.cs" />
     <Compile Include="Exceptions\RelationshipNotRegisteredExecption.cs" />
     <Compile Include="Extensions\EnumerableExtensions.cs" />
@@ -111,9 +111,7 @@
     <Compile Include="Session\ISessionFactory.cs" />
     <Compile Include="Session\Patch\PatchContext.cs" />
     <Compile Include="Session\Registry\IModelRegistry.cs" />
-    <Compile Include="Session\Registry\IResourceRegistry.cs" />
     <Compile Include="Session\Registry\ModelRegistry.cs" />
-    <Compile Include="Session\Registry\ResourceRegistry.cs" />
     <Compile Include="Session\Session.cs" />
     <Compile Include="Session\SessionFactory.cs" />
   </ItemGroup>

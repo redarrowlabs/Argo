@@ -10,17 +10,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading.Tasks;
 using RedArrow.Argo.Client.Collections;
 using RedArrow.Argo.Client.Collections.Generic;
 using RedArrow.Argo.Client.Http;
 using RedArrow.Argo.Client.Logging;
+using RedArrow.Argo.Client.Model;
+using RedArrow.Argo.Model;
 
 namespace RedArrow.Argo.Client.Session
 {
     public class Session : IModelSession, ISession, ICollectionSession
     {
-        private static readonly ILog Log = LogProvider.For<Session>();
+		private static readonly ILog Log = LogProvider.For<Session>();
 
         private HttpClient HttpClient { get; }
 
@@ -29,27 +32,20 @@ namespace RedArrow.Argo.Client.Session
         internal ICacheProvider Cache { get; }
 
         internal IModelRegistry ModelRegistry { get; }
-
-        private IResourceRegistry ResourceRegistry { get; }
-
+		
         public bool Disposed { get; set; }
 
         internal Session(
             Func<HttpClient> httpClientFactory,
             IHttpRequestBuilder httpRequestBuilder,
             ICacheProvider cache,
-            IModelRegistry modelRegistry,
-            IResourceRegistry resourceRegistry)
+            IModelRegistry modelRegistry)
         {
             HttpClient = httpClientFactory();
             HttpRequestBuilder = httpRequestBuilder;
             Cache = cache;
 
             ModelRegistry = modelRegistry;
-            ResourceRegistry = resourceRegistry;
-
-            //ResourceState = new Dictionary<Guid, Resource>();
-            //PatchContexts = new Dictionary<Guid, PatchContext>();
         }
 
         public void Dispose()
@@ -70,33 +66,90 @@ namespace RedArrow.Argo.Client.Session
             return (TModel)await Create(typeof(TModel), model);
         }
 
-        private async Task<object> Create(Type modelType, object model)
+        private async Task<object> Create(Type inModelType, object inModel)
         {
             ThrowIfDisposed();
 
-            var resourceToken = ResourceRegistry.StageNewResource(modelType, model);
-            var resource = ResourceRegistry.GetResource(resourceToken);
-            var includedModels = ModelRegistry.GetIncludedModels(model);
-            var requestContext = HttpRequestBuilder.CreateResource(resource, null);
-            
-            Log.Info(() => $"creating resource {resource.Type} from model {modelType} {JsonConvert.SerializeObject(model)}");
+	        Resource rootResource = null;
+	        var includedResources = new List<Resource>();
 
-            try
-            {
-                var response = await HttpClient.SendAsync(requestContext);
-                response.EnsureSuccessStatusCode();
+	        if(inModel != null) // map model to resource
+	        {
+				// all unmanaged models in the object graph
+				var includedModels = ModelRegistry.GetIncludedModels(inModel);
 
-                var id = response.GetResourceId();
-                model = CreateModel(modelType, id);
-                Cache.Update(id, model);
-                ResourceRegistry.PromoteStagedResource(resourceToken, response.GetResourceId());
-                return model;
-            }
-            catch
-            {
-                ResourceRegistry.UnstageResource(resourceToken);
-                throw;
-            }
+		        includedModels.Each(model =>
+		        {
+			        var modelType = model.GetType();
+			        var resourceType = ModelRegistry.GetResourceType(modelType);
+			        var resource = Resource.FromType(resourceType);
+
+			        // attribute bag
+			        var modelAttributeBag = ModelRegistry.GetAttributeBag(model);
+			        if (modelAttributeBag != null)
+			        {
+				        resource.Attributes = new JObject(modelAttributeBag);
+			        }
+
+			        // attributes
+			        var modelAttributes = ModelRegistry.GetAttributeValues(model);
+			        if (modelAttributes != null)
+			        {
+				        if (resource.Attributes == null)
+				        {
+					        resource.Attributes = modelAttributes;
+				        }
+				        else
+				        {
+					        resource.Attributes.Merge(modelAttributes, new JsonMergeSettings
+					        {
+						        MergeNullValueHandling = MergeNullValueHandling.Ignore,
+						        MergeArrayHandling = MergeArrayHandling.Replace
+					        });
+				        }
+			        }
+
+			        // relationships
+			        resource.Relationships = ModelRegistry.GetRelationshipValues(model);
+
+			        if (model == inModel)
+			        {
+				        rootResource = resource;
+			        }
+			        else
+			        {
+				        includedResources.Add(resource);
+			        }
+		        });
+	        }
+	        else
+	        {
+				rootResource = Resource.FromType(ModelRegistry.GetResourceType(inModelType));
+			}
+			
+			var request = HttpRequestBuilder.CreateResource(rootResource, includedResources);
+
+			if (Log.IsDebugEnabled())
+			{
+				Log.Debug(() => $"preparing to create {rootResource.Type} resource with id {{{rootResource.Id}}}");
+				foreach (var include in includedResources)
+				{
+					Log.Debug(() => $"preparing to create included {include.Type} resource with id {{{include.Id}}}");
+				}
+			}
+
+			var response = await HttpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+	        includedResources.Each(x =>
+	        {
+		        var model = CreateModel(ModelRegistry.GetModelType(x.Type), x);
+		        Cache.Update(x.Id, model);
+	        });
+
+	        inModel = CreateModel(inModelType, rootResource);
+            Cache.Update(rootResource.Id, inModel);
+            return inModel;
         }
 
         public async Task<TModel> Get<TModel>(Guid id)
@@ -224,15 +277,14 @@ namespace RedArrow.Argo.Client.Session
         public async Task Delete<TModel>(Guid id)
             where TModel : class
         {
-            //ThrowIfDisposed();
+            ThrowIfDisposed();
 
-            //var resourceType = ModelRegistry.GetResourceType<TModel>();
-            //var response = await HttpClient.DeleteAsync($"{resourceType}/{id}");
-            //response.EnsureSuccessStatusCode();
+            var resourceType = ModelRegistry.GetResourceType<TModel>();
+            var response = await HttpClient.DeleteAsync($"{resourceType}/{id}");
+            response.EnsureSuccessStatusCode();
 
-            //Cache.Remove(id);
-            //ResourceState.Remove(id);
-            //PatchContexts.Remove(id);
+            Cache.Remove(id);
+			// TODO update model to indicate it is no longer managed
         }
 
         public TAttr GetAttribute<TModel, TAttr>(Guid id, string attrName)
@@ -455,18 +507,13 @@ namespace RedArrow.Argo.Client.Session
                 Owner = owner
             };
         }
-
-        private TModel CreateModel<TModel>(Guid id)
+		
+        private object CreateModel(Type type, IResourceIdentifier resource)
         {
-            return (TModel)CreateModel(typeof(TModel), id);
+            Log.Debug(() => $"initializing new session-managed instance of {type} with id {resource.Id}");
+            return Activator.CreateInstance(type, resource.Id, resource, this);
         }
-
-        private object CreateModel(Type type, Guid id)
-        {
-            Log.Debug(() => $"instantiating new session-managed instance of {type} with id {id}");
-            return Activator.CreateInstance(type, id, this);
-        }
-
+		
         // wrap this in a PatchContext
         private PatchContext GetPatchContext<TModel>(Guid id)
         {

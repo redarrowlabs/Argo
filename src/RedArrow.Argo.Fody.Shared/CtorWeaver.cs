@@ -12,10 +12,11 @@ namespace RedArrow.Argo
     {
         private void AddCtor(ModelWeavingContext context)
         {
-            // Ctor(Guid id, IModelSession session)
+            // Ctor(Guid id, IResourceIdentifier resource, IModelSession session)
             // {
             //   Id = id;
-            //   _argo_generated_session = session;
+			//   __argo__generated_Resource = resource;
+            //   __argo__generated_session = session;
             //  }
             var ctor = new MethodDefinition(
                 ".ctor",
@@ -27,6 +28,11 @@ namespace RedArrow.Argo
                     "id",
                     ParameterAttributes.None,
                     context.ImportReference(typeof(Guid))));
+	        ctor.Parameters.Add(
+				new ParameterDefinition(
+					"resource",
+					ParameterAttributes.None,
+					context.ImportReference(_resourceIdentifierTypeDef)));
             ctor.Parameters.Add(
                 new ParameterDefinition(
                     "session",
@@ -37,18 +43,25 @@ namespace RedArrow.Argo
 
             var proc = ctor.Body.GetILProcessor();
 
-            // public Patient(Guid id, IModelSession session)
+            // public Patient(Guid id, IResourceIdentifier resource, IModelSession session)
             // {
             //   this.Id = id;
-            //   this._argo_generated_session = session;
+			//   this.__argo__generated_Resource = resource;
+            //   this.__argo__generated_session = session;
             // }
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
             proc.Emit(OpCodes.Call, objectCtor); // call base ctor on 'this'
-            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-            proc.Emit(OpCodes.Ldarg_1); // load 'id' onto stack
+
+			proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+            proc.Emit(OpCodes.Ldarg_1); // load arg 'id' onto stack
             proc.Emit(OpCodes.Callvirt, context.IdPropDef.SetMethod); // this.Id = id;
-            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-            proc.Emit(OpCodes.Ldarg_2); // load 'session' onto stack
+
+			proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+			proc.Emit(OpCodes.Ldarg_2); // load arg 'resource' onto stack
+			proc.Emit(OpCodes.Callvirt, context.ResourcePropDef.SetMethod);
+
+			proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+            proc.Emit(OpCodes.Ldarg_3); // load arg 'session' onto stack
             proc.Emit(OpCodes.Stfld, context.SessionField); // this.__argo__generated_session = session;
 
             // this._attrBackingField = this.__argo__generated_session.GetAttribute

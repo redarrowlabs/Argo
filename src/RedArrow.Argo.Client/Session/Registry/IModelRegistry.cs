@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using RedArrow.Argo.Client.Config.Model;
+using RedArrow.Argo.Client.Model;
 
 namespace RedArrow.Argo.Client.Session.Registry
 {
@@ -13,6 +14,10 @@ namespace RedArrow.Argo.Client.Session.Registry
 
         Type GetModelType(string resourceType);
 
+	    Resource GetResource(object model);
+
+	    bool IsManagedModel(object model);
+	    bool IsUnmanagedModel(object model);
 
         Guid GetId(object model);
 
@@ -24,22 +29,23 @@ namespace RedArrow.Argo.Client.Session.Registry
         IEnumerable<AttributeConfiguration> GetAttributeConfigs(Type modelType);
 
         JObject GetAttributeValues(object model);
+	    IDictionary<string, Relationship> GetRelationshipValues(object model);
 
-        IEnumerable<HasOneConfiguration> GetHasOneConfigs(Type modelType);
+	    IEnumerable<RelationshipConfiguration> GetHasOneConfigs(Type modelType);
 
-        IEnumerable<HasManyConfiguration> GetHasManyConfigs<TModel>();
+        IEnumerable<RelationshipConfiguration> GetHasManyConfigs<TModel>();
 
-        IEnumerable<HasManyConfiguration> GetHasManyConfigs(Type modelType);
+        IEnumerable<RelationshipConfiguration> GetHasManyConfigs(Type modelType);
 
-        HasManyConfiguration GetHasManyConfig<TModel>(string rltnName);
+        RelationshipConfiguration GetHasManyConfig<TModel>(string rltnName);
 
-        HasManyConfiguration GetHasManyConfig(Type modelType, string rltnName);
+        RelationshipConfiguration GetHasManyConfig(Type modelType, string rltnName);
 
 
         JObject GetAttributeBag(object model);
 
         void SetAttributeBag(object model, JObject attributes);
 
-        IEnumerable<object> GetIncludedModels(object model);
+        object[] GetIncludedModels(object model);
     }
 }

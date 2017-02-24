@@ -8,7 +8,7 @@ namespace RedArrow.Argo
     {
         private void AddResourceIdentifierProperty(ModelWeavingContext context)
         {
-            context.ResourceProperty = AddAutoProperty("__argo__generated_Resource", context);
+            context.ResourcePropDef = AddAutoProperty("__argo__generated_Resource", context);
         }
 
         private void AddPatchProperty(ModelWeavingContext context)

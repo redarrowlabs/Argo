@@ -74,13 +74,13 @@ namespace RedArrow.Argo.Client.Services.SparseFieldsets
                 foreach (var hasManyConfiguration in collectionConfiguration)
                 {
                     if (!nodeMap.Select(x => x.Split('.'))
-                            .Any(x => x.Contains(hasManyConfiguration.HasManyType.Name.ToLower()))
+                            .Any(x => x.Contains(hasManyConfiguration.RelationshipType.Name.ToLower()))
                         && hasManyConfiguration.Eager)
                     {
                         ExtractFieldsetsType(
-                            hasManyConfiguration.HasManyType,
+                            hasManyConfiguration.RelationshipType,
                             hasManyConfiguration.RelationshipName,
-                            $"{currentLevel}.{hasManyConfiguration.HasManyType.Name.ToLower()}",
+                            $"{currentLevel}.{hasManyConfiguration.RelationshipType.Name.ToLower()}",
                             nodeMap,
                             fieldsetMap);
                     }
@@ -95,13 +95,13 @@ namespace RedArrow.Argo.Client.Services.SparseFieldsets
                 foreach (var hasOneConfiguration in singleConfiguration)
                 {
                     if (!nodeMap.Select(x => x.Split('.'))
-                            .Any(x => x.Contains(hasOneConfiguration.HasOneType.Name.ToLower()))
+                            .Any(x => x.Contains(hasOneConfiguration.RelationshipType.Name.ToLower()))
                         && hasOneConfiguration.Eager)
                     {
                         ExtractFieldsetsType(
-                            hasOneConfiguration.HasOneType,
+                            hasOneConfiguration.RelationshipType,
                             hasOneConfiguration.RelationshipName,
-                            $"{currentLevel}.{hasOneConfiguration.HasOneType.Name.ToLower()}",
+                            $"{currentLevel}.{hasOneConfiguration.RelationshipType.Name.ToLower()}",
                             nodeMap,
                             fieldsetMap);
                     }
