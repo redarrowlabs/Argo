@@ -40,20 +40,28 @@ namespace RedArrow.Argo.Client.Extensions
                 .FirstOrDefault() ?? type.Name.Camelize();
         }
 
+        internal static PropertyInfo GetSessionManagedProperty(this Type type)
+        {
+            return type.GetTypeInfo()
+                .DeclaredProperties
+                .Where(prop => prop.PropertyType == typeof(bool))
+                .Single(prop => prop.Name == "__argo__generated_SessionManaged");
+        }
+
         internal static PropertyInfo GetModelResourceProperty(this Type type)
         {
             return type.GetTypeInfo()
                 .DeclaredProperties
-                .Where(prop => prop.Name == "__argo__generated_Resource")
-                .Single(prop => prop.PropertyType == typeof(IResourceIdentifier));
+                .Where(prop => prop.PropertyType == typeof(IResourceIdentifier))
+                .Single(prop => prop.Name == "__argo__generated_Resource");
         }
 
         internal static PropertyInfo GetModelPatchProperty(this Type type)
         {
             return type.GetTypeInfo()
                 .DeclaredProperties
-                .Where(prop => prop.Name == "__argo__generated_Patch")
-                .Single(prop => prop.PropertyType == typeof(IResourceIdentifier));
+                .Where(prop => prop.PropertyType == typeof(IResourceIdentifier))
+                .Single(prop => prop.Name == "__argo__generated_Patch");
         }
 
         internal static PropertyInfo GetModelIdProperty(this Type type)

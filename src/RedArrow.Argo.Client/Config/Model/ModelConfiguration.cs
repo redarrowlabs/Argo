@@ -10,6 +10,7 @@ namespace RedArrow.Argo.Client.Config.Model
         public Type ModelType { get; }
         public string ResourceType { get; }
 
+        public PropertyInfo SessionManagedProperty { get; set; }
         public PropertyInfo ResourceProperty { get; }
         public PropertyInfo PatchProperty { get; }
 
@@ -31,6 +32,7 @@ namespace RedArrow.Argo.Client.Config.Model
             ModelType = modelType;
             ResourceType = modelType.GetModelResourceType();
 
+            SessionManagedProperty = modelType.GetSessionManagedProperty();
             ResourceProperty = modelType.GetModelResourceProperty();
             PatchProperty = modelType.GetModelPatchProperty();
 

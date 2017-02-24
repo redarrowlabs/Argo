@@ -77,7 +77,7 @@ namespace RedArrow.Argo
 
         private void AddSessionManagedProperty(ModelWeavingContext context)
         {
-            var propertyName = "SessionManaged";
+            var propertyName = "__argo__generated_SessionManaged";
 
             var getter = new MethodDefinition(
                 $"get_{propertyName}",
