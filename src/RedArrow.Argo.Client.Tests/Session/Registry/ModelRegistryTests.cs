@@ -3,7 +3,7 @@ using System.Linq;
 using Ploeh.AutoFixture.Xunit2;
 using RedArrow.Argo.Client.Config.Model;
 using RedArrow.Argo.Client.Session.Registry;
-using RedArrow.Argo.Client.Tests.Session.Registry.Models;
+using RedArrow.Argo.Client.Tests.Session.Models;
 using WovenByFody;
 using Xunit;
 

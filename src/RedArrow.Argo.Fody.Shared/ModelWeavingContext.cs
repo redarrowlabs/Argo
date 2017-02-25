@@ -41,6 +41,7 @@ namespace RedArrow.Argo
         public FieldDefinition SessionField { get; set; }
         public PropertyDefinition ResourcePropDef { get; set; }
         public PropertyDefinition PatchProperty { get; set; }
+	    public PropertyDefinition SessionManagedProperty { get; set; }
 
         public ModelWeavingContext(
             TypeDefinition modelTypeDef,

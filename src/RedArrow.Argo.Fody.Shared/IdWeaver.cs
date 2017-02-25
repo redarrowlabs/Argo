@@ -7,7 +7,7 @@ namespace RedArrow.Argo
 {
     public partial class ModuleWeaver
     {
-        private void VerifyId(ModelWeavingContext context)
+        private void WeaveId(ModelWeavingContext context)
         {
             if (context.IdPropDef != null &&
                 context.IdPropDef.GetMethod?.ReturnType.Resolve() != context.ImportReference(typeof(Guid)).Resolve())
@@ -16,11 +16,11 @@ namespace RedArrow.Argo
             }
 
             // if id property doesn't have a setter, try to add one
-            if (context.IdPropDef != null && context.IdPropDef.SetMethod == null)
+            if (context.IdPropDef != null)
             {
-                LogInfo($"{context.IdPropDef.FullName} has no setter.  Attempting to resolve...");
+                LogInfo($"upserting {context.IdPropDef.FullName} [Id] property setter");
 
-                var getterBackingField = context
+                var idBackingField = context
                     .IdPropDef
                     ?.GetMethod
                     ?.Body
@@ -28,29 +28,40 @@ namespace RedArrow.Argo
                     ?.SingleOrDefault(x => x.OpCode == OpCodes.Ldfld)
                     ?.Operand as FieldReference;
 
-                if (getterBackingField != null)
+                if (idBackingField != null)
                 {
-                    var setter = new MethodDefinition(
-                        $"set_{context.IdPropDef.Name}",
-                        MethodAttributes.Private | MethodAttributes.SpecialName | MethodAttributes.HideBySig,
-                        context.ImportReference(TypeSystem.Void));
+	                var setter = context.IdPropDef.SetMethod;
+	                if (setter == null)
+	                {
+		                setter = new MethodDefinition(
+			                $"set_{context.IdPropDef.Name}",
+			                MethodAttributes.Private | MethodAttributes.SpecialName | MethodAttributes.HideBySig,
+			                context.ImportReference(TypeSystem.Void));
+		                setter.Parameters.Add(
+			                new ParameterDefinition(
+				                "value",
+				                ParameterAttributes.None,
+				                context.IdPropDef.PropertyType));
+		                setter.SemanticsAttributes = MethodSemanticsAttributes.Setter;
+						context.Methods.Add(setter);
+						context.IdPropDef.SetMethod = setter;
+					}
+	                else
+	                {
+		                setter.Body.Instructions.Clear();
+	                }
+	                var proc = setter.Body.GetILProcessor();
 
-                    setter.Parameters.Add(
-                        new ParameterDefinition(
-                            "value",
-                            ParameterAttributes.None,
-                            context.IdPropDef.PropertyType));
-                    setter.SemanticsAttributes = MethodSemanticsAttributes.Setter;
+	                var ret = proc.Create(OpCodes.Ret);
 
-                    var proc = setter.Body.GetILProcessor();
-                    proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+					proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+					proc.Emit(OpCodes.Callvirt, context.SessionManagedProperty.GetMethod);
+					proc.Emit(OpCodes.Brtrue_S, ret);
+
+					proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
                     proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
-                    proc.Emit(OpCodes.Stfld, getterBackingField); // this.backingField = value;
-                    proc.Emit(OpCodes.Ret); // return
-
-                    context.Methods.Add(setter);
-
-                    context.IdPropDef.SetMethod = setter;
+                    proc.Emit(OpCodes.Stfld, idBackingField); // this.backingField = value;
+                    proc.Append(ret); // return
                 }
                 else
                 {

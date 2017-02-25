@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)AttributeWeaver.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IntroPrinter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ModelFieldWeaver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Constants.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CtorWeaver.cs" />

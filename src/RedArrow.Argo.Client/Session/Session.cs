@@ -5,12 +5,14 @@ using RedArrow.Argo.Client.Session.Registry;
 using RedArrow.Argo.Session;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using RedArrow.Argo.Client.Collections;
 using RedArrow.Argo.Client.Collections.Generic;
+using RedArrow.Argo.Client.Exceptions;
 using RedArrow.Argo.Client.Http;
 using RedArrow.Argo.Client.Logging;
 using RedArrow.Argo.Client.Model;
@@ -66,108 +68,114 @@ namespace RedArrow.Argo.Client.Session
         private async Task<object> Create(Type rootModelType, object rootModel)
         {
             ThrowIfDisposed();
+			
+			// set Id if unset
+	        var rootModelId = rootModel == null
+				? Guid.NewGuid()
+				: ModelRegistry.GetId(rootModel);
+	        if (rootModelId == Guid.Empty)
+	        {
+				rootModelId = Guid.NewGuid();
+				ModelRegistry.SetId(rootModel, rootModelId);
+	        }
 
-            Resource rootResource = null;
-            var includedResources = new List<Resource>();
+	        IDictionary<Guid, Resource> resourceIndex;
 
             if (rootModel != null) // map model to resource
             {
-                ModelRegistry.SetId(rootModel, Guid.NewGuid());
+				// all unmanaged models in the object graph, including root
+				resourceIndex = ModelRegistry.GetIncludedModels(rootModel)
+		            .Select(model =>
+		            {
+			            var modelType = model.GetType();
+			            var resourceType = ModelRegistry.GetResourceType(modelType);
 
-                // all unmanaged models in the object graph
-                var includedModels = ModelRegistry.GetIncludedModels(rootModel);
+			            JObject attrs = null;
+			            IDictionary<string, Relationship> rltns = null;
 
-                foreach (var model in includedModels)
-                {
-                    var modelType = model.GetType();
-                    var resourceType = ModelRegistry.GetResourceType(modelType);
+			            // attribute bag
+			            var modelAttributeBag = ModelRegistry.GetAttributeBag(model);
+			            if (modelAttributeBag != null)
+			            {
+				            attrs = modelAttributeBag;
+			            }
 
-                    JObject attrs = null;
-                    IDictionary<string, Relationship> rltns = null;
+			            // attributes
+			            var modelAttributes = ModelRegistry.GetAttributeValues(model);
+			            if (modelAttributes != null)
+			            {
+				            if (attrs == null)
+				            {
+					            attrs = modelAttributes;
+				            }
+				            else // occurs when we already set from AttrBag
+				            {
+								// mapped attrs override anything also in the AttrBag
+					            attrs.Merge(modelAttributes, new JsonMergeSettings
+					            {
+						            MergeNullValueHandling = MergeNullValueHandling.Ignore,
+						            MergeArrayHandling = MergeArrayHandling.Replace
+					            });
+				            }
+			            }
 
-                    // attribute bag
-                    var modelAttributeBag = ModelRegistry.GetAttributeBag(model);
-                    if (modelAttributeBag != null)
-                    {
-                        attrs = new JObject(modelAttributeBag);
-                    }
+			            // relationships
+			            // Note: this process sets unset model Ids in order to create relationships
+			            var relationships = ModelRegistry.GetRelationshipValues(model);
+			            if (!relationships.IsNullOrEmpty())
+			            {
+				            rltns = relationships;
+			            }
 
-                    // attributes
-                    var modelAttributes = ModelRegistry.GetAttributeValues(model);
-                    if (modelAttributes != null)
-                    {
-                        if (attrs == null)
-                        {
-                            attrs = modelAttributes;
-                        }
-                        else
-                        {
-                            attrs.Merge(modelAttributes, new JsonMergeSettings
-                            {
-                                MergeNullValueHandling = MergeNullValueHandling.Ignore,
-                                MergeArrayHandling = MergeArrayHandling.Replace
-                            });
-                        }
-                    }
-
-                    // relationships
-                    // Note: this process sets unset Ids in order to establish relationship links
-                    var relationships = ModelRegistry.GetRelationshipValues(model);
-                    if (!relationships.IsNullOrEmpty())
-                    {
-                        rltns = relationships;
-                    }
-
-                    var resource = new Resource
-                    {
-                        Id = ModelRegistry.GetId(model),
-                        Type = resourceType,
-                        Attributes = attrs,
-                        Relationships = rltns
-                    };
-
-                    if (model == rootModel)
-                    {
-                        rootResource = resource;
-                    }
-                    else
-                    {
-                        includedResources.Add(resource);
-                    }
-                }
+			            return new Resource
+			            {
+				            Id = ModelRegistry.GetId(model),
+				            Type = resourceType,
+				            Attributes = attrs,
+				            Relationships = rltns
+			            };
+		            })
+					.ToDictionary(x => x.Id);
             }
-            else
+            else // model is null - all we know is resource type
             {
-                rootResource = new Resource
-                {
-                    Id = Guid.NewGuid(),
-                    Type = ModelRegistry.GetResourceType(rootModelType)
-                };
+	            resourceIndex = new Dictionary<Guid, Resource>
+	            {
+		            {
+			            rootModelId, new Resource
+			            {
+				            Id = rootModelId,
+				            Type = ModelRegistry.GetResourceType(rootModelType)
+			            }
+		            }
+	            };
             }
 
-            var request = HttpRequestBuilder.CreateResource(rootResource, includedResources);
+	        var rootResource = resourceIndex[rootModelId];
+	        var includes = resourceIndex.Values.Where(x => x.Id != rootModelId).ToArray();
+
+            var request = HttpRequestBuilder.CreateResource(rootResource, includes);
 
             if (Log.IsDebugEnabled())
             {
-                Log.Debug(() => $"preparing to create {rootResource.Type} resource with id {{{rootResource.Id}}}");
-                foreach (var include in includedResources)
+                Log.Debug(() => $"preparing to POST {rootResource.Type}:{{{rootResource.Id}}}");
+                foreach (var include in includes)
                 {
-                    Log.Debug(() => $"preparing to create included {include.Type} resource with id {{{include.Id}}}");
+                    Log.Debug(() => $"preparing to POST included {include.Type}:{{{include.Id}}}");
                 }
             }
 
             var response = await HttpClient.SendAsync(request);
+			//TODO: callback to inspect copy of response
             response.EnsureSuccessStatusCode();
 
-            includedResources.Each(x =>
-            {
+			// create and cache models
+            await Task.WhenAll(resourceIndex.Values.Select(x => Task.Run(() => 
+			{
                 var model = CreateModel(ModelRegistry.GetModelType(x.Type), x);
                 Cache.Update(x.Id, model);
-            });
-
-            rootModel = CreateModel(rootModelType, rootResource);
-            Cache.Update(rootResource.Id, rootModel);
-            return rootModel;
+            })));
+	        return Cache.Retrieve(rootModelId);
         }
 
         public async Task<TModel> Get<TModel>(Guid id)
@@ -292,86 +300,55 @@ namespace RedArrow.Argo.Client.Session
             where TRltn : class
         {
             ThrowIfDisposed();
-
-            //TODO: check patch context for delta rltn
-
-            //Resource resource;
-            //if (ResourceState.TryGetValue(id, out resource))
-            //{
-            //    Relationship relationship;
-            //    if (resource?.Relationships != null && resource.Relationships.TryGetValue(rltnName, out relationship))
-            //    {
-            //        var rltnData = relationship.Data;
-
-            //        if (rltnData?.Type == JTokenType.Null)
-            //        {
-            //            return default(TRltn);
-            //        }
-
-            //        if (rltnData?.Type != JTokenType.Object)
-            //        {
-            //            throw new Exception("TODO");
-            //        }
-
-            //        var rltnId = rltnData.ToObject<ResourceIdentifier>();
-
-            //        return Task.Run(async () =>
-            //        {
-            //            try
-            //            {
-            //                return await Get<TRltn>(rltnId.Id);
-            //            }
-            //            catch (Exception ex)
-            //            {
-            //                Log.FatalException("an unexpected error occurred while retrieving a relationship", ex);
-            //                throw;
-            //            }
-            //        }).Result;
-            //    }
-
-            //    return default(TRltn);
-            //}
-
-            //throw new Exception("TODO");
-            return default(TRltn);
+			
+			// check patch first, fall back on resource if rltnName not found
+	        Relationship rltn;
+			var relationships = ModelRegistry.GetPatch(model)?.Relationships;
+	        if (relationships == null || !relationships.TryGetValue(rltnName, out rltn))
+	        {
+		        relationships = ModelRegistry.GetResource(model).Relationships;
+		        if (relationships == null || !relationships.TryGetValue(rltnName, out rltn))
+		        {
+					// the rltnName was not found in the patch or resource
+			        return default(TRltn); // TODO: return GetRelated<TModel>(modelId, rltnName);
+		        }
+	        }
+			// if we make it to here, 'rltn' has been set
+	        var rltnData = rltn.Data;
+	        if (rltnData?.Type != JTokenType.Object)
+	        {
+				//TODO: what if type is array? throw execption? log warning? get first element?
+		        return default(TRltn);
+	        }
+	        var rltnIdentifier = rltnData.ToObject<ResourceIdentifier>();
+			// calling Get<> here will check the cache first, then go remote if necessary
+	        return Task.Run(async () => await Get<TRltn>(rltnIdentifier.Id)).Result;
         }
 
         public void SetReference<TModel, TRltn>(TModel model, string rltnName, TRltn rltn)
             where TModel : class
             where TRltn : class
         {
-            //ThrowIfDisposed();
+            ThrowIfDisposed();
 
-            //var context = GetPatchContext<TModel>(id);
-
-            //if (rltn == null)
-            //{
-            //    context.SetRelated(rltnName, null, false);
-            //    return;
-            //}
-
-            //var rltnId = ModelRegistry.GetId(rltn);
-            //var rltnType = ModelRegistry.GetResourceType<TRltn>();
-
-            //var transient = rltnId == Guid.Empty;
-            //if (transient)
-            //{
-            //    rltnId = context.GetRelated(rltnName) ?? Guid.NewGuid();
-            //}
-
-            //// TODO: refactor these two steps to work together, not separately
-            //context.SetRelated(
-            //    rltnName,
-            //    new ResourceIdentifier { Id = rltnId, Type = rltnType },
-            //    transient);
-            //var resource = ResourceState[id];
-            //resource.Relationships[rltnName] = new Relationship
-            //{
-            //    Data = JObject.FromObject(new ResourceIdentifier { Id = rltnId, Type = rltnType })
-            //};
-            //// =====
-
-            //Cache.Update(rltnId, rltn);
+	        var patch = ModelRegistry.GetOrCreatePatch(model);
+	        var relationship = new Relationship();
+	        if (rltn != null)
+	        {
+		        var rltnType = ModelRegistry.GetResourceType<TRltn>();
+		        var rltnId = ModelRegistry.GetId(rltn);
+		        if (rltnId == Guid.Empty)
+		        {
+			        rltnId = Guid.NewGuid();
+					ModelRegistry.SetId(rltn, rltnId);
+		        }
+		        relationship.Data = JObject.FromObject(new ResourceIdentifier {Id = rltnId, Type = rltnType});
+	        }
+	        else
+	        {
+		        relationship.Data = JValue.CreateNull();
+	        }
+	        patch.GetRelationships()[rltnName] = relationship;
         }
 
         public void InitializeCollection(IRemoteCollection collection)
@@ -483,7 +460,7 @@ namespace RedArrow.Argo.Client.Session
 
         private object CreateModel(Type type, IResourceIdentifier resource)
         {
-            Log.Debug(() => $"initializing new session-managed instance of {type} with id {resource.Id}");
+            Log.Debug(() => $"activating new session-managed instance of {type}:{{{resource.Id}}}");
             return Activator.CreateInstance(type, resource, this);
         }
 

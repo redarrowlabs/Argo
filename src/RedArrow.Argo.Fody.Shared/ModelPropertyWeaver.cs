@@ -119,7 +119,7 @@ namespace RedArrow.Argo
             proc.Append(loadRet);
             proc.Emit(OpCodes.Ret);
 
-            var propDef = new PropertyDefinition(
+            context.SessionManagedProperty = new PropertyDefinition(
                 propertyName,
                 PropertyAttributes.None,
                 context.ImportReference(typeof(bool)))
@@ -128,7 +128,7 @@ namespace RedArrow.Argo
             };
             
             context.Methods.Add(getter);
-            context.Properties.Add(propDef);
+            context.Properties.Add(context.SessionManagedProperty);
         }
     }
 }

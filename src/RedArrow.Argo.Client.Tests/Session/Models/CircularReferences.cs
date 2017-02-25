@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using RedArrow.Argo.Attributes;
 
-namespace RedArrow.Argo.Client.Tests.Session.Registry.Models
+namespace RedArrow.Argo.Client.Tests.Session.Models
 {
     [Model]
     public class CircularReferenceA
     {
         [Id]
-        public Guid Id { get; }
+        public Guid Id { get; set; }
 
         [HasOne]
         public CircularReferenceB B { get; set; }

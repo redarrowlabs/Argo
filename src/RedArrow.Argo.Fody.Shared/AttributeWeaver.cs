@@ -63,7 +63,7 @@ namespace RedArrow.Argo
             // {
             //     if (this.__argo__generated_session != null && this.<[PropName]>k__BackingField != value)
             //     {
-            //         this.__argo__generated_session.SetRelationship<[ModelType], [ReturnType]>(this.Id, "[AttrName]", value);
+            //         this.__argo__generated_session.SetRelationship<[ModelType], [ReturnType]>(this, "[AttrName]", value);
             //     }
             //     this.<[PropName]>k__BackingField = value;
             // }

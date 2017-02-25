@@ -69,7 +69,7 @@ namespace RedArrow.Argo.Client.Session.Registry
             GetModelConfig(modelType).PatchProperty.SetValue(model, resource);
         }
 
-        private Resource GetOrCreatePatch(object model)
+        public Resource GetOrCreatePatch(object model)
         {
             var patch = GetPatch(model);
             if (patch == null)
@@ -146,12 +146,15 @@ namespace RedArrow.Argo.Client.Session.Registry
         public JObject GetAttributeValues(object model)
         {
             if (model == null) return null;
-            return JObject.FromObject(GetAttributeConfigs(model.GetType())
-                .Select(x => new KeyValuePair<string, object>(x.AttributeName, x.Property.GetValue(model)))
-                .Where(kvp => kvp.Value != null)
-                .ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value));
+	        var attrValues = GetAttributeConfigs(model.GetType())
+		        .Select(x => new KeyValuePair<string, object>(x.AttributeName, x.Property.GetValue(model)))
+		        .Where(kvp => kvp.Value != null)
+		        .ToDictionary(
+			        kvp => kvp.Key,
+			        kvp => kvp.Value);
+	        return attrValues.Any()
+		        ? JObject.FromObject(attrValues)
+		        : null;
         }
 
         public IEnumerable<RelationshipConfiguration> GetHasOneConfigs<TModel>()
@@ -264,10 +267,10 @@ namespace RedArrow.Argo.Client.Session.Registry
 			    var related = hasOne.PropertyInfo.GetValue(model);
 			    if (related == null) continue;
 			    var id = GetId(related);
-			    if (id == Guid.NewGuid())
+			    if (id == Guid.Empty)
 			    {
 				    id = Guid.NewGuid();
-					SetId(model, id);
+					SetId(related, id);
 			    }
 			    ret[hasOne.RelationshipName] = new Relationship
 			    {
@@ -286,10 +289,10 @@ namespace RedArrow.Argo.Client.Session.Registry
 			    foreach (var related in collection)
 			    {
 					var id = GetId(related);
-					if (id == Guid.NewGuid())
+					if (id == Guid.Empty)
 					{
 						id = Guid.NewGuid();
-						SetId(model, id);
+						SetId(related, id);
 					}
 					ret[hasMany.RelationshipName] = new Relationship
 					{

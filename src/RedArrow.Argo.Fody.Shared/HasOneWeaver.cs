@@ -66,7 +66,7 @@ namespace RedArrow.Argo
 			// {
 			//   if (this.__argo__generated_session != null)
 			//   {
-			//     this.<[PropName]>k__BackingField = this.__argo__generated_session.GetReference<[ModelType], [ReturnType]>(this.Id, "[AttrName]");
+			//     this.<[PropName]>k__BackingField = this.__argo__generated_session.GetReference<[ModelType], [ReturnType]>(this, "[AttrName]");
 			//   }
 			//   return this.<[PropName]>k__BackingField;
 			// }
@@ -114,7 +114,7 @@ namespace RedArrow.Argo
 			//     this.<[PropName]>k__BackingField = value;
 			//     if (this.__argo__generated_session != null)
 			//     {
-			//         this.__argo__generated_session.SetReference<[ModelType], [ReturnType]>(this.Id, "[AttrName]", this.<[PropName]>k__BackingField);
+			//         this.__argo__generated_session.SetReference<[ModelType], [ReturnType]>(this, "[AttrName]", this.<[PropName]>k__BackingField);
 			//     }
 			// }
 			var proc = refPropDef.SetMethod.Body.GetILProcessor();

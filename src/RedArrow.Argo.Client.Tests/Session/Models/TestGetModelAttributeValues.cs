@@ -1,7 +1,7 @@
 ﻿using System;
 using RedArrow.Argo.Attributes;
 
-namespace RedArrow.Argo.Client.Tests.Session.Registry.Models
+namespace RedArrow.Argo.Client.Tests.Session.Models
 {
     [Model]
     public class TestGetModelAttributeValues

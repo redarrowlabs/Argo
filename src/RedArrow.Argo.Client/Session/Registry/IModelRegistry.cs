@@ -15,8 +15,9 @@ namespace RedArrow.Argo.Client.Session.Registry
 
 	    Resource GetResource(object model);
         Resource GetPatch(object model);
+	    Resource GetOrCreatePatch(object model);
 
-        bool IsManagedModel(object model);
+		bool IsManagedModel(object model);
 	    bool IsUnmanagedModel(object model);
 
         Guid GetId(object model);

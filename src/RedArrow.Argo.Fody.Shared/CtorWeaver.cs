@@ -35,17 +35,24 @@ namespace RedArrow.Argo
                     context.ImportReference(_sessionTypeDef)));
 
             var objectCtor = context.ImportReference(TypeSystem.Object.Resolve().GetConstructors().First());
-            
-            // supply generic type arguments to template
-            var sessionGetId = _session_GetId.MakeGenericMethod(context.ModelTypeRef);
+
+			var idBackingField = context
+				.IdPropDef
+				?.GetMethod
+				?.Body
+				?.Instructions
+				?.SingleOrDefault(x => x.OpCode == OpCodes.Ldfld)
+				?.Operand as FieldReference;
+			// supply generic type arguments to template
+			var sessionGetId = _session_GetId.MakeGenericMethod(context.ModelTypeRef);
 
             var proc = ctor.Body.GetILProcessor();
 
-            // public Patient(Guid id, IResourceIdentifier resource, IModelSession session)
+            // public Patient(IResourceIdentifier resource, IModelSession session)
             // {
-            //   this.Id = id;
             //   this.__argo__generated_Resource = resource;
             //   this.__argo__generated_session = session;
+			//   this.Id = __argo__generated_session.GetId<TModel>();
             // }
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
             proc.Emit(OpCodes.Call, objectCtor); // call base ctor on 'this'
@@ -63,7 +70,7 @@ namespace RedArrow.Argo
             proc.Emit(OpCodes.Ldfld, context.SessionField); // load this.__argo__generated_session
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
             proc.Emit(OpCodes.Callvirt, context.ImportReference(sessionGetId));
-            proc.Emit(OpCodes.Call, context.IdPropDef.SetMethod); // this.Id = this.__argo__generated_session.GetId<TModel>();
+            proc.Emit(OpCodes.Stfld, idBackingField); // this.<Id>K_backingField = this.__argo__generated_session.GetId<TModel>();
 
             // this._attrBackingField = this.__argo__generated_session.GetAttribute
             WeaveAttributeFieldInitializers(context, proc, context.MappedAttributes);
