@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using RedArrow.Argo.Attributes;
 
-namespace RedArrow.Argo.Client.Tests.Session.Registry
+namespace RedArrow.Argo.Client.Tests.Session.Registry.Models
 {
     [Model]
     public class CircularReferenceA

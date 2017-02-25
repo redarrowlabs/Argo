@@ -24,11 +24,6 @@ namespace RedArrow.Argo
                 TypeSystem.Void);
 
             ctor.Parameters.Add(
-                new ParameterDefinition(
-                    "id",
-                    ParameterAttributes.None,
-                    context.ImportReference(typeof(Guid))));
-	        ctor.Parameters.Add(
 				new ParameterDefinition(
 					"resource",
 					ParameterAttributes.None,
@@ -40,29 +35,35 @@ namespace RedArrow.Argo
                     context.ImportReference(_sessionTypeDef)));
 
             var objectCtor = context.ImportReference(TypeSystem.Object.Resolve().GetConstructors().First());
+            
+            // supply generic type arguments to template
+            var sessionGetId = _session_GetId.MakeGenericMethod(context.ModelTypeRef);
 
             var proc = ctor.Body.GetILProcessor();
 
             // public Patient(Guid id, IResourceIdentifier resource, IModelSession session)
             // {
             //   this.Id = id;
-			//   this.__argo__generated_Resource = resource;
+            //   this.__argo__generated_Resource = resource;
             //   this.__argo__generated_session = session;
             // }
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
             proc.Emit(OpCodes.Call, objectCtor); // call base ctor on 'this'
 
-			proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-            proc.Emit(OpCodes.Ldarg_1); // load arg 'id' onto stack
-            proc.Emit(OpCodes.Callvirt, context.IdPropDef.SetMethod); // this.Id = id;
+            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+            proc.Emit(OpCodes.Ldarg_1); // load arg 'resource' onto stack
+            proc.Emit(OpCodes.Callvirt, context.ResourcePropDef.SetMethod);
 
-			proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-			proc.Emit(OpCodes.Ldarg_2); // load arg 'resource' onto stack
-			proc.Emit(OpCodes.Callvirt, context.ResourcePropDef.SetMethod);
-
-			proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-            proc.Emit(OpCodes.Ldarg_3); // load arg 'session' onto stack
+            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+            proc.Emit(OpCodes.Ldarg_2); // load arg 'session' onto stack
             proc.Emit(OpCodes.Stfld, context.SessionField); // this.__argo__generated_session = session;
+
+            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+            proc.Emit(OpCodes.Ldfld, context.SessionField); // load this.__argo__generated_session
+            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+            proc.Emit(OpCodes.Callvirt, context.ImportReference(sessionGetId));
+            proc.Emit(OpCodes.Call, context.IdPropDef.SetMethod); // this.Id = this.__argo__generated_session.GetId<TModel>();
 
             // this._attrBackingField = this.__argo__generated_session.GetAttribute
             WeaveAttributeFieldInitializers(context, proc, context.MappedAttributes);
@@ -74,14 +75,10 @@ namespace RedArrow.Argo
 
         private void WeaveAttributeFieldInitializers(ModelWeavingContext context, ILProcessor proc, IEnumerable<PropertyDefinition> attrPropDefs)
         {
-            var sessionGetAttrGeneric = _sessionTypeDef
-                   .Methods
-                   .SingleOrDefault(x => x.Name == "GetAttribute");
-
             foreach (var attrPropDef in attrPropDefs)
             {
                 // supply generic type arguments to template
-                var sessionGetAttr = sessionGetAttrGeneric.MakeGenericMethod(context.ModelTypeRef, attrPropDef.PropertyType);
+                var sessionGetAttr = _session_GetAttribute.MakeGenericMethod(context.ModelTypeRef, attrPropDef.PropertyType);
 
                 var backingField = attrPropDef.BackingField();
 
@@ -100,7 +97,7 @@ namespace RedArrow.Argo
                 proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
                 proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
                 proc.Emit(OpCodes.Ldarg_0); // load 'this'
-                proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
+                //proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
                 proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack
                 proc.Emit(OpCodes.Callvirt, context.ImportReference(
                     sessionGetAttr,

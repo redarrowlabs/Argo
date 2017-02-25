@@ -17,6 +17,8 @@ namespace RedArrow.Argo
         private TypeDefinition _resourceIdentifierTypeDef;
 
         private MethodDefinition _session_DisposedGetter;
+        private MethodDefinition _session_GetId;
+        private MethodDefinition _session_GetAttribute;
         private MethodDefinition _session_GetGenericEnumerable;
         private MethodDefinition _session_SetGenericEnumerable;
         private MethodDefinition _session_GetGenericCollection;
@@ -50,18 +52,24 @@ namespace RedArrow.Argo
                 .Properties
                 .Single(x => x.Name == "Disposed")
                 .GetMethod;
+            _session_GetId = _sessionTypeDef
+                .Methods
+                .Single(x => x.Name == "GetId");
+            _session_GetAttribute = _sessionTypeDef
+                .Methods
+                .Single(x => x.Name == "GetAttribute");
             _session_GetGenericEnumerable = _sessionTypeDef
                 .Methods
-                .SingleOrDefault(x => x.Name == "GetGenericEnumerable");
+                .Single(x => x.Name == "GetGenericEnumerable");
             _session_SetGenericEnumerable = _sessionTypeDef
                 .Methods
-                .SingleOrDefault(x => x.Name == "SetGenericEnumerable");
+                .Single(x => x.Name == "SetGenericEnumerable");
             _session_GetGenericCollection = _sessionTypeDef
                 .Methods
-                .SingleOrDefault(x => x.Name == "GetGenericCollection");
+                .Single(x => x.Name == "GetGenericCollection");
             _session_SetGenericCollection = _sessionTypeDef
                 .Methods
-                .SingleOrDefault(x => x.Name == "SetGenericCollection");
+                .Single(x => x.Name == "SetGenericCollection");
             
             //_genericIEnumerableTypeDef = argoAssemblyDef.MainModule
             //    .ImportReference(typeof(IEnumerable<>))

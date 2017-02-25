@@ -3,6 +3,7 @@ using System.Linq;
 using Ploeh.AutoFixture.Xunit2;
 using RedArrow.Argo.Client.Config.Model;
 using RedArrow.Argo.Client.Session.Registry;
+using RedArrow.Argo.Client.Tests.Session.Registry.Models;
 using WovenByFody;
 using Xunit;
 
@@ -223,6 +224,55 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
             Assert.Contains(a, result);
             Assert.Contains(b, result);
             Assert.Contains(c, result);
+        }
+
+        [Theory, AutoData]
+        public void GetAttributeValues__Given_Model__Then_ReturnAllAttributeValues
+            (string expectedAttr1, int expectedAttr2, long expectedAttr3)
+        {
+            var subject = CreateSubject(typeof(TestGetModelAttributeValues));
+
+            var model = new TestGetModelAttributeValues
+            {
+                Attribute1 = expectedAttr1,
+                Attribute2 = expectedAttr2,
+                Attribute3 = expectedAttr3
+            };
+
+            var result = subject.GetAttributeValues(model);
+
+            Assert.Equal(expectedAttr1, result.Value<string>("attribute1"));
+            Assert.Equal(expectedAttr2, result.Value<int>("attribute-2"));
+            Assert.Equal(expectedAttr3, result.Value<long>("attribute3"));
+        }
+
+        [Theory, AutoData]
+        public void GetAttributeValues__Given_Model__When_NullValues__Then_ReturnNonNullAttributeValues
+            (string expectedAttr1, long expectedAttr3)
+        {
+            var subject = CreateSubject(typeof(TestGetModelAttributeValues));
+
+            var model = new TestGetModelAttributeValues
+            {
+                Attribute1 = expectedAttr1,
+                Attribute3 = expectedAttr3
+            };
+
+            var result = subject.GetAttributeValues(model);
+
+            Assert.Equal(expectedAttr1, result.Value<string>("attribute1"));
+            Assert.Null(result["attribute-2"]);
+            Assert.Equal(expectedAttr3, result.Value<long>("attribute3"));
+        }
+
+        [Fact]
+        public void GetAttributeValues__Given_Model__When_ModelNull__Then_ReturnNull()
+        {
+            var subject = CreateSubject(typeof(TestGetModelAttributeValues));
+
+            var result = subject.GetAttributeValues(null);
+
+            Assert.Null(result);
         }
 
         private static ModelRegistry CreateSubject(params Type[] modelTypes)

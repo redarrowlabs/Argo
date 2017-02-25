@@ -29,21 +29,9 @@ namespace RedArrow.Argo.Client.Http
             //RelateResources = new RelateResources(ModelRegistry);
         }
 
-        public RequestContext GetResource(Guid id, Type modelType)
+        public HttpRequestMessage GetResource(Guid id, string resourceType)
         {
-            //var resourceType = ModelRegistry.GetResourceType(modelType);
-            ////var url = $"{resourceType}/{id}";
-
-            ////url = SparseFieldsetService.BuildSparseFieldsetUrl(modelType, url).Result;
-            ////url = IncludeResources.BuildIncludesUrl(modelType, url);
-
-            //return new RequestContext
-            //{
-            //    Request = new HttpRequestMessage(HttpMethod.Get, url),
-            //    ResourceId = id,
-            //    ResourceType = resourceType
-            //};
-            return null;
+            return new HttpRequestMessage(HttpMethod.Get, $"{resourceType}/{id}");
         }
 
         public RequestContext GetRelated(object owner, string rltnName)
@@ -62,7 +50,7 @@ namespace RedArrow.Argo.Client.Http
 
         public HttpRequestMessage CreateResource(Resource resource, IEnumerable<Resource> include)
         {
-            var root = ResourceRootCreate.FromResource(resource, include);
+            var root = ResourceRootSingle.FromResource(resource, include);
 
             return new HttpRequestMessage(HttpMethod.Post, resource.Type)
             {
@@ -70,8 +58,18 @@ namespace RedArrow.Argo.Client.Http
             };
         }
 
-        public RequestContext UpdateResource(Guid id, object model)
+        public HttpRequestMessage UpdateResource(Resource patch, IEnumerable<Resource> include)
         {
+            if(patch == null) throw new ArgumentNullException(nameof(patch));
+            if(include == null) throw new ArgumentNullException(nameof(include));
+
+            var root = ResourceRootSingle.FromResource(patch, include);
+
+            return new HttpRequestMessage(new HttpMethod("PATCH"), $"{patch.Type}/{patch.Id}")
+            {
+                Content = BuildHttpContent(root.ToJson())
+            };
+
             //if (model == null)
             //{
             //    throw new ArgumentNullException(nameof(model));
@@ -98,7 +96,6 @@ namespace RedArrow.Argo.Client.Http
             //        Relationships = patchContext.Resource?.Relationships,
             //        Included = included
             //    };
-            return null;
         }
 
         private static HttpContent BuildHttpContent(string content)

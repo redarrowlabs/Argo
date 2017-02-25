@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using RedArrow.Argo.Attributes;
-using RedArrow.Argo.Session;
 
 namespace WovenByFody
 {

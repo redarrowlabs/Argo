@@ -20,7 +20,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\TypeReferenceExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)HasManyWeaver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)HasOneWeaver.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)IdVerifier.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IdWeaver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ModelFinder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ModelPropertyWeaver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ModelWeavingContext.cs" />

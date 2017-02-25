@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using RedArrow.Argo.Client.Extensions;
 
 namespace RedArrow.Argo.Client.Model
 {
@@ -8,11 +9,12 @@ namespace RedArrow.Argo.Client.Model
 
         internal static ResourceRootSingle FromResource(Resource resource, IEnumerable<Resource> included)
         {
-            return new ResourceRootSingle
+            var root = new ResourceRootSingle {Data = resource};
+            if (!included.IsNullOrEmpty())
             {
-                Data = resource,
-                Included = included
-            };
+                root.Included = included;
+            }
+            return root;
         }
     }
 }

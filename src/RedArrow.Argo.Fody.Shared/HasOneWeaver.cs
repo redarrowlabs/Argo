@@ -84,7 +84,6 @@ namespace RedArrow.Argo
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
             proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
 			proc.Emit(OpCodes.Ldarg_0); // load 'this'
-            proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
             proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack
 			proc.Emit(OpCodes.Callvirt, context.ImportReference(
 				sessionGetAttr,
@@ -133,7 +132,6 @@ namespace RedArrow.Argo
 			proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
             proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
 			proc.Emit(OpCodes.Ldarg_0); // load 'this'
-            proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
             proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack
             proc.Emit(OpCodes.Ldarg_0); // load 'this'
             proc.Emit(OpCodes.Ldfld, backingField); // load backing field

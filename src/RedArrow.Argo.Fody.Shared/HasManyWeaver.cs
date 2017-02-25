@@ -3,8 +3,6 @@ using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using RedArrow.Argo.Extensions;
 
 namespace RedArrow.Argo
@@ -103,7 +101,6 @@ namespace RedArrow.Argo
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
             proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
             proc.Emit(OpCodes.Ldarg_0); // load 'this'
-            proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
             proc.Emit(OpCodes.Ldstr, rltnName); // load attrName onto stack
             proc.Emit(OpCodes.Callvirt, context.ImportReference(
                 sessionGetRltn,
@@ -160,7 +157,6 @@ namespace RedArrow.Argo
             proc.Emit(OpCodes.Ldarg_0);
             proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
             proc.Emit(OpCodes.Ldarg_0); // load 'this'
-            proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
             proc.Emit(OpCodes.Ldstr, rltnName); // load attrName onto stack
             proc.Emit(OpCodes.Ldarg_1); // load 'value'
             proc.Emit(OpCodes.Callvirt, context.ImportReference(

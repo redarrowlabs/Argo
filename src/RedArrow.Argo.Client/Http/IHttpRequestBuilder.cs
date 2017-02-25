@@ -7,9 +7,9 @@ namespace RedArrow.Argo.Client.Http
 {
     internal interface IHttpRequestBuilder
     {
-        RequestContext GetResource(Guid id, Type modelType);
+        HttpRequestMessage GetResource(Guid id, string resourceType);
         RequestContext GetRelated(object owner, string rltnName);
         HttpRequestMessage CreateResource(Resource resource, IEnumerable<Resource> included);
-        RequestContext UpdateResource(Guid id, object model);
+        HttpRequestMessage UpdateResource(Resource patch, IEnumerable<Resource> included);
     }
 }

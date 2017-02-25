@@ -1,7 +1,7 @@
 ﻿using System;
 using RedArrow.Argo.Attributes;
 
-namespace RedArrow.Argo.Client.Tests.Session.Registry
+namespace RedArrow.Argo.Client.Tests.Session.Registry.Models
 {
     [Model("customized-model-name")]
     public class TestCustomWovenModel

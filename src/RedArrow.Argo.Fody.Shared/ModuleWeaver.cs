@@ -91,7 +91,7 @@ namespace RedArrow.Argo
                     LogWarningPoint,
                     LogError,
                     LogWarningPoint);
-                VerifyIdProperty(context);
+                VerifyId(context);
 	            if (context.IdPropDef != null)
 	            {
 	                AddSessionField(context);

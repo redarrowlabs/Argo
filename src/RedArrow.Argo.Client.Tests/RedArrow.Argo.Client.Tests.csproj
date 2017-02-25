@@ -119,10 +119,11 @@
     <Compile Include="FakeResponseHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Session\Patch\PatchContextTests.cs" />
-    <Compile Include="Session\Registry\CircularReferences.cs" />
+    <Compile Include="Session\Registry\Models\CircularReferences.cs" />
     <Compile Include="Session\Registry\ModelRegistryTests.cs" />
-    <Compile Include="Session\Registry\TestCustomWovenModel.cs" />
-    <Compile Include="Session\Registry\TestWovenModel.cs" />
+    <Compile Include="Session\Registry\Models\TestCustomWovenModel.cs" />
+    <Compile Include="Session\Registry\Models\TestGetModelAttributeValues.cs" />
+    <Compile Include="Session\Registry\Models\TestWovenModel.cs" />
     <Compile Include="Session\SessionTests.cs" />
   </ItemGroup>
   <ItemGroup>

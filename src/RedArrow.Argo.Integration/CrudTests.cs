@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Ploeh.AutoFixture.Xunit2;
 using RedArrow.Argo.Client.Config;
 using RedArrow.Argo.Client.Session;
@@ -100,36 +94,36 @@ namespace RedArrow.Argo.Integration
 
                 Assert.Same(patient, patientRef);
             }
-            //// update!
-            //using (var session = sessionFactory.CreateSession())
-            //{
-            //    var patient = await session.Get<Patient>(crossSessionId);
+            // update!
+            using (var session = sessionFactory.CreateSession())
+            {
+                var patient = await session.Get<Patient>(crossSessionId);
 
-            //    Assert.Equal(crossSessionId, patient.Id);
-            //    Assert.Equal(initialFirstName, patient.FirstName);
-            //    Assert.Equal(initialLastName, patient.LastName);
+                Assert.Equal(crossSessionId, patient.Id);
+                Assert.Equal(initialFirstName, patient.FirstName);
+                Assert.Equal(initialLastName, patient.LastName);
 
-            //    patient.LastName = updatedLastName;
+                patient.LastName = updatedLastName;
 
-            //    Assert.Equal(updatedLastName, patient.LastName);
+                Assert.Equal(updatedLastName, patient.LastName);
 
-            //    await session.Update(patient);
-            //    Assert.Equal(initialFirstName, patient.FirstName);
-            //    Assert.Equal(updatedLastName, patient.LastName);
+                await session.Update(patient);
+                Assert.Equal(initialFirstName, patient.FirstName);
+                Assert.Equal(updatedLastName, patient.LastName);
 
-            //    var patient2 = await session.Get<Patient>(crossSessionId);
+                var patient2 = await session.Get<Patient>(crossSessionId);
 
-            //    Assert.Same(patient, patient2);
-            //}
-            //// later that day...
-            //using (var session = sessionFactory.CreateSession())
-            //{
-            //    var patient = await session.Get<Patient>(crossSessionId);
+                Assert.Same(patient, patient2);
+            }
+            // later that day...
+            using (var session = sessionFactory.CreateSession())
+            {
+                var patient = await session.Get<Patient>(crossSessionId);
 
-            //    Assert.Equal(crossSessionId, patient.Id);
-            //    Assert.Equal(initialFirstName, patient.FirstName);
-            //    Assert.Equal(updatedLastName, patient.LastName);
-            //}
+                Assert.Equal(crossSessionId, patient.Id);
+                Assert.Equal(initialFirstName, patient.FirstName);
+                Assert.Equal(updatedLastName, patient.LastName);
+            }
             // cleanup
             using (var session = sessionFactory.CreateSession())
             {
@@ -147,7 +141,7 @@ namespace RedArrow.Argo.Integration
                             .DefaultRequestHeaders
                             .Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken);
 
-                        httpClient.DefaultRequestHeaders.Add("api-version", "2");
+                        httpClient.DefaultRequestHeaders.Add("Api-Version", "2");
                         httpClient.DefaultRequestHeaders.Add("Titan-Data-Segmentation-Key", "10000000-1000-0000-0000-000000000000");
                     })
                 .Models()

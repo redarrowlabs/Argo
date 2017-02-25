@@ -44,19 +44,62 @@ namespace RedArrow.Argo.Client.Session.Registry
             return null;
         }
 
-	    public Resource GetResource(object model)
-	    {
-		    var modelType = model.GetType();
-		    return (Resource) GetModelConfig(modelType).ResourceProperty.GetValue(model);
-	    }
+        #region Resource
 
-	    public void SetResource(object model, Resource resource)
-	    {
-		    var modelType = model.GetType();
-			GetModelConfig(modelType).ResourceProperty.SetValue(model, resource);
-	    }
+        public Resource GetResource(object model)
+        {
+            var modelType = model.GetType();
+            return (Resource)GetModelConfig(modelType).ResourceProperty.GetValue(model);
+        }
+        public void SetResource(object model, Resource resource)
+        {
+            var modelType = model.GetType();
+            GetModelConfig(modelType).ResourceProperty.SetValue(model, resource);
+        }
 
-	    public bool IsManagedModel(object model)
+        public Resource GetPatch(object model)
+        {
+            var modelType = model.GetType();
+            return (Resource)GetModelConfig(modelType).PatchProperty.GetValue(model);
+        }
+
+        private void SetPatch(object model, Resource resource)
+        {
+            var modelType = model.GetType();
+            GetModelConfig(modelType).PatchProperty.SetValue(model, resource);
+        }
+
+        private Resource GetOrCreatePatch(object model)
+        {
+            var patch = GetPatch(model);
+            if (patch == null)
+            {
+                patch = new Resource();
+                SetPatch(model, patch);
+            }
+            return patch;
+        }
+
+        public TAttr GetAttributeValue<TAttr>(object model, string attrName)
+        {
+            var resource = GetResource(model);
+            JToken value;
+            if (resource?.Attributes != null
+                && resource.Attributes.TryGetValue(attrName, out value))
+            {
+                return value.ToObject<TAttr>();
+            }
+            return default(TAttr);
+        }
+
+        public void SetAttributeValue<TAttr>(object model, string attrName, TAttr value)
+        {
+            GetOrCreatePatch(model).SetAttribute(attrName, value);
+        }
+
+        #endregion
+
+        public bool IsManagedModel(object model)
 	    {
 		    var modelType = model.GetType();
 		    return (bool) GetModelConfig(modelType).SessionManagedProperty.GetValue(model);
@@ -86,15 +129,29 @@ namespace RedArrow.Argo.Client.Session.Registry
 
         public IEnumerable<AttributeConfiguration> GetAttributeConfigs(Type modelType)
         {
-            return GetModelConfig(modelType).AttributeProperties.Values;
+            return GetModelConfig(modelType).AttributeConfigs.Values;
+        }
+
+        public AttributeConfiguration GetAttributeConfig(Type modelType, string attrName)
+        {
+            AttributeConfiguration ret;
+            if (!GetModelConfig(modelType).AttributeConfigs.TryGetValue(attrName, out ret))
+            {
+                throw new AttributeNotRegisteredException(attrName, modelType);
+            }
+
+            return ret;
         }
 
         public JObject GetAttributeValues(object model)
         {
             if (model == null) return null;
-	        return new JObject(GetAttributeConfigs(model.GetType())
-		        .Select(x => new KeyValuePair<string, object>(x.AttributeName, x.Property.GetValue(model)))
-		        .Where(x => x.Value != null));
+            return JObject.FromObject(GetAttributeConfigs(model.GetType())
+                .Select(x => new KeyValuePair<string, object>(x.AttributeName, x.Property.GetValue(model)))
+                .Where(kvp => kvp.Value != null)
+                .ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value));
         }
 
         public IEnumerable<RelationshipConfiguration> GetHasOneConfigs<TModel>()
@@ -183,8 +240,9 @@ namespace RedArrow.Argo.Client.Session.Registry
 				.Union(GetHasManyConfigs(modelType)
 					.Select(hasMany => hasMany.PropertyInfo.GetValue(model))
 					.OfType<IEnumerable>()
-					.SelectMany(collection => collection.Cast<object>())
-				.Where(item => item != null))
+					.SelectMany(collection => collection.Cast<object>()))
+                .Where(x => x != null)
+                .Where(IsUnmanagedModel)
 				.ToArray();
 
 			var includedModels = parentModels.Union(relatedModels).ToArray();
@@ -192,7 +250,7 @@ namespace RedArrow.Argo.Client.Session.Registry
 	        return includedModels.Union(relatedModels
 		        .Where(x => !parentModels.Contains(x))
 		        .SelectMany(x => GetIncludedModels(x, includedModels)))
-		        .Where(IsUnmanagedModel);
+                .ToArray();
         }
 
 	    public IDictionary<string, Relationship> GetRelationshipValues(object model)

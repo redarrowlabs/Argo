@@ -64,6 +64,7 @@
     <Compile Include="Config\Model\ModelConfiguration.cs" />
     <Compile Include="Config\Model\HasManyConfiguration.cs" />
     <Compile Include="Config\SessionFactoryConfiguration.cs" />
+    <Compile Include="Exceptions\AttributeNotRegisteredException.cs" />
     <Compile Include="Exceptions\RelationshipNotRegisteredExecption.cs" />
     <Compile Include="Extensions\EnumerableExtensions.cs" />
     <Compile Include="Extensions\ExpressionExtensions.cs" />
@@ -78,7 +79,7 @@
     <Compile Include="Flurl\Shared\Url.cs" />
     <Compile Include="Http\DefaultHttpMessageHandler.cs" />
     <Compile Include="Http\IHttpRequestBuilder.cs" />
-    <Compile Include="Http\RequestBuilder.cs" />
+    <Compile Include="Http\HttpRequestBuilder.cs" />
     <Compile Include="Http\RequestContext.cs" />
     <Compile Include="Exceptions\ArgoException.cs" />
     <Compile Include="Exceptions\ModelNotRegisteredException.cs" />
@@ -96,7 +97,6 @@
     <Compile Include="Model\ResourceCreate.cs" />
     <Compile Include="Model\ResourceIdentifier.cs" />
     <Compile Include="Model\ResourceRootCollection.cs" />
-    <Compile Include="Model\ResourceRootCreate.cs" />
     <Compile Include="Model\ResourceRootSingle.cs" />
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

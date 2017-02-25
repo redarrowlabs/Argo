@@ -7,7 +7,7 @@ namespace RedArrow.Argo
 {
     public partial class ModuleWeaver
     {
-        private void VerifyIdProperty(ModelWeavingContext context)
+        private void VerifyId(ModelWeavingContext context)
         {
             if (context.IdPropDef != null &&
                 context.IdPropDef.GetMethod?.ReturnType.Resolve() != context.ImportReference(typeof(Guid)).Resolve())

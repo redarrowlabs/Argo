@@ -7,10 +7,10 @@ using Newtonsoft.Json.Linq;
 namespace RedArrow.Argo.Client.Model
 {
     public class Resource : ResourceIdentifier
-	{
-		private static readonly string ArgoVersion = typeof(Resource).GetTypeInfo().Assembly.GetName().Version.ToString();
+    {
+        private static readonly string ArgoVersion = typeof(Resource).GetTypeInfo().Assembly.GetName().Version.ToString();
 
-		[JsonProperty("attributes", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonProperty("attributes", NullValueHandling = NullValueHandling.Ignore)]
         public JObject Attributes { get; set; }
 
         [JsonProperty("relationships", NullValueHandling = NullValueHandling.Ignore)]
@@ -19,29 +19,25 @@ namespace RedArrow.Argo.Client.Model
         [JsonProperty("links", NullValueHandling = NullValueHandling.Ignore)]
         public IDictionary<string, JToken> Links { get; set; }
 
-        internal Resource() { }
+        internal Resource(){ }
 
         internal static Resource FromJson(string json)
         {
             return JsonConvert.DeserializeObject<Resource>(json);
         }
 
-	    internal static Resource FromType(string type)
-	    {
-		    return new Resource
-		    {
-			    Id = Guid.NewGuid(),
-			    Type = type,
-			    Meta = new Dictionary<string, JToken>
-			    {
-				    {"$ccv", JToken.FromObject(ArgoVersion)} //client created version
-			    }
-		    };
-	    }
-
         public JObject GetAttributes()
         {
             return Attributes ?? (Attributes = new JObject());
+        }
+
+        public void SetAttribute(string attrName, object value)
+        {
+            if (Attributes == null)
+            {
+                Attributes = new JObject();
+            }
+            Attributes[attrName] = JObject.FromObject(value);
         }
 
         public IDictionary<string, Relationship> GetRelationships()
