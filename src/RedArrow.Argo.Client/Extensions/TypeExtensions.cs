@@ -46,7 +46,7 @@ namespace RedArrow.Argo.Client.Extensions
 		    return type.GetTypeInfo()
 			    .DeclaredFields
 			    .Where(field => field.FieldType == typeof (IModelSession))
-			    .Single(field => field.Name == "__argo__Generated_session");
+			    .Single(field => field.Name == "__argo__generated_session");
 	    }
 
         internal static PropertyInfo GetSessionManagedProperty(this Type type)

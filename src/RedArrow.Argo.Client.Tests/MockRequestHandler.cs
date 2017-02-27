@@ -12,6 +12,8 @@ namespace RedArrow.Argo.Client.Tests
 
         public bool Disposed { get; private set; }
 
+        public int RequestsSent { get; set; }
+
 	    public MockRequestHandler()
 	    {
 		    _mockRequests = new Dictionary<Uri, Func<HttpRequestMessage, Task<HttpResponseMessage>>>();
@@ -24,6 +26,8 @@ namespace RedArrow.Argo.Client.Tests
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            RequestsSent++;
+
 	        Func<HttpRequestMessage, Task<HttpResponseMessage>> mock;
 	        if (_mockRequests.TryGetValue(request.RequestUri, out mock))
 	        {

@@ -91,7 +91,7 @@ namespace RedArrow.Argo.Client.Session
 		        }
 		     
 				// all unmanaged models in the object graph, including root
-		        resourceIndex = ModelRegistry.GetIncludes(model)
+		        resourceIndex = ModelRegistry.GetIncluded(model)
 			        .Select(CreateModelResource)
 			        .ToDictionary(x => x.Id);
 	        }
@@ -146,7 +146,7 @@ namespace RedArrow.Argo.Client.Session
 			// if nothing was updated, no need to continue
 			if (patch == null) return;
 
-			var includes = ModelRegistry.GetIncludes(model)
+			var includes = ModelRegistry.GetIncluded(model)
 				.Select(CreateModelResource)
 				.ToArray();
 			var request = HttpRequestBuilder.UpdateResource(patch, includes);
@@ -336,7 +336,7 @@ namespace RedArrow.Argo.Client.Session
 					return $"{model.GetType()}:{{{modelId}}} {rltnName} is modeled as [HasOne], but json contains multiple items for this relationship.  The first item will arbitrarily be used.";
 				});
 				// TODO: I don't like that we're performing this conversion for every get
-				// TODO: consider modeling RelationshipSingle and RelationshipCollection
+				// TODO: consider modeling RelationshipSingle and RelationshipCollection with relationship.IsSingular / relationship.IsCollection
 				rltnIdentifier = rltnData.ToObject<IEnumerable<ResourceIdentifier>>().FirstOrDefault();
 			}
 	        else
@@ -356,7 +356,7 @@ namespace RedArrow.Argo.Client.Session
             where TModel : class
             where TRltn : class
         {
-            ThrowIfDisposed();
+            ThrowIfUnmanaged(model);
 
 	        var patch = ModelRegistry.GetOrCreatePatch(model);
 	        var relationship = new Relationship();
@@ -370,6 +370,7 @@ namespace RedArrow.Argo.Client.Session
 					ModelRegistry.SetId(rltn, rltnId);
 		        }
 		        relationship.Data = JObject.FromObject(new ResourceIdentifier {Id = rltnId, Type = rltnType});
+                Cache.Update(rltnId, rltn);
 	        }
 	        else
 	        {

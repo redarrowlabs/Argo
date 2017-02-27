@@ -22,14 +22,11 @@ namespace RedArrow.Argo.Client.Session
         public ISession CreateSession()
         {
             // TODO? perhaps a way to use a real DI container here...
-            var modelRegistry = new ModelRegistry(ModelConfigurations);
-            var httpRequestBuider = new HttpRequestBuilder(modelRegistry);
-
             return new Session(
                 HttpClientFactory,
-                httpRequestBuider,
+                new HttpRequestBuilder(),
                 new BasicCacheProvider(),
-                modelRegistry);
+                new ModelRegistry(ModelConfigurations));
         }
     }
 }

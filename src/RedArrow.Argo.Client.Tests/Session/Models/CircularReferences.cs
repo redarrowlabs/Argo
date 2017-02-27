@@ -18,7 +18,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Models
     public class CircularReferenceB
     {
         [Id]
-        public Guid Id { get; }
+        public Guid Id { get; set; }
 
         [HasOne]
         public CircularReferenceA A { get; set; }
@@ -30,7 +30,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Models
     public class CircularReferenceC
     {
         [Id]
-        public Guid Id { get; }
+        public Guid Id { get; set; }
 
         [HasOne]
         public CircularReferenceA A { get; set; }

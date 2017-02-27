@@ -16,7 +16,8 @@ namespace RedArrow.Argo.Client.Session.Registry
 
 	    Resource GetResource(object model);
         Resource GetPatch(object model);
-	    Resource GetOrCreatePatch(object model);
+	    Resource GetOrCreatePatch<TModel>(TModel model)
+            where TModel : class;
 	    void ApplyPatch(object model);
 
 		bool IsManagedModel(object model);
@@ -50,6 +51,6 @@ namespace RedArrow.Argo.Client.Session.Registry
 
         void SetAttributeBag(object model, JObject attributes);
 
-        object[] GetIncludes(object model);
+        object[] GetIncluded(object model);
     }
 }

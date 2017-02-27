@@ -3,10 +3,6 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using RedArrow.Argo.Client.Model;
-using RedArrow.Argo.Client.Services.Relationships;
-using RedArrow.Argo.Client.Services.SparseFieldsets;
-using RedArrow.Argo.Client.Session.Patch;
-using RedArrow.Argo.Client.Session.Registry;
 
 namespace RedArrow.Argo.Client.Http
 {

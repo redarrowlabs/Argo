@@ -117,10 +117,12 @@
     <Compile Include="Collections\Operations\QueuedClearOperationTests.cs" />
     <Compile Include="Collections\Operations\QueuedRemoveOperationTests.cs" />
     <Compile Include="Extensions\HttpRequestMessageExtensions.cs" />
+    <Compile Include="Extensions\SessionExtensions.cs" />
     <Compile Include="MockRequestHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Session\Models\BasicModel.cs" />
     <Compile Include="Session\Models\CircularReferences.cs" />
+    <Compile Include="Session\Models\ComplexModel.cs" />
     <Compile Include="Session\Models\TestCustomWovenModel.cs" />
     <Compile Include="Session\Models\TestGetModelAttributeValues.cs" />
     <Compile Include="Session\Models\TestWovenModel.cs" />

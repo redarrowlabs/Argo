@@ -29,8 +29,8 @@ namespace RedArrow.Argo.Client.Model
 
 	    public void Patch(Resource patch)
 	    {
-		    Attributes.Merge(patch.Attributes);
-		    patch.Relationships?.Each(kvp => Relationships[kvp.Key] = kvp.Value);
+		    GetAttributes().Merge(patch.Attributes);
+		    patch.Relationships?.Each(kvp => GetRelationships()[kvp.Key] = kvp.Value);
 	    }
 
         public JObject GetAttributes()
@@ -40,11 +40,7 @@ namespace RedArrow.Argo.Client.Model
 
         public void SetAttribute(string attrName, object value)
         {
-            if (Attributes == null)
-            {
-                Attributes = new JObject();
-            }
-            Attributes[attrName] = JObject.FromObject(value);
+            GetAttributes()[attrName] = JToken.FromObject(value);
         }
 
         public IDictionary<string, Relationship> GetRelationships()
