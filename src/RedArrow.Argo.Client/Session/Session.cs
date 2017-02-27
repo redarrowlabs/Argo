@@ -5,6 +5,7 @@ using RedArrow.Argo.Client.Session.Registry;
 using RedArrow.Argo.Session;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -196,16 +197,60 @@ namespace RedArrow.Argo.Client.Session
             {
                 return default(TModel); // null
             }
+			// TODO: invoke dev-registered callback so dev can inspect copy of HttpResponseMessage
             response.EnsureSuccessStatusCode();
 
-            var contentString = await response.Content.ReadAsStringAsync();
-            var root = JsonConvert.DeserializeObject<ResourceRootSingle>(contentString);
-
+			// deserializing from stream is more performant than string
+			// http://www.newtonsoft.com/json/help/html/Performance.htm
+			ResourceRootSingle root;
+			using(var stream = await response.Content.ReadAsStreamAsync())
+			using (var sr = new StreamReader(stream))
+			using(var reader = new JsonTextReader(sr))
+			{
+				root = new JsonSerializer().Deserialize<ResourceRootSingle>(reader);
+			}
             model = CreateModel(typeof(TModel), root.Data);
             Cache.Update(id, model);
 
             return (TModel) model;
         }
+
+		//TODO: consider exposing this on ISession
+	    private async Task<IEnumerable<TRltn>> GetRelated<TModel, TRltn>(TModel model, string rltnName)
+	    {
+		    ThrowIfDisposed();
+
+			var resource = ModelRegistry.GetResource(model);
+		    var request = HttpRequestBuilder.GetRelated(resource.Id, resource.Type, rltnName);
+		    var response = await HttpClient.SendAsync(request);
+		    if (response.StatusCode == HttpStatusCode.NotFound)
+		    {
+				return null; // null
+			}
+			// TODO: invoke dev-registered callback so dev can inspect copy of HttpResponseMessage
+			response.EnsureSuccessStatusCode();
+			
+			// deserializing from stream is more performant than string
+			// http://www.newtonsoft.com/json/help/html/Performance.htm
+			ResourceRootCollection root;
+			using (var stream = await response.Content.ReadAsStreamAsync())
+			using (var sr = new StreamReader(stream))
+			using (var reader = new JsonTextReader(sr))
+			{
+				root = new JsonSerializer().Deserialize<ResourceRootCollection>(reader);
+			}
+
+		    return root.Data?.Select(rltn =>
+		    {
+			    // use the actual resource type, not typeof(TRltn)
+			    // TRltn may be a base class or interface!
+			    var rltnModelType = ModelRegistry.GetModelType(rltn.Type);
+			    var rltnModel = CreateModel(rltnModelType, rltn);
+			    Cache.Update(rltn.Id, rltnModel);
+			    // TODO: check if rltnModelType is assignable to TRltn, but then what ¯\_(ツ)_/¯
+			    return (TRltn)rltnModel;
+		    }).ToArray();
+		}
 
         public async Task Update<TModel>(TModel model)
             where TModel : class
@@ -283,16 +328,27 @@ namespace RedArrow.Argo.Client.Session
             where TModel : class
         {
             ThrowIfDisposed();
+			
+			// GetAttribute is only used by model ctor. we can safely check the resource
+			// and ignore the patch
+			JToken attr;
+	        var attributes = ModelRegistry.GetResource(model).Attributes;
+			if (attributes == null || !attributes.TryGetValue(attrName, out attr))
+			{
+				// the attrName was not found in the patch or resource
+				return default(TAttr);
+			}
 
-            return ModelRegistry.GetAttributeValue<TAttr>(model, attrName);
+			// if we make it here, 'attr' has been set
+	        return attr.ToObject<TAttr>();
         }
 
-        public void SetAttribute<TModel, TAttr>(TModel model, string attrName, TAttr value)
+		public void SetAttribute<TModel, TAttr>(TModel model, string attrName, TAttr value)
             where TModel : class
         {
-            ThrowIfDisposed();
+			ThrowIfDisposed();
 
-            ModelRegistry.SetAttributeValue(model, attrName, value);
+			ModelRegistry.GetOrCreatePatch(model).SetAttribute(attrName, value);
         }
 
         public TRltn GetReference<TModel, TRltn>(TModel model, string rltnName)
@@ -306,14 +362,25 @@ namespace RedArrow.Argo.Client.Session
 			var relationships = ModelRegistry.GetPatch(model)?.Relationships;
 	        if (relationships == null || !relationships.TryGetValue(rltnName, out rltn))
 	        {
-		        relationships = ModelRegistry.GetResource(model).Relationships;
+		        var modelResource = ModelRegistry.GetResource(model);
+		        relationships = modelResource.Relationships;
 		        if (relationships == null || !relationships.TryGetValue(rltnName, out rltn))
 		        {
-					// the rltnName was not found in the patch or resource
-			        return default(TRltn); // TODO: return GetRelated<TModel>(modelId, rltnName);
+			        // the rltnName defined in model was not found in the patch or resource
+			        // TODO? we're doing FirstOrDefault instead of SingleOrDefault in case of improperly structured data
+					// TODO? i.e. relationship data containing a collection for this to-one relationship
+			        // TODO? throw exception?  log warning? ¯\_(ツ)_/¯ 
+			        var related = GetRelated<TModel, TRltn>(model, rltnName).Result?.FirstOrDefault();
+			        var relatedResource = ModelRegistry.GetOrCreatePatch(related);
+			        modelResource.GetRelationships()[rltnName] = new Relationship
+			        {
+				        Data = JObject.FromObject(relatedResource.ToResourceIdentifier())
+			        };
+			        return related;
 		        }
 	        }
-			// if we make it to here, 'rltn' has been set
+
+	        // if we make it to here, 'rltn' has been set
 	        var rltnData = rltn.Data;
 	        if (rltnData?.Type != JTokenType.Object)
 	        {
@@ -322,7 +389,7 @@ namespace RedArrow.Argo.Client.Session
 	        }
 	        var rltnIdentifier = rltnData.ToObject<ResourceIdentifier>();
 			// calling Get<> here will check the cache first, then go remote if necessary
-	        return Task.Run(async () => await Get<TRltn>(rltnIdentifier.Id)).Result;
+	        return Get<TRltn>(rltnIdentifier.Id).Result;
         }
 
         public void SetReference<TModel, TRltn>(TModel model, string rltnName, TRltn rltn)

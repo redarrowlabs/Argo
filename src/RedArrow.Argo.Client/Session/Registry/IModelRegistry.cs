@@ -29,8 +29,6 @@ namespace RedArrow.Argo.Client.Session.Registry
         AttributeConfiguration GetAttributeConfig(Type modelType, string attrName);
 
         JObject GetAttributeValues(object model);
-        TAttr GetAttributeValue<TAttr>(object model, string attrName);
-        void SetAttributeValue<TAttr>(object model, string attrName, TAttr value);
 	    IDictionary<string, Relationship> GetRelationshipValues(object model);
 
 	    IEnumerable<RelationshipConfiguration> GetHasOneConfigs(Type modelType);

@@ -34,18 +34,9 @@ namespace RedArrow.Argo.Client.Http
             return new HttpRequestMessage(HttpMethod.Get, $"{resourceType}/{id}");
         }
 
-        public RequestContext GetRelated(object owner, string rltnName)
+        public HttpRequestMessage GetRelated(Guid id, string resourceType, string rltnName)
         {
-            var id = ModelRegistry.GetId(owner);
-            var resourceType = ModelRegistry.GetResourceType(owner.GetType());
-
-            return new RequestContext
-            {
-                Request = new HttpRequestMessage(HttpMethod.Get, $"{resourceType}/{id}/{rltnName}"),
-
-                ResourceId = id,
-                ResourceType = resourceType,
-            };
+			return new HttpRequestMessage(HttpMethod.Get, $"{resourceType}/{id}/{rltnName}");
         }
 
         public HttpRequestMessage CreateResource(Resource resource, IEnumerable<Resource> include)

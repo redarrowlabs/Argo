@@ -80,23 +80,6 @@ namespace RedArrow.Argo.Client.Session.Registry
             return patch;
         }
 
-        public TAttr GetAttributeValue<TAttr>(object model, string attrName)
-        {
-            var resource = GetResource(model);
-            JToken value;
-            if (resource?.Attributes != null
-                && resource.Attributes.TryGetValue(attrName, out value))
-            {
-                return value.ToObject<TAttr>();
-            }
-            return default(TAttr);
-        }
-
-        public void SetAttributeValue<TAttr>(object model, string attrName, TAttr value)
-        {
-            GetOrCreatePatch(model).SetAttribute(attrName, value);
-        }
-
         #endregion
 
         public bool IsManagedModel(object model)

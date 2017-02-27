@@ -112,6 +112,7 @@
     <Compile Include="Session\Patch\PatchContext.cs" />
     <Compile Include="Session\Registry\IModelRegistry.cs" />
     <Compile Include="Session\Registry\ModelRegistry.cs" />
+    <Compile Include="Session\RelationshipType.cs" />
     <Compile Include="Session\Session.cs" />
     <Compile Include="Session\SessionFactory.cs" />
   </ItemGroup>
