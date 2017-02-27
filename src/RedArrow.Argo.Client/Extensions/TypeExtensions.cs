@@ -6,6 +6,7 @@ using RedArrow.Argo.Attributes;
 using RedArrow.Argo.Client.Config.Model;
 using RedArrow.Argo.Client.Exceptions;
 using RedArrow.Argo.Model;
+using RedArrow.Argo.Session;
 
 namespace RedArrow.Argo.Client.Extensions
 {
@@ -39,6 +40,14 @@ namespace RedArrow.Argo.Client.Extensions
                 .Select(arg => arg.Value as string)
                 .FirstOrDefault() ?? type.Name.Camelize();
         }
+
+	    internal static FieldInfo GetSessionField(this Type type)
+	    {
+		    return type.GetTypeInfo()
+			    .DeclaredFields
+			    .Where(field => field.FieldType == typeof (IModelSession))
+			    .Single(field => field.Name == "__argo__Generated_session");
+	    }
 
         internal static PropertyInfo GetSessionManagedProperty(this Type type)
         {

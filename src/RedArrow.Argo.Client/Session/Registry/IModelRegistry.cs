@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using RedArrow.Argo.Client.Config.Model;
 using RedArrow.Argo.Client.Model;
+using RedArrow.Argo.Session;
 
 namespace RedArrow.Argo.Client.Session.Registry
 {
@@ -16,9 +17,12 @@ namespace RedArrow.Argo.Client.Session.Registry
 	    Resource GetResource(object model);
         Resource GetPatch(object model);
 	    Resource GetOrCreatePatch(object model);
+	    void ApplyPatch(object model);
 
 		bool IsManagedModel(object model);
-	    bool IsUnmanagedModel(object model);
+		bool IsManagedBy(IModelSession session, object model);
+		bool IsUnmanagedModel(object model);
+	    void DetachModel(object model);
 
         Guid GetId(object model);
         void SetId(object model, Guid id);
@@ -46,6 +50,6 @@ namespace RedArrow.Argo.Client.Session.Registry
 
         void SetAttributeBag(object model, JObject attributes);
 
-        object[] GetIncludedModels(object model);
+        object[] GetIncludes(object model);
     }
 }

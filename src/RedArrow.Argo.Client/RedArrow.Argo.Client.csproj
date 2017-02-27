@@ -65,7 +65,9 @@
     <Compile Include="Config\Model\HasManyConfiguration.cs" />
     <Compile Include="Config\SessionFactoryConfiguration.cs" />
     <Compile Include="Exceptions\AttributeNotRegisteredException.cs" />
+    <Compile Include="Exceptions\ManagedModelCreationException.cs" />
     <Compile Include="Exceptions\RelationshipNotRegisteredExecption.cs" />
+    <Compile Include="Exceptions\UnmanagedModelException.cs" />
     <Compile Include="Extensions\EnumerableExtensions.cs" />
     <Compile Include="Extensions\ExpressionExtensions.cs" />
     <Compile Include="Extensions\HttpClientExtensions.cs" />
@@ -78,6 +80,7 @@
     <Compile Include="Flurl\Shared\StringExtensions.cs" />
     <Compile Include="Flurl\Shared\Url.cs" />
     <Compile Include="Http\DefaultHttpMessageHandler.cs" />
+    <Compile Include="Http\HttpMessageCallbackHandler.cs" />
     <Compile Include="Http\IHttpRequestBuilder.cs" />
     <Compile Include="Http\HttpRequestBuilder.cs" />
     <Compile Include="Http\RequestContext.cs" />

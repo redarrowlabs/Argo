@@ -8,6 +8,7 @@ using RedArrow.Argo.Client.Exceptions;
 using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Model;
 using RedArrow.Argo.Model;
+using RedArrow.Argo.Session;
 
 namespace RedArrow.Argo.Client.Session.Registry
 {
@@ -80,6 +81,12 @@ namespace RedArrow.Argo.Client.Session.Registry
             return patch;
         }
 
+	    public void ApplyPatch(object model)
+		{
+			GetResource(model).Patch(GetPatch(model));
+			SetPatch(model, null);
+	    }
+
         #endregion
 
         public bool IsManagedModel(object model)
@@ -88,10 +95,22 @@ namespace RedArrow.Argo.Client.Session.Registry
 		    return (bool) GetModelConfig(modelType).SessionManagedProperty.GetValue(model);
 		}
 
+	    public bool IsManagedBy(IModelSession session, object model)
+	    {
+		    var modelType = model.GetType();
+		    return session == GetModelConfig(modelType).SessionField.GetValue(model);
+	    }
+
 		public bool IsUnmanagedModel(object model)
 		{
 			return !IsManagedModel(model);
 		}
+
+	    public void DetachModel(object model)
+	    {
+		    var modelType = model.GetType();
+			GetModelConfig(modelType).SessionField.SetValue(model, null);
+	    }
 
 		public Guid GetId(object model)
         {
@@ -213,12 +232,12 @@ namespace RedArrow.Argo.Client.Session.Registry
             }
         }
 
-        public object[] GetIncludedModels(object model)
+        public object[] GetIncludes(object model)
         {
-            return model == null ? null : GetIncludedModels(model, new [] {model}).ToArray();
+            return model == null ? null : GetUnmanagedIncludes(model, new [] {model}).ToArray();
         }
 
-        private IEnumerable<object> GetIncludedModels(object model, object[] parentModels)
+        private IEnumerable<object> GetUnmanagedIncludes(object model, object[] parentModels)
         {
 			var modelType = model.GetType();
 			var relatedModels = GetHasOneConfigs(modelType)
@@ -235,7 +254,7 @@ namespace RedArrow.Argo.Client.Session.Registry
 
 	        return includedModels.Union(relatedModels
 		        .Where(x => !parentModels.Contains(x))
-		        .SelectMany(x => GetIncludedModels(x, includedModels)))
+		        .SelectMany(x => GetUnmanagedIncludes(x, includedModels)))
                 .ToArray();
         }
 

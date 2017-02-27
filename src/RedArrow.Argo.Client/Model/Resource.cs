@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using RedArrow.Argo.Client.Extensions;
 
 namespace RedArrow.Argo.Client.Model
 {
@@ -25,6 +26,12 @@ namespace RedArrow.Argo.Client.Model
         {
             return JsonConvert.DeserializeObject<Resource>(json);
         }
+
+	    public void Patch(Resource patch)
+	    {
+		    Attributes.Merge(patch.Attributes);
+		    patch.Relationships?.Each(kvp => Relationships[kvp.Key] = kvp.Value);
+	    }
 
         public JObject GetAttributes()
         {
