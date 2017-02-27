@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,12 +10,6 @@ namespace RedArrow.Argo.Client.Http
 {
 	public class HttpMessageCallbackHandler : DelegatingHandler
 	{
-		private IEnumerable<Func<HttpResponseMessage, Task>> ResponseReceived { get; }
-		private IEnumerable<Func<HttpResponseMessage, Task>> ResourceCreated { get; }
-		private IEnumerable<Func<HttpResponseMessage, Task>> ResourceUpdated { get; }
-		private IEnumerable<Func<HttpResponseMessage, Task>> ResourceRetrieved { get; }
-		private IEnumerable<Func<HttpResponseMessage, Task>> ResourceDeleted { get; }
-
 		private IDictionary<string, IEnumerable<Func<HttpResponseMessage, Task>>> Callbacks { get; }
 
 		public HttpMessageCallbackHandler(
@@ -46,16 +39,19 @@ namespace RedArrow.Argo.Client.Http
 
 			var callbacks = new List<Func<HttpResponseMessage, Task>>(Callbacks[null]);
 			var method = response.RequestMessage.Method.Method;
-			if (Callbacks.ContainsKey(method))
+			IEnumerable<Func<HttpResponseMessage, Task>> methodCallbacks;
+			if (Callbacks.TryGetValue(method, out methodCallbacks))
 			{
-				callbacks.AddRange(Callbacks[method]);
+				callbacks.AddRange(methodCallbacks);
 			}
 
-			if (!callbacks.Any()) return response;
+			if (callbacks.Any())
+			{
+				var copy = CopyResponse(response);
+				// callbacks are run asyncronously
+				callbacks.Each(x => Task.Run(() => x(copy), cancellationToken));
+			}
 
-			var copy = CopyResponse(response);
-			// callbacks are run asyncronously
-			callbacks.Each(x => Task.Run(() => x(copy), cancellationToken));
 			return response;
 		}
 
