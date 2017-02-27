@@ -231,12 +231,12 @@ namespace RedArrow.Argo.Client.Session.Registry
             }
         }
 
-        public object[] GetIncluded(object model)
+        public object[] GetIncludedModels(object model)
         {
-            return model == null ? null : GetIncluded(model, new [] {model}).ToArray();
+            return model == null ? null : GetIncludedModels(model, new [] {model}).ToArray();
         }
 
-        private IEnumerable<object> GetIncluded(object model, object[] parentModels)
+        private IEnumerable<object> GetIncludedModels(object model, object[] parentModels)
         {
 			var modelType = model.GetType();
 			var relatedModels = GetHasOneConfigs(modelType)
@@ -252,7 +252,7 @@ namespace RedArrow.Argo.Client.Session.Registry
 
 	        return includedModels.Union(relatedModels
 		        .Where(x => !parentModels.Contains(x))
-		        .SelectMany(x => GetIncluded(x, includedModels)))
+		        .SelectMany(x => GetIncludedModels(x, includedModels)))
                 .Where(IsUnmanagedModel)
                 .ToArray();
         }

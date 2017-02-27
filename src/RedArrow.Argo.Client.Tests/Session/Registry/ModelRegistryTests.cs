@@ -144,7 +144,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
             c.PrimaryD = ds.First();
             c.AllDs = ds;
 
-            var result = subject.GetIncluded(a);
+            var result = subject.GetIncludedModels(a);
 
             Assert.NotNull(result);
             Assert.NotEmpty(result);
@@ -162,7 +162,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
         {
             var subject = CreateSubject(typeof(CircularReferenceA));
 
-            var result = subject.GetIncluded(null);
+            var result = subject.GetIncludedModels(null);
 
             Assert.Null(result);
         }
@@ -182,7 +182,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
             b.A = a;
             b.C = null;
 
-            var result = subject.GetIncluded(a);
+            var result = subject.GetIncludedModels(a);
 
             Assert.NotNull(result);
             Assert.NotEmpty(result);
@@ -214,7 +214,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
             c.PrimaryD = null;
             c.AllDs = null;
 
-            var result = subject.GetIncluded(a);
+            var result = subject.GetIncludedModels(a);
 
             Assert.NotNull(result);
             Assert.NotEmpty(result);

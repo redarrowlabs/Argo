@@ -91,7 +91,7 @@ namespace RedArrow.Argo.Client.Session
 		        }
 		     
 				// all unmanaged models in the object graph, including root
-		        resourceIndex = ModelRegistry.GetIncluded(model)
+		        resourceIndex = ModelRegistry.GetIncludedModels(model)
 			        .Select(CreateModelResource)
 			        .ToDictionary(x => x.Id);
 	        }
@@ -146,7 +146,7 @@ namespace RedArrow.Argo.Client.Session
 			// if nothing was updated, no need to continue
 			if (patch == null) return;
 
-			var includes = ModelRegistry.GetIncluded(model)
+			var includes = ModelRegistry.GetIncludedModels(model)
 				.Select(CreateModelResource)
 				.ToArray();
 			var request = HttpRequestBuilder.UpdateResource(patch, includes);

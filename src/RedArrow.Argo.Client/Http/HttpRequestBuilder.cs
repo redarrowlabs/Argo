@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
+using RedArrow.Argo.Client.Extensions;
+using RedArrow.Argo.Client.Flurl.Shared;
 using RedArrow.Argo.Client.Model;
 
 namespace RedArrow.Argo.Client.Http
@@ -10,9 +12,14 @@ namespace RedArrow.Argo.Client.Http
     {
         private const string JsonApiHeader = "application/vnd.api+json";
 		
-        public HttpRequestMessage GetResource(Guid id, string resourceType)
+        public HttpRequestMessage GetResource(Guid id, string resourceType, IEnumerable<string> included)
         {
-            return new HttpRequestMessage(HttpMethod.Get, $"{resourceType}/{id}");
+            var path = $"{resourceType}/{id}";
+            if (!included.IsNullOrEmpty())
+            {
+                path.SetQueryParam("include", string.Join(",", included));
+            }
+            return new HttpRequestMessage(HttpMethod.Get, path);
         }
 
         public HttpRequestMessage GetRelated(Guid id, string resourceType, string rltnName)
