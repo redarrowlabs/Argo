@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using RedArrow.Argo.Attributes;
 
-namespace RedArrow.Argo.Client.Tests.Session.Models
+namespace WovenByFody
 {
     [Model]
     public class CircularReferenceA
@@ -10,7 +10,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Models
         [Id]
         public Guid Id { get; set; }
 
-        [HasOne]
+        [HasOne(LoadStrategy.Eager)]
         public CircularReferenceB B { get; set; }
     }
 
@@ -19,10 +19,9 @@ namespace RedArrow.Argo.Client.Tests.Session.Models
     {
         [Id]
         public Guid Id { get; set; }
-
-        [HasOne]
+        [HasOne(LoadStrategy.Eager)]
         public CircularReferenceA A { get; set; }
-        [HasOne]
+        [HasOne(LoadStrategy.Eager)]
         public CircularReferenceC C { get; set; }
     }
 
@@ -31,11 +30,9 @@ namespace RedArrow.Argo.Client.Tests.Session.Models
     {
         [Id]
         public Guid Id { get; set; }
-
-        [HasOne]
+        [HasOne(LoadStrategy.Eager)]
         public CircularReferenceA A { get; set; }
-
-        [HasOne]
+        [HasOne(LoadStrategy.Eager)]
         public CircularReferenceD PrimaryD { get; set; }
 
         [HasMany]

@@ -36,10 +36,7 @@ namespace RedArrow.Argo
                 }
 
                 // find the attrName, if there is one
-                var propAttr = propertyDef.CustomAttributes.GetAttribute(Constants.Attributes.Property);
-                var attrName = propAttr.ConstructorArguments
-                    .Select(x => x.Value as string)
-                    .SingleOrDefault() ?? propertyDef.Name.Camelize();
+                var attrName = propertyDef.JsonApiName(TypeSystem, Constants.Attributes.Property);
 
                 LogInfo($"\tWeaving {propertyDef} => {attrName}");
 

@@ -18,7 +18,7 @@ namespace RedArrow.Argo
             // if id property doesn't have a setter, try to add one
             if (context.IdPropDef != null)
             {
-                LogInfo($"upserting {context.IdPropDef.FullName} [Id] property setter");
+                LogInfo($"Upserting {context.IdPropDef.FullName} [Id] property setter");
 
                 var idBackingField = context
                     .IdPropDef

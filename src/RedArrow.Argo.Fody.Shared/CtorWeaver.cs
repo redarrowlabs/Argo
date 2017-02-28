@@ -52,6 +52,7 @@ namespace RedArrow.Argo
             // {
             //   this.__argo__generated_Resource = resource;
             //   this.__argo__generated_session = session;
+            //   this.__argo__generated_includePath = "model.include.path";
 			//   this.Id = __argo__generated_session.GetId<TModel>();
             // }
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
@@ -64,6 +65,10 @@ namespace RedArrow.Argo
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
             proc.Emit(OpCodes.Ldarg_2); // load arg 'session' onto stack
             proc.Emit(OpCodes.Stfld, context.SessionField); // this.__argo__generated_session = session;
+            
+            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+            proc.Emit(OpCodes.Ldstr, GetIncludePath(context));
+            proc.Emit(OpCodes.Stfld, context.IncludePathField); // this.__argo__generated_includePath = this.__argo__generated_session.GetIncludePath<TModel>()
 
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
@@ -104,7 +109,6 @@ namespace RedArrow.Argo
                 proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
                 proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
                 proc.Emit(OpCodes.Ldarg_0); // load 'this'
-                //proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
                 proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack
                 proc.Emit(OpCodes.Callvirt, context.ImportReference(
                     sessionGetAttr,
@@ -114,6 +118,67 @@ namespace RedArrow.Argo
 
                 proc.Emit(OpCodes.Stfld, backingField); // store return value in 'this'.<backing field>
             }
+        }
+
+        private string GetIncludePath(ModelWeavingContext context)
+        {
+            var modelTypeDef = context.ModelTypeRef.Resolve();
+            var relationships = GetEagerRelationships(context, modelTypeDef, string.Empty, new[] {modelTypeDef});
+
+            return string.Join(",", relationships);
+        }
+
+        private IEnumerable<string> GetEagerRelationships(ModelWeavingContext context, TypeDefinition type, string path, TypeDefinition[] pathTypes)
+        {
+            var eagerRltns = type.Properties
+                .Where(x => x.CustomAttributes
+                    .Where(attr =>
+                        attr.AttributeType.Resolve() == context.ImportReference(_hasOneAttributeTypeDef).Resolve()
+                        || attr.AttributeType.Resolve() == context.ImportReference(_hasManyAttributeTypeDef).Resolve())
+                    .Where(attr => attr.HasConstructorArguments)
+                    .SelectMany(attr => attr.ConstructorArguments
+                        .Where(arg => arg.Type.Resolve() == context.ImportReference(_loadStrategyTypeDef).Resolve()))
+                    .Any(arg => (int) arg.Value == 1)) // eager
+                .Where(eagerProp =>
+                {
+                    var eagerPropAttr = eagerProp.CustomAttributes.ContainsAttribute(Constants.Attributes.HasOne)
+                        ? Constants.Attributes.HasOne
+                        : Constants.Attributes.HasMany;
+                    var eagerPropName = eagerProp.JsonApiName(TypeSystem, eagerPropAttr);
+                    var eagerPropType = eagerProp.PropertyType.Resolve();
+                    var nextPath = string.IsNullOrEmpty(path)
+                        ? eagerPropName
+                        : $"{path}.{eagerPropName}";
+                    var typeVisited = pathTypes.Contains(eagerPropType);
+                    if (typeVisited)
+                    {
+                        LogWarning($"Potential circular reference detected and omitted from eager load: {eagerProp.PropertyType.Resolve().FullName}::{nextPath}");
+                    }
+                    return !typeVisited;
+                });
+
+            if (eagerRltns.Any())
+            {
+                return eagerRltns.SelectMany(x =>
+                {
+                    var eagerPropAttr = x.CustomAttributes.ContainsAttribute(Constants.Attributes.HasOne)
+                        ? Constants.Attributes.HasOne
+                        : Constants.Attributes.HasMany;
+                    var eagerPropName = x.JsonApiName(TypeSystem, eagerPropAttr);
+                    var eagerPropType = x.PropertyType.Resolve();
+                    var nextPath = string.IsNullOrEmpty(path)
+                        ? eagerPropName
+                        : $"{path}.{eagerPropName}";
+                    return GetEagerRelationships(
+                        context,
+                        x.PropertyType.Resolve(),
+                        nextPath,
+                        pathTypes.Concat(new [] { eagerPropType}).ToArray());
+                })
+                .ToArray();
+            }
+
+            return new [] {path};
         }
     }
 }

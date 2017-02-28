@@ -50,7 +50,7 @@ namespace RedArrow.Argo.Client.Session.Registry
         JObject GetAttributeBag(object model);
 
         void SetAttributeBag(object model, JObject attributes);
-
+        
         object[] GetIncludedModels(object model);
     }
 }

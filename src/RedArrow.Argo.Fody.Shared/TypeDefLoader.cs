@@ -13,6 +13,10 @@ namespace RedArrow.Argo
         private MethodDefinition _debuggerBrowsableAttribute;
         private TypeDefinition _debuggerBrowsableStateTypeDef;
 
+        private TypeDefinition _hasOneAttributeTypeDef;
+        private TypeDefinition _hasManyAttributeTypeDef;
+        private TypeDefinition _loadStrategyTypeDef;
+
         private TypeDefinition _sessionTypeDef;
         private TypeDefinition _resourceIdentifierTypeDef;
 
@@ -24,9 +28,6 @@ namespace RedArrow.Argo
         private MethodDefinition _session_GetGenericCollection;
         private MethodDefinition _session_SetGenericCollection;
         
-        //private TypeDefinition _genericIEnumerableTypeDef;
-        //private TypeDefinition _genericICollectionTypeDef;
-
         private int _stringComparison_ordinal;
         private MethodDefinition _string_equals;
         private TypeDefinition _equalityComparerTypeDef;
@@ -35,6 +36,11 @@ namespace RedArrow.Argo
         private void LoadTypeDefinitions()
         {
             var argoAssemblyDef = AssemblyResolver.Resolve("RedArrow.Argo");
+
+            _hasOneAttributeTypeDef = argoAssemblyDef.MainModule.GetType("RedArrow.Argo.Attributes.HasOneAttribute");
+            _hasManyAttributeTypeDef = argoAssemblyDef.MainModule.GetType("RedArrow.Argo.Attributes.HasManyAttribute");
+            _loadStrategyTypeDef = argoAssemblyDef.MainModule.GetType("RedArrow.Argo.Attributes.LoadStrategy");
+
             _sessionTypeDef = argoAssemblyDef.MainModule.GetType("RedArrow.Argo.Session.IModelSession");
             _resourceIdentifierTypeDef = argoAssemblyDef.MainModule.GetType("RedArrow.Argo.Model.IResourceIdentifier");
 
@@ -71,13 +77,6 @@ namespace RedArrow.Argo
                 .Methods
                 .Single(x => x.Name == "SetGenericCollection");
             
-            //_genericIEnumerableTypeDef = argoAssemblyDef.MainModule
-            //    .ImportReference(typeof(IEnumerable<>))
-            //    .Resolve();
-            //_genericICollectionTypeDef = argoAssemblyDef.MainModule
-            //    .ImportReference(typeof(ICollection<>))
-            //    .Resolve();
-
             _string_equals = ModuleDefinition
                 .TypeSystem
                 .String

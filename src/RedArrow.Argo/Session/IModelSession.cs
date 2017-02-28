@@ -6,7 +6,7 @@ namespace RedArrow.Argo.Session
     public interface IModelSession
     {
         bool Disposed { get; }
-
+        
         Guid GetId<TModel>(TModel model);
 
         TAttr GetAttribute<TModel, TAttr>(TModel model, string attrName)

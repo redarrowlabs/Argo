@@ -121,7 +121,6 @@
     <Compile Include="MockRequestHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Session\Models\BasicModel.cs" />
-    <Compile Include="Session\Models\CircularReferences.cs" />
     <Compile Include="Session\Models\ComplexModel.cs" />
     <Compile Include="Session\Models\TestCustomWovenModel.cs" />
     <Compile Include="Session\Models\TestGetModelAttributeValues.cs" />

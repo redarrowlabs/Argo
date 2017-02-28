@@ -53,11 +53,7 @@ namespace RedArrow.Argo
                 }
 
                 // find the rltnName, if there is one
-                var propAttr = propertyDef.CustomAttributes.GetAttribute(Constants.Attributes.HasMany);
-                var rltnName = propAttr.ConstructorArguments
-                    .Where(x => x.Type == TypeSystem.String)
-                    .Select(x => x.Value as string)
-                    .SingleOrDefault() ?? propertyDef.Name.Camelize();
+                var rltnName = propertyDef.JsonApiName(TypeSystem, Constants.Attributes.HasMany);
 
                 // find property generic element type
                 var elementTypeDef = ((GenericInstanceType)propertyTypeRef).GenericArguments.First().Resolve();

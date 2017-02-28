@@ -25,7 +25,6 @@ namespace RedArrow.Argo.Fody.Tests
 				var field = type.GetAllFields()
 					.Where(x => x.IsPrivate)
 					.Where(x => x.Name == "__argo__generated_session")
-					.Where(x => x.IsNotSerialized)
 					.SingleOrDefault(x => x.FieldType == typeof(IModelSession));
 
 				Assert.NotNull(field);

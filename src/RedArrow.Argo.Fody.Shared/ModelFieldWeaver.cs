@@ -6,16 +6,23 @@ namespace RedArrow.Argo
     {
         private void AddSessionField(ModelWeavingContext context)
         {
-            // [NonSerialized]
-            // private readonly ISession __argo__generated_session
-            context.SessionField = new FieldDefinition(
-                    "__argo__generated_session",
-                    FieldAttributes.Private | FieldAttributes.NotSerialized,
-                    context.ImportReference(_sessionTypeDef));
+            context.SessionField = AddField("session", _sessionTypeDef, context);
+        }
 
-            context.Fields.Add(context.SessionField);
+        private void AddIncludePathField(ModelWeavingContext context)
+        {
+            context.IncludePathField = AddField("includePath", TypeSystem.String, context);
+        }
 
-            // TODO: foreach HasMany, add a lazyField = Lazy<>(() => _session.GetCollection(...))
+        private static FieldDefinition AddField(string fieldName, TypeReference fieldType, ModelWeavingContext context)
+        {
+            var fieldDef = new FieldDefinition(
+                    $"__argo__generated_{fieldName}",
+                    FieldAttributes.Private,
+                    context.ImportReference(fieldType));
+
+            context.Fields.Add(fieldDef);
+            return fieldDef;
         }
     }
 }

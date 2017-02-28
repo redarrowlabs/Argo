@@ -175,7 +175,7 @@ namespace RedArrow.Argo.Client.Session
             }
 
             var resourceType = ModelRegistry.GetResourceType<TModel>();
-            var request = HttpRequestBuilder.GetResource(id, resourceType);
+            var request = HttpRequestBuilder.GetResource(id, resourceType, Enumerable.Empty<string>());
             var response = await HttpClient.SendAsync(request);
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
@@ -262,7 +262,7 @@ namespace RedArrow.Argo.Client.Session
         {
             return ModelRegistry.GetResource(model).Id;
         }
-
+        
         public TAttr GetAttribute<TModel, TAttr>(TModel model, string attrName)
             where TModel : class
         {

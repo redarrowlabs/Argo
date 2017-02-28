@@ -39,6 +39,8 @@ namespace RedArrow.Argo
         public Collection<PropertyDefinition> Properties => ModelTypeDef.Properties;
 
         public FieldDefinition SessionField { get; set; }
+        public FieldDefinition IncludePathField { get; set; }
+
         public PropertyDefinition ResourcePropDef { get; set; }
         public PropertyDefinition PatchProperty { get; set; }
 	    public PropertyDefinition SessionManagedProperty { get; set; }

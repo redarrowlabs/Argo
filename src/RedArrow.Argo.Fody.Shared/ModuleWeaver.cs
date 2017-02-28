@@ -94,7 +94,8 @@ namespace RedArrow.Argo
                     LogWarningPoint);
 
 				AddSessionField(context);
-				AddSessionManagedProperty(context);
+	            AddIncludePathField(context);
+                AddSessionManagedProperty(context);
 				WeaveId(context);
 	            if (context.IdPropDef != null)
 	            {
