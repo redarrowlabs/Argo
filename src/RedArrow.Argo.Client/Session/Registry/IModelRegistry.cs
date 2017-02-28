@@ -16,8 +16,7 @@ namespace RedArrow.Argo.Client.Session.Registry
 
 	    Resource GetResource(object model);
         Resource GetPatch(object model);
-	    Resource GetOrCreatePatch<TModel>(TModel model)
-            where TModel : class;
+	    Resource GetOrCreatePatch<TModel>(TModel model);
 	    void ApplyPatch(object model);
 
 		bool IsManagedModel(object model);
@@ -25,11 +24,12 @@ namespace RedArrow.Argo.Client.Session.Registry
 		bool IsUnmanagedModel(object model);
 	    void DetachModel(object model);
 
+	    string GetInclude<TModel>();
+
         Guid GetId(object model);
         void SetId(object model, Guid id);
 
         IEnumerable<AttributeConfiguration> GetAttributeConfigs<TModel>();
-
         IEnumerable<AttributeConfiguration> GetAttributeConfigs(Type modelType);
         AttributeConfiguration GetAttributeConfig(Type modelType, string attrName);
 
@@ -37,18 +37,12 @@ namespace RedArrow.Argo.Client.Session.Registry
 	    IDictionary<string, Relationship> GetRelationshipValues(object model);
 
 	    IEnumerable<RelationshipConfiguration> GetHasOneConfigs(Type modelType);
-
         IEnumerable<RelationshipConfiguration> GetHasManyConfigs<TModel>();
-
         IEnumerable<RelationshipConfiguration> GetHasManyConfigs(Type modelType);
-
         RelationshipConfiguration GetHasManyConfig<TModel>(string rltnName);
-
         RelationshipConfiguration GetHasManyConfig(Type modelType, string rltnName);
-
-
+		
         JObject GetAttributeBag(object model);
-
         void SetAttributeBag(object model, JObject attributes);
         
         object[] GetIncludedModels(object model);

@@ -12,12 +12,12 @@ namespace RedArrow.Argo.Client.Http
     {
         private const string JsonApiHeader = "application/vnd.api+json";
 		
-        public HttpRequestMessage GetResource(Guid id, string resourceType, IEnumerable<string> included)
+        public HttpRequestMessage GetResource(Guid id, string resourceType, string include)
         {
             var path = $"{resourceType}/{id}";
-            if (!included.IsNullOrEmpty())
+            if (!string.IsNullOrEmpty(include))
             {
-                path.SetQueryParam("include", string.Join(",", included));
+                path = path.SetQueryParam("include", include);
             }
             return new HttpRequestMessage(HttpMethod.Get, path);
         }

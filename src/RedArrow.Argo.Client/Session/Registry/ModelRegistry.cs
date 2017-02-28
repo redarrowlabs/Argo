@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Newtonsoft.Json.Linq;
 using RedArrow.Argo.Client.Config.Model;
 using RedArrow.Argo.Client.Exceptions;
@@ -69,7 +70,6 @@ namespace RedArrow.Argo.Client.Session.Registry
         }
 
         public Resource GetOrCreatePatch<TModel>(TModel model)
-            where TModel : class
         {
             var patch = GetPatch(model);
             if (patch == null)
@@ -109,6 +109,11 @@ namespace RedArrow.Argo.Client.Session.Registry
 	    {
 		    var modelType = model.GetType();
 			GetModelConfig(modelType).SessionField.SetValue(model, null);
+	    }
+
+	    public string GetInclude<TModel>()
+	    {
+		    return (string) GetModelConfig<TModel>().IncludeField.GetValue(null);
 	    }
 
 		public Guid GetId(object model)
@@ -216,6 +221,11 @@ namespace RedArrow.Argo.Client.Session.Registry
             var jAttrBag = new JObject(unmappedAttrs);
             attrBagProp.SetValue(model, jAttrBag.ToObject(attrBagProp.PropertyType));
         }
+
+	    private ModelConfiguration GetModelConfig<TModel>()
+	    {
+		    return GetModelConfig(typeof (TModel));
+	    }
 
         private ModelConfiguration GetModelConfig(Type modelType)
         {

@@ -4,33 +4,11 @@ using System.Linq;
 using System.Reflection;
 using RedArrow.Argo.Attributes;
 using RedArrow.Argo.Client.Config.Model;
-using RedArrow.Argo.Client.Exceptions;
-using RedArrow.Argo.Model;
-using RedArrow.Argo.Session;
 
 namespace RedArrow.Argo.Client.Extensions
 {
     internal static class TypeExtensions
     {
-        internal static ConstructorInfo GetDefaultConstructor(this Type type)
-        {
-            if (type == null || type.GetTypeInfo().IsAbstract)
-            {
-                return null;
-            }
-
-            var result = type.GetTypeInfo()
-                .DeclaredConstructors
-                .FirstOrDefault(ctor => ctor.IsPublic && !ctor.GetParameters().Any());
-
-            if (result == null)
-            {
-                throw new ArgoException("A default (no-arg) constructor could not be found for: ", type);
-            }
-
-            return result;
-        }
-
         internal static string GetModelResourceType(this Type type)
         {
             return type.GetTypeInfo()
@@ -45,15 +23,21 @@ namespace RedArrow.Argo.Client.Extensions
 	    {
 		    return type.GetTypeInfo()
 			    .DeclaredFields
-			    .Where(field => field.FieldType == typeof (IModelSession))
 			    .Single(field => field.Name == "__argo__generated_session");
+	    }
+
+	    internal static FieldInfo GetIncludeField(this Type type)
+	    {
+		    return type.GetTypeInfo()
+			    .DeclaredFields
+			    .Single(field => field.Name == "__argo__generated_include");
+
 	    }
 
         internal static PropertyInfo GetSessionManagedProperty(this Type type)
         {
             return type.GetTypeInfo()
                 .DeclaredProperties
-                .Where(prop => prop.PropertyType == typeof(bool))
                 .Single(prop => prop.Name == "__argo__generated_SessionManaged");
         }
 
@@ -61,7 +45,6 @@ namespace RedArrow.Argo.Client.Extensions
         {
             return type.GetTypeInfo()
                 .DeclaredProperties
-                .Where(prop => prop.PropertyType == typeof(IResourceIdentifier))
                 .Single(prop => prop.Name == "__argo__generated_Resource");
         }
 
@@ -69,7 +52,6 @@ namespace RedArrow.Argo.Client.Extensions
         {
             return type.GetTypeInfo()
                 .DeclaredProperties
-                .Where(prop => prop.PropertyType == typeof(IResourceIdentifier))
                 .Single(prop => prop.Name == "__argo__generated_Patch");
         }
 

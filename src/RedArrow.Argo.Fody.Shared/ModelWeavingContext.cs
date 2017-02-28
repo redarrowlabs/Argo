@@ -31,8 +31,7 @@ namespace RedArrow.Argo
         public IEnumerable<PropertyDefinition> MappedHasOnes { get; }
         public IEnumerable<PropertyDefinition> MappedHasManys { get; }
 
-        private TypeDefinition ModelTypeDef { get; }
-        public TypeReference ModelTypeRef => ModelTypeDef;
+        public TypeDefinition ModelTypeDef { get; }
 
         public Collection<FieldDefinition> Fields => ModelTypeDef.Fields;
         public Collection<MethodDefinition> Methods => ModelTypeDef.Methods;

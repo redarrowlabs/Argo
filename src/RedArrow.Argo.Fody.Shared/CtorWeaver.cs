@@ -12,7 +12,7 @@ namespace RedArrow.Argo
     {
         private void AddCtor(ModelWeavingContext context)
         {
-            // Ctor(Guid id, IResourceIdentifier resource, IModelSession session)
+            // public Ctor(Guid id, IResourceIdentifier resource, IModelSession session)
             // {
             //   Id = id;
 			//   __argo__generated_Resource = resource;
@@ -44,7 +44,7 @@ namespace RedArrow.Argo
 				?.SingleOrDefault(x => x.OpCode == OpCodes.Ldfld)
 				?.Operand as FieldReference;
 			// supply generic type arguments to template
-			var sessionGetId = _session_GetId.MakeGenericMethod(context.ModelTypeRef);
+			var sessionGetId = _session_GetId.MakeGenericMethod(context.ModelTypeDef);
 
             var proc = ctor.Body.GetILProcessor();
 
@@ -67,10 +67,6 @@ namespace RedArrow.Argo
             proc.Emit(OpCodes.Stfld, context.SessionField); // this.__argo__generated_session = session;
             
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-            proc.Emit(OpCodes.Ldstr, GetIncludePath(context));
-            proc.Emit(OpCodes.Stfld, context.IncludePathField); // this.__argo__generated_includePath = this.__argo__generated_session.GetIncludePath<TModel>()
-
-            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
             proc.Emit(OpCodes.Ldfld, context.SessionField); // load this.__argo__generated_session
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
@@ -85,12 +81,49 @@ namespace RedArrow.Argo
             context.Methods.Add(ctor);
         }
 
-        private void WeaveAttributeFieldInitializers(ModelWeavingContext context, ILProcessor proc, IEnumerable<PropertyDefinition> attrPropDefs)
+	    private void AddStaticCtor(ModelWeavingContext context)
+	    {
+		    var ctor = context.ModelTypeDef.GetStaticConstructor();
+
+			var include = GetIncludePath(context);
+
+		    if (ctor == null)
+		    {
+			    ctor = new MethodDefinition(
+				".cctor",
+				MethodAttributes.Private |
+				MethodAttributes.HideBySig |
+				MethodAttributes.Static |
+				MethodAttributes.SpecialName |
+				MethodAttributes.RTSpecialName,
+				TypeSystem.Void);
+
+				context.Methods.Add(ctor);
+
+			    var proc = ctor.Body.GetILProcessor();
+
+				proc.Emit(OpCodes.Ldstr, include);
+				proc.Emit(OpCodes.Stsfld, context.IncludePathField);
+				proc.Emit(OpCodes.Ret);
+		    }
+		    else
+			{
+				var proc = ctor.Body.GetILProcessor();
+				var originalFirst = ctor.Body.Instructions[0];
+
+				proc.InsertBefore(originalFirst, proc.Create(OpCodes.Ldstr, include));
+				proc.InsertBefore(originalFirst, proc.Create(OpCodes.Stsfld, context.IncludePathField));
+			}
+
+		    context.ModelTypeDef.IsBeforeFieldInit = false;
+	    }
+
+	    private void WeaveAttributeFieldInitializers(ModelWeavingContext context, ILProcessor proc, IEnumerable<PropertyDefinition> attrPropDefs)
         {
             foreach (var attrPropDef in attrPropDefs)
             {
                 // supply generic type arguments to template
-                var sessionGetAttr = _session_GetAttribute.MakeGenericMethod(context.ModelTypeRef, attrPropDef.PropertyType);
+                var sessionGetAttr = _session_GetAttribute.MakeGenericMethod(context.ModelTypeDef, attrPropDef.PropertyType);
 
                 var backingField = attrPropDef.BackingField();
 
@@ -113,72 +146,11 @@ namespace RedArrow.Argo
                 proc.Emit(OpCodes.Callvirt, context.ImportReference(
                     sessionGetAttr,
                     attrPropDef.PropertyType.IsGenericParameter
-                        ? context.ModelTypeRef
+                        ? context.ModelTypeDef
                         : null)); // invoke session.GetAttribute(..)
 
                 proc.Emit(OpCodes.Stfld, backingField); // store return value in 'this'.<backing field>
             }
-        }
-
-        private string GetIncludePath(ModelWeavingContext context)
-        {
-            var modelTypeDef = context.ModelTypeRef.Resolve();
-            var relationships = GetEagerRelationships(context, modelTypeDef, string.Empty, new[] {modelTypeDef});
-
-            return string.Join(",", relationships);
-        }
-
-        private IEnumerable<string> GetEagerRelationships(ModelWeavingContext context, TypeDefinition type, string path, TypeDefinition[] pathTypes)
-        {
-            var eagerRltns = type.Properties
-                .Where(x => x.CustomAttributes
-                    .Where(attr =>
-                        attr.AttributeType.Resolve() == context.ImportReference(_hasOneAttributeTypeDef).Resolve()
-                        || attr.AttributeType.Resolve() == context.ImportReference(_hasManyAttributeTypeDef).Resolve())
-                    .Where(attr => attr.HasConstructorArguments)
-                    .SelectMany(attr => attr.ConstructorArguments
-                        .Where(arg => arg.Type.Resolve() == context.ImportReference(_loadStrategyTypeDef).Resolve()))
-                    .Any(arg => (int) arg.Value == 1)) // eager
-                .Where(eagerProp =>
-                {
-                    var eagerPropAttr = eagerProp.CustomAttributes.ContainsAttribute(Constants.Attributes.HasOne)
-                        ? Constants.Attributes.HasOne
-                        : Constants.Attributes.HasMany;
-                    var eagerPropName = eagerProp.JsonApiName(TypeSystem, eagerPropAttr);
-                    var eagerPropType = eagerProp.PropertyType.Resolve();
-                    var nextPath = string.IsNullOrEmpty(path)
-                        ? eagerPropName
-                        : $"{path}.{eagerPropName}";
-                    var typeVisited = pathTypes.Contains(eagerPropType);
-                    if (typeVisited)
-                    {
-                        LogWarning($"Potential circular reference detected and omitted from eager load: {eagerProp.PropertyType.Resolve().FullName}::{nextPath}");
-                    }
-                    return !typeVisited;
-                });
-
-            if (eagerRltns.Any())
-            {
-                return eagerRltns.SelectMany(x =>
-                {
-                    var eagerPropAttr = x.CustomAttributes.ContainsAttribute(Constants.Attributes.HasOne)
-                        ? Constants.Attributes.HasOne
-                        : Constants.Attributes.HasMany;
-                    var eagerPropName = x.JsonApiName(TypeSystem, eagerPropAttr);
-                    var eagerPropType = x.PropertyType.Resolve();
-                    var nextPath = string.IsNullOrEmpty(path)
-                        ? eagerPropName
-                        : $"{path}.{eagerPropName}";
-                    return GetEagerRelationships(
-                        context,
-                        x.PropertyType.Resolve(),
-                        nextPath,
-                        pathTypes.Concat(new [] { eagerPropType}).ToArray());
-                })
-                .ToArray();
-            }
-
-            return new [] {path};
         }
     }
 }

@@ -65,7 +65,7 @@ namespace RedArrow.Argo
                 }
                 else
                 {
-                    throw new Exception($"Model {context.ModelTypeRef.FullName} [Id] property '{context.IdPropDef?.Name}' has no setter. This property must have a private or protected setter");
+                    throw new Exception($"Model {context.ModelTypeDef.FullName} [Id] property '{context.IdPropDef?.Name}' has no setter. This property must have a private or protected setter");
                 }
 
                 LogInfo($"Successfully added private setter to {context.IdPropDef}");

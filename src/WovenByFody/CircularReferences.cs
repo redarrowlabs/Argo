@@ -37,8 +37,7 @@ namespace WovenByFody
 
         [HasMany]
         public IEnumerable<CircularReferenceD> AllDs { get; set; }
-
-    }
+	}
 
     [Model]
     public class CircularReferenceD

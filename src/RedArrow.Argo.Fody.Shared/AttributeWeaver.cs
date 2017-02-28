@@ -52,7 +52,7 @@ namespace RedArrow.Argo
             string attrName)
         {
             // supply generic type arguments to template
-            var sessionSetAttr = sessionSetAttrGeneric.MakeGenericMethod(context.ModelTypeRef, attrPropDef.PropertyType);
+            var sessionSetAttr = sessionSetAttrGeneric.MakeGenericMethod(context.ModelTypeDef, attrPropDef.PropertyType);
 
             attrPropDef.SetMethod.Body.Instructions.Clear();
 
@@ -82,7 +82,7 @@ namespace RedArrow.Argo
             proc.Emit(OpCodes.Callvirt, context.ImportReference(
                 sessionSetAttr,
                 attrPropDef.PropertyType.IsGenericParameter
-                    ? context.ModelTypeRef
+                    ? context.ModelTypeDef
                     : null)); // invoke session.GetAttribute(..)
 
             proc.Append(endif); // load 'this' onto stack

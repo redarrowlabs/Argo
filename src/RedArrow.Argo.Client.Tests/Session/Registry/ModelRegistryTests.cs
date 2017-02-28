@@ -275,6 +275,16 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
             Assert.Null(result);
         }
 
+	    [Fact]
+	    public void GetInclude__Given_ModelType__Then_ReturnStaticIncludeValue()
+	    {
+		    var subject = CreateSubject(typeof (CircularReferenceB));
+			
+		    var result = subject.GetInclude<CircularReferenceB>();
+
+			Assert.Equal("a,c.a,c.primaryD", result);
+	    }
+
         private static ModelRegistry CreateSubject(params Type[] modelTypes)
         {
             return new ModelRegistry(modelTypes.Select(x => new ModelConfiguration(x)));

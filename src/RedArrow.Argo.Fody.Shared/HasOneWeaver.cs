@@ -56,7 +56,7 @@ namespace RedArrow.Argo
             string attrName)
         {
             // supply generic type arguments to template
-            var sessionGetAttr = sessionGetAttrGeneric.MakeGenericMethod(context.ModelTypeRef, refPropDef.PropertyType);
+            var sessionGetAttr = sessionGetAttrGeneric.MakeGenericMethod(context.ModelTypeDef, refPropDef.PropertyType);
 
 			// get
 			// {
@@ -84,7 +84,7 @@ namespace RedArrow.Argo
 			proc.Emit(OpCodes.Callvirt, context.ImportReference(
 				sessionGetAttr,
 				refPropDef.PropertyType.IsGenericParameter
-					? context.ModelTypeRef
+					? context.ModelTypeDef
 					: null)); // invoke session.GetReference(..)
 			proc.Emit(OpCodes.Stfld, backingField); // store return value in 'this'.<backing field>
 
@@ -101,7 +101,7 @@ namespace RedArrow.Argo
             string attrName)
         {
             // supply generic type arguments to template
-            var sessionSetAttr = sessionSetAttrGeneric.MakeGenericMethod(context.ModelTypeRef, refPropDef.PropertyType);
+            var sessionSetAttr = sessionSetAttrGeneric.MakeGenericMethod(context.ModelTypeDef, refPropDef.PropertyType);
 
 			refPropDef.SetMethod.Body.Instructions.Clear();
 
@@ -134,7 +134,7 @@ namespace RedArrow.Argo
 			proc.Emit(OpCodes.Callvirt, context.ImportReference(
 				sessionSetAttr,
 				refPropDef.PropertyType.IsGenericParameter
-					? context.ModelTypeRef
+					? context.ModelTypeDef
 					: null)); // invoke session.GetReference(..)
 
 			proc.Append(ret);

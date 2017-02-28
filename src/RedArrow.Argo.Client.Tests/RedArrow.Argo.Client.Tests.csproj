@@ -142,9 +142,9 @@
       <Project>{f540b5ca-b7c2-4799-9eb2-b5401bd1f28c}</Project>
       <Name>RedArrow.Argo</Name>
     </ProjectReference>
-    <ProjectReference Include="..\WovenByFody.NETStandard14\WovenByFody.NETStandard14.csproj">
-      <Project>{14153e37-e5bf-46bc-8635-1b473148a8bf}</Project>
-      <Name>WovenByFody.NETStandard14</Name>
+    <ProjectReference Include="..\WovenByFody.Net45\WovenByFody.Net45.csproj">
+      <Project>{d7da07d0-aab7-44d5-b69b-46a7555c64f1}</Project>
+      <Name>WovenByFody.Net45</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

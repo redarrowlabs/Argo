@@ -175,7 +175,8 @@ namespace RedArrow.Argo.Client.Session
             }
 
             var resourceType = ModelRegistry.GetResourceType<TModel>();
-            var request = HttpRequestBuilder.GetResource(id, resourceType, Enumerable.Empty<string>());
+			var include = ModelRegistry.GetInclude<TModel>();
+            var request = HttpRequestBuilder.GetResource(id, resourceType, include);
             var response = await HttpClient.SendAsync(request);
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
