@@ -320,8 +320,12 @@ namespace RedArrow.Argo.Client.Session
 					{
 						relationship.Data = JValue.CreateNull();
 					}
-			        var patch = ModelRegistry.GetOrCreatePatch(model);
-			        patch.GetRelationships()[rltnName] = relationship;
+					// TODO -
+					// we're updating the resource, not the patch, since this is not a mutative action
+					// updating the resource effectivly updates what the session knows about the data
+					// the session won't try to hit the server again, and this change won't be persisted
+			        var resource = ModelRegistry.GetResource(model);
+					resource.GetRelationships()[rltnName] = relationship;
 			        return related;
 		        }
 	        }
