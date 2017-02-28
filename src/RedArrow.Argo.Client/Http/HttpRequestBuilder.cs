@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Text;
+using Newtonsoft.Json;
 using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Flurl.Shared;
 using RedArrow.Argo.Client.Model;
@@ -40,6 +42,14 @@ namespace RedArrow.Argo.Client.Http
         public HttpRequestMessage UpdateResource(Resource patch, IEnumerable<Resource> include)
         {
             var root = ResourceRootSingle.FromResource(patch, include);
+
+			// TODO: investigate - writing via stream may be more performant / smaller memory footprint
+			// TODO: since it would avoid loading potentially large strings into memory
+			//var stream = new MemoryStream();
+			//var sr = new StreamWriter(stream);
+			//var writer = new JsonTextWriter(sr);
+			//new JsonSerializer().Serialize(writer, root);
+			//var content = new StreamContent(stream);
 
             return new HttpRequestMessage(new HttpMethod("PATCH"), $"{patch.Type}/{patch.Id}")
             {

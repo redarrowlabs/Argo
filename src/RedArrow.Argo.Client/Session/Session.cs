@@ -48,13 +48,15 @@ namespace RedArrow.Argo.Client.Session
             ModelRegistry = modelRegistry;
         }
 
-        public void Dispose()
+		public void Dispose()
         {
             HttpClient.Dispose();
             Disposed = true;
-        }
+		}
 
-        public async Task<TModel> Create<TModel>()
+		#region ISession
+
+		public async Task<TModel> Create<TModel>()
             where TModel : class
         {
             return await Create<TModel>(typeof(TModel), null);
@@ -183,16 +185,8 @@ namespace RedArrow.Argo.Client.Session
                 return default(TModel); // null
             }
             response.EnsureSuccessStatusCode();
-
-			// deserializing from stream is more performant than string
-			// http://www.newtonsoft.com/json/help/html/Performance.htm
-			ResourceRootSingle root;
-			using(var stream = await response.Content.ReadAsStreamAsync())
-			using (var sr = new StreamReader(stream))
-			using(var reader = new JsonTextReader(sr))
-			{
-				root = new JsonSerializer().Deserialize<ResourceRootSingle>(reader);
-			}
+			
+			var root = await response.GetContentModel<ResourceRootSingle>();
             model = CreateResourceModel<TModel>(root.Data);
             Cache.Update(id, model);
 
@@ -213,16 +207,7 @@ namespace RedArrow.Argo.Client.Session
 			}
 			response.EnsureSuccessStatusCode();
 			
-			// deserializing from stream is more performant than string
-			// http://www.newtonsoft.com/json/help/html/Performance.htm
-			ResourceRootCollection root;
-			using (var stream = await response.Content.ReadAsStreamAsync())
-			using (var sr = new StreamReader(stream))
-			using (var reader = new JsonTextReader(sr))
-			{
-				root = new JsonSerializer().Deserialize<ResourceRootCollection>(reader);
-			}
-
+		    var root = await response.GetContentModel<ResourceRootCollection>();
 		    return root.Data?.Select(rltn =>
 		    {
 			    // use the actual resource type, not typeof(TRltn)
@@ -239,6 +224,7 @@ namespace RedArrow.Argo.Client.Session
             ThrowIfDisposed();
 
             var id = ModelRegistry.GetId(model);
+
             return Delete<TModel>(id);
         }
 
@@ -248,18 +234,35 @@ namespace RedArrow.Argo.Client.Session
             var resourceType = ModelRegistry.GetResourceType<TModel>();
             var response = await HttpClient.DeleteAsync($"{resourceType}/{id}");
 			response.EnsureSuccessStatusCode();
-
-	        var model = Cache.Retrieve<TModel>(id);
-	        if (model != null)
-			{
-				Cache.Remove(id);
-				ModelRegistry.DetachModel(model);
-			}
+			Detach<TModel>(id);
         }
 
-        #region IModelSession
+	    public void Detach<TModel>(Guid id) where TModel : class
+	    {
+		    var model = Cache.Retrieve<TModel>(id);
+		    if (model != null)
+		    {
+			    Detach(id, model);
+		    }
+	    }
 
-        public Guid GetId<TModel>(TModel model)
+	    public void Detach<TModel>(TModel model) where TModel : class
+	    {
+		    var id = ModelRegistry.GetId(model);
+			Detach(id, model);
+	    }
+
+	    private void Detach(Guid id, object model)
+	    {
+		    Cache.Remove(id);
+			ModelRegistry.DetachModel(model);
+	    }
+
+#endregion ISession
+
+		#region IModelSession
+
+		public Guid GetId<TModel>(TModel model)
         {
             return ModelRegistry.GetResource(model).Id;
         }

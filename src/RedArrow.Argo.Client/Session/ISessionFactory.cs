@@ -1,7 +1,10 @@
-﻿namespace RedArrow.Argo.Client.Session
+﻿using System;
+using System.Net.Http;
+
+namespace RedArrow.Argo.Client.Session
 {
     public interface ISessionFactory
     {
-        ISession CreateSession();
+        ISession CreateSession(Action<HttpClient> configureClient = null);
     }
 }
