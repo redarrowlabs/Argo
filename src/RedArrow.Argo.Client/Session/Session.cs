@@ -310,12 +310,18 @@ namespace RedArrow.Argo.Client.Session
 					// TODO? i.e. relationship data containing a collection for this to-one relationship
 			        // TODO? throw exception?  log warning? ¯\_(ツ)_/¯ 
 			        var related = GetRelated<TModel, TRltn>(model, rltnName).Result?.FirstOrDefault();
-			        var relatedResource = ModelRegistry.GetResource(related);
-					var patch = ModelRegistry.GetOrCreatePatch(model);
-					patch.GetRelationships()[rltnName] = new Relationship
+					var relationship = new Relationship();
+					if (related != null)
 			        {
-				        Data = JObject.FromObject(relatedResource.ToResourceIdentifier())
-			        };
+				        var relatedResource = ModelRegistry.GetResource(related);
+				        relationship.Data = JObject.FromObject(relatedResource.ToResourceIdentifier());
+			        }
+					else
+					{
+						relationship.Data = JValue.CreateNull();
+					}
+			        var patch = ModelRegistry.GetOrCreatePatch(model);
+			        patch.GetRelationships()[rltnName] = relationship;
 			        return related;
 		        }
 	        }
