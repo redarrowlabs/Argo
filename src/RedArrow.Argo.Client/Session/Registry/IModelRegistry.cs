@@ -28,6 +28,7 @@ namespace RedArrow.Argo.Client.Session.Registry
 
         Guid GetId(object model);
         void SetId(object model, Guid id);
+        Guid GetOrCreateId(object model);
 
         IEnumerable<AttributeConfiguration> GetAttributeConfigs<TModel>();
         IEnumerable<AttributeConfiguration> GetAttributeConfigs(Type modelType);
@@ -45,6 +46,6 @@ namespace RedArrow.Argo.Client.Session.Registry
         JObject GetAttributeBag(object model);
         void SetAttributeBag(object model, JObject attributes);
         
-        object[] GetIncludedModels(object model);
+        object[] IncludedModelsCreate(object model);
     }
 }

@@ -113,9 +113,6 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
-    <Compile Include="Collections\Operations\QueuedAddOperationTests.cs" />
-    <Compile Include="Collections\Operations\QueuedClearOperationTests.cs" />
-    <Compile Include="Collections\Operations\QueuedRemoveOperationTests.cs" />
     <Compile Include="Extensions\HttpRequestMessageExtensions.cs" />
     <Compile Include="Extensions\SessionExtensions.cs" />
     <Compile Include="MockRequestHandler.cs" />
@@ -125,7 +122,6 @@
     <Compile Include="Session\Models\TestCustomWovenModel.cs" />
     <Compile Include="Session\Models\TestGetModelAttributeValues.cs" />
     <Compile Include="Session\Models\TestWovenModel.cs" />
-    <Compile Include="Session\Patch\PatchContextTests.cs" />
     <Compile Include="Session\Registry\ModelRegistryTests.cs" />
     <Compile Include="Session\SessionTests.cs" />
   </ItemGroup>
@@ -150,6 +146,9 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Collections\" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

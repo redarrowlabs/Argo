@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RedArrow.Argo.Client.Extensions;
@@ -9,8 +7,6 @@ namespace RedArrow.Argo.Client.Model
 {
     public class Resource : ResourceIdentifier
     {
-        private static readonly string ArgoVersion = typeof(Resource).GetTypeInfo().Assembly.GetName().Version.ToString();
-
         [JsonProperty("attributes", NullValueHandling = NullValueHandling.Ignore)]
         public JObject Attributes { get; set; }
 

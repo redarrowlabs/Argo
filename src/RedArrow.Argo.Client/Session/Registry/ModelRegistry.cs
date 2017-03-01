@@ -6,6 +6,7 @@ using System.Reflection;
 using Newtonsoft.Json.Linq;
 using RedArrow.Argo.Client.Config.Model;
 using RedArrow.Argo.Client.Exceptions;
+using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Model;
 using RedArrow.Argo.Session;
 
@@ -128,6 +129,17 @@ namespace RedArrow.Argo.Client.Session.Registry
             GetModelConfig(modelType).IdProperty.SetValue(model, id);
         }
 
+        public Guid GetOrCreateId(object model)
+        {
+            var modelId = GetId(model);
+            if (modelId == Guid.Empty)
+            {
+                modelId = Guid.NewGuid();
+                SetId(model, modelId);
+            }
+            return modelId;
+        }
+
         public IEnumerable<AttributeConfiguration> GetAttributeConfigs<TModel>()
         {
             return GetAttributeConfigs(typeof(TModel));
@@ -241,12 +253,12 @@ namespace RedArrow.Argo.Client.Session.Registry
             }
         }
 
-        public object[] GetIncludedModels(object model)
+        public object[] IncludedModelsCreate(object model)
         {
-            return model == null ? null : GetIncludedModels(model, new [] {model}).ToArray();
+            return model == null ? null : CreateIncludedModels(model, new [] {model}).ToArray();
         }
 
-        private IEnumerable<object> GetIncludedModels(object model, object[] parentModels)
+        private IEnumerable<object> CreateIncludedModels(object model, object[] parentModels)
         {
 			var modelType = model.GetType();
 			var relatedModels = GetHasOneConfigs(modelType)
@@ -262,12 +274,12 @@ namespace RedArrow.Argo.Client.Session.Registry
 
 	        return includedModels.Union(relatedModels
 		        .Where(x => !parentModels.Contains(x))
-		        .SelectMany(x => GetIncludedModels(x, includedModels)))
+		        .SelectMany(x => CreateIncludedModels(x, includedModels)))
                 .Where(IsUnmanagedModel)
                 .ToArray();
         }
 
-	    public IDictionary<string, Relationship> GetRelationshipValues(object model)
+        public IDictionary<string, Relationship> GetRelationshipValues(object model)
 		{
 			var modelType = model.GetType();
 
@@ -277,43 +289,36 @@ namespace RedArrow.Argo.Client.Session.Registry
 		    {
 			    var related = hasOne.PropertyInfo.GetValue(model);
 			    if (related == null) continue;
-			    var id = GetId(related);
-			    if (id == Guid.Empty)
-			    {
-				    id = Guid.NewGuid();
-					SetId(related, id);
-			    }
+		        var id = GetOrCreateId(related);
 			    ret[hasOne.RelationshipName] = new Relationship
-			    {
-				    Data = JObject.FromObject(new ResourceIdentifier
-				    {
-					    Id = id,
-					    Type = GetResourceType(related.GetType())
-				    })
-			    };
+                {
+                    Data = JObject.FromObject(new ResourceIdentifier
+                    {
+                        Id = id,
+                        Type = GetResourceType(related.GetType())
+                    })
+                };
 		    }
 
 		    foreach (var hasMany in GetHasManyConfigs(modelType))
 		    {
 			    var collection = hasMany.PropertyInfo.GetValue(model) as IEnumerable;
 			    if (collection == null) continue;
-			    foreach (var related in collection)
-			    {
-					var id = GetId(related);
-					if (id == Guid.Empty)
-					{
-						id = Guid.NewGuid();
-						SetId(related, id);
-					}
-					ret[hasMany.RelationshipName] = new Relationship
-					{
-						Data = JObject.FromObject(new ResourceIdentifier
-						{
-							Id = id,
-							Type = GetResourceType(related.GetType())
-						})
-					};
-				}
+		        ret[hasMany.RelationshipName] = new Relationship
+		        {
+		            Data = JObject.FromObject(collection
+                        .Cast<object>()
+		                .Select(related =>
+		                {
+		                    var id = GetOrCreateId(related);
+		                    return new ResourceIdentifier
+		                    {
+		                        Id = id,
+		                        Type = GetResourceType(related.GetType())
+		                    };
+		                })
+		                .ToArray())
+		        };
 		    }
 
 		    return ret;

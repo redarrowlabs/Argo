@@ -4,23 +4,27 @@ namespace RedArrow.Argo.Client.Exceptions
 {
     public class ArgoException : Exception
     {
-        private Type Type { get; }
+        protected Guid? Id { get; }
+        protected Type Type { get; }
 
-        public ArgoException(Type type)
+        public ArgoException(Type type, Guid? id = null)
         {
+            Id = id;
             Type = type;
         }
 
-        public ArgoException(string message, Type type) : base(message)
+        public ArgoException(string message, Type type, Guid? id = null) : base(message)
         {
+            Id = id;
             Type = type;
         }
 
-        public ArgoException(string message, Exception innerException, Type type) : base(message, innerException)
+        public ArgoException(string message, Exception innerException, Type type, Guid? id = null) : base(message, innerException)
         {
+            Id = id;
             Type = type;
         }
 
-        public override string Message => $"{base.Message}{Type.FullName}";
+        public override string Message => $"\tModel Id:\t{Id}\n\tModel Type:\t{Type.FullName}\n{base.Message}";
     }
 }

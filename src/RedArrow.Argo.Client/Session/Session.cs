@@ -4,6 +4,7 @@ using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Session.Registry;
 using RedArrow.Argo.Session;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -89,11 +90,11 @@ namespace RedArrow.Argo.Client.Session
 	        {
 		        if (ModelRegistry.IsManagedModel(model))
 		        {
-					throw new ManagedModelCreationException(ModelRegistry.GetId(model), model.GetType());
+					throw new ManagedModelCreationException(model.GetType(), modelId);
 		        }
 		     
 				// all unmanaged models in the object graph, including root
-		        resourceIndex = ModelRegistry.GetIncludedModels(model)
+		        resourceIndex = ModelRegistry.IncludedModelsCreate(model)
 			        .Select(CreateModelResource)
 			        .ToDictionary(x => x.Id);
 	        }
@@ -148,7 +149,8 @@ namespace RedArrow.Argo.Client.Session
 			// if nothing was updated, no need to continue
 			if (patch == null) return;
 
-			var includes = ModelRegistry.GetIncludedModels(model)
+			var includes = Cache.Items
+                .Where(ModelRegistry.IsUnmanagedModel)
 				.Select(CreateModelResource)
 				.ToArray();
 			var request = HttpRequestBuilder.UpdateResource(patch, includes);
@@ -193,30 +195,44 @@ namespace RedArrow.Argo.Client.Session
             return model;
         }
 		
-	    private async Task<IEnumerable<TRltn>> GetRelated<TModel, TRltn>(TModel model, string rltnName)
-			where TRltn : class
+	    private object GetSingleRelated(object model, string rltnName)
 	    {
-		    ThrowIfDisposed();
-
 			var resource = ModelRegistry.GetResource(model);
 		    var request = HttpRequestBuilder.GetRelated(resource.Id, resource.Type, rltnName);
-		    var response = await HttpClient.SendAsync(request);
-		    if (response.StatusCode == HttpStatusCode.NotFound)
-		    {
-				return null; // null
-			}
+		    var response = HttpClient.SendAsync(request).GetAwaiter().GetResult();
+	        if (response.StatusCode == HttpStatusCode.NotFound) return null;
+
 			response.EnsureSuccessStatusCode();
 			
-		    var root = await response.GetContentModel<ResourceRootCollection>();
-		    return root.Data?.Select(rltn =>
-		    {
-			    // use the actual resource type, not typeof(TRltn)
-			    // TRltn may be a base class or interface!
-			    var rltnModel = CreateResourceModel<TRltn>(rltn);
-			    Cache.Update(rltn.Id, rltnModel);
-			    return rltnModel;
-		    }).ToArray();
-		}
+            // TODO: perhaps use a 3rd ResourceRoot with JToken Data to determine if array was erroneously returned
+		    var root = response.GetContentModel<ResourceRootSingle>().GetAwaiter().GetResult();
+
+	        var rltn = root.Data;
+	        if (rltn == null) return null;
+
+	        var rltnModel = CreateResourceModel(rltn);
+	        Cache.Update(rltn.Id, rltnModel);
+	        return rltnModel;
+	    }
+
+        private IEnumerable GetManyRelated(object model, string rltnName)
+        {
+            var resource = ModelRegistry.GetResource(model);
+            var request = HttpRequestBuilder.GetRelated(resource.Id, resource.Type, rltnName);
+            var response = HttpClient.SendAsync(request).GetAwaiter().GetResult();
+            if (response.StatusCode == HttpStatusCode.NotFound) return null;
+
+            response.EnsureSuccessStatusCode();
+
+            // TODO: perhaps use a 3rd ResourceRoot with JToken Data to determine if object was erroneously returned
+            var root = response.GetContentModel<ResourceRootCollection>().GetAwaiter().GetResult();
+            return root.Data?.Select(rltn =>
+            {
+                var rltnModel = CreateResourceModel(rltn);
+                Cache.Update(rltn.Id, rltnModel);
+                return rltnModel;
+            }).ToArray();
+        }
 
         public Task Delete<TModel>(TModel model)
             where TModel : class
@@ -258,7 +274,7 @@ namespace RedArrow.Argo.Client.Session
 			ModelRegistry.DetachModel(model);
 	    }
 
-#endregion ISession
+        #endregion ISession
 
 		#region IModelSession
 
@@ -308,133 +324,65 @@ namespace RedArrow.Argo.Client.Session
 		        relationships = modelResource.Relationships;
 		        if (relationships == null || !relationships.TryGetValue(rltnName, out rltn))
 		        {
-			        // the rltnName defined in model was not found in the patch or resource
-			        // TODO? we're doing FirstOrDefault instead of SingleOrDefault in case of improperly structured data
-					// TODO? i.e. relationship data containing a collection for this to-one relationship
-			        // TODO? throw exception?  log warning? ¯\_(ツ)_/¯ 
-			        var related = GetRelated<TModel, TRltn>(model, rltnName).Result?.FirstOrDefault();
-					var relationship = new Relationship();
-					if (related != null)
-			        {
-				        var relatedResource = ModelRegistry.GetResource(related);
-				        relationship.Data = JObject.FromObject(relatedResource.ToResourceIdentifier());
-			        }
-					else
+		            var related = GetSingleRelated(model, rltnName);
+					rltn = new Relationship
 					{
-						relationship.Data = JValue.CreateNull();
-					}
-					// TODO -
+					    Data = related != null
+                            ? JToken.FromObject(ModelRegistry.GetResource(related).ToResourceIdentifier())
+                            : JValue.CreateNull()
+					};
 					// we're updating the resource, not the patch, since this is not a mutative action
 					// updating the resource effectivly updates what the session knows about the data
 					// the session won't try to hit the server again, and this change won't be persisted
 			        var resource = ModelRegistry.GetResource(model);
-					resource.GetRelationships()[rltnName] = relationship;
-			        return related;
+					resource.GetRelationships()[rltnName] = rltn;
 		        }
 	        }
 
-	        // if we make it to here, 'rltn' has been set
-	        var rltnData = rltn.Data;
-	        ResourceIdentifier rltnIdentifier;
-	        if (rltnData == null || rltnData.Type == JTokenType.Null) return default(TRltn);
-	        if (rltnData.Type == JTokenType.Object)
-			{
-				// TODO: I don't like that we're performing this conversion for every get
-				rltnIdentifier = rltnData.ToObject<ResourceIdentifier>();
-			}
-			else if (rltnData.Type == JTokenType.Array)
-			{
-				Log.Warn(() =>
-				{
-					var modelId = ModelRegistry.GetId(model);
-					return $"{model.GetType()}:{{{modelId}}} {rltnName} is modeled as [HasOne], but json contains multiple items for this relationship.  The first item will arbitrarily be used.";
-				});
-				// TODO: I don't like that we're performing this conversion for every get
-				// TODO: consider modeling RelationshipSingle and RelationshipCollection with relationship.IsSingular / relationship.IsCollection
-				rltnIdentifier = rltnData.ToObject<IEnumerable<ResourceIdentifier>>().FirstOrDefault();
-			}
-	        else
-			{
-				Log.Error(() =>
-				{
-					var modelId = ModelRegistry.GetId(model);
-					return $"{model.GetType()}:{{{modelId}}} {rltnName} data appears to be corrupt.  It is not an expected json token type: {rltnData.Type}";
-				});
-				return default(TRltn);
-			}
-			// calling Get<TRltn>(...) here will check the cache first, then go remote if necessary
-	        return Get<TRltn>(rltnIdentifier.Id).Result;
+            // if we make it to here, 'rltn' has been set
+            var rltnData = rltn.Data;
+            ResourceIdentifier rltnIdentifier;
+            if (rltnData == null || rltnData.Type == JTokenType.Null) return default(TRltn);
+            if (rltnData.Type == JTokenType.Object)
+            {
+                // TODO: I don't like that we're performing this conversion for every get
+                rltnIdentifier = rltnData.ToObject<ResourceIdentifier>();
+            }
+            else
+            {
+                throw new ModelMapException(
+                    $"Relationship {rltnName} mapped as [HasOne] but json relationship data was not an object",
+                    typeof(TModel),
+                    ModelRegistry.GetId(model));
+            }
+            // calling Get<TRltn>(...) here will check the cache first, then go remote if necessary
+            return Get<TRltn>(rltnIdentifier.Id).GetAwaiter().GetResult();
         }
 
         public void SetReference<TModel, TRltn>(TModel model, string rltnName, TRltn rltn)
             where TModel : class
             where TRltn : class
         {
-            ThrowIfUnmanaged(model);
+            ThrowIfDisposed();
 
-	        var patch = ModelRegistry.GetOrCreatePatch(model);
-	        var relationship = new Relationship();
-	        if (rltn != null)
-	        {
-		        var rltnType = ModelRegistry.GetResourceType<TRltn>();
-		        var rltnId = ModelRegistry.GetId(rltn);
-		        if (rltnId == Guid.Empty)
-		        {
-			        rltnId = Guid.NewGuid();
-					ModelRegistry.SetId(rltn, rltnId);
-		        }
-		        relationship.Data = JObject.FromObject(new ResourceIdentifier {Id = rltnId, Type = rltnType});
-                Cache.Update(rltnId, rltn);
-	        }
-	        else
-	        {
-		        relationship.Data = JValue.CreateNull();
-	        }
-	        patch.GetRelationships()[rltnName] = relationship;
-        }
-
-        public void InitializeCollection(IRemoteCollection collection)
-        {
-            // TODO: determine if {id/type} from owner relationship are cached already
-            // TODO: abstract this into a collection loader/initializer
-
-            // TODO: brute force this for now
-
-            // TODO: don't run this task if the resource collection is empty/null!
-
-            //Task.Run(async () =>
-            //{
-            //    var requestContext = HttpRequestBuilder.GetRelated(collection.Owner, collection.Name);
-            //    var response = await HttpClient.SendAsync(requestContext.Request);
-            //    if (response.StatusCode == HttpStatusCode.NotFound)
-            //    {
-            //        return;
-            //    }
-            //    response.EnsureSuccessStatusCode();
-
-            //    var contentJson = await response.Content.ReadAsStringAsync();
-            //    var root = JsonConvert.DeserializeObject<ResourceRootCollection>(contentJson);
-
-            //    if (root.Data == null)
-            //    {
-            //        return;
-            //    }
-
-            //    var items = root.Data.Select(x =>
-            //    {
-            //        ResourceState[x.Id] = x;
-            //        var modelType = ModelRegistry.GetModelType(x.Type);
-            //        if (modelType == null)
-            //        {
-            //            // TODO: ModelNotRegisteredException
-            //            throw new Exception("TODO");
-            //        }
-            //        var model = CreateModel(modelType, x.Id);
-            //        Cache.Update(x.Id, model);
-            //        return model;
-            //    });
-            //    collection.SetItems(items);
-            //}).Wait();
+            var relationship = new Relationship();
+            if (rltn != null)
+            {
+                var rltnIdentifier = new ResourceIdentifier
+                {
+                    Id = ModelRegistry.GetOrCreateId(rltn),
+                    Type = ModelRegistry.GetResourceType(rltn.GetType())
+                };
+                relationship.Data = JToken.FromObject(rltnIdentifier);
+                Cache.Update(rltnIdentifier.Id, rltn);
+            }
+            else
+            {
+                relationship.Data = JValue.CreateNull();
+            }
+            ModelRegistry
+                .GetOrCreatePatch(model)
+                .GetRelationships()[rltnName] = relationship;
         }
 
         public IEnumerable<TElmnt> GetGenericEnumerable<TModel, TElmnt>(TModel model, string rltnName)
@@ -482,8 +430,7 @@ namespace RedArrow.Argo.Client.Session
             };
         }
 
-        private RemoteGenericBag<TElmnt> SetRemoteCollection<TModel, TElmnt>(TModel model, string rltnName,
-            IEnumerable<TElmnt> value)
+        private RemoteGenericBag<TElmnt> SetRemoteCollection<TModel, TElmnt>(TModel model, string rltnName, IEnumerable<TElmnt> value)
             where TModel : class
             where TElmnt : class
         {
@@ -500,21 +447,45 @@ namespace RedArrow.Argo.Client.Session
 
         #endregion IModelSession
 
-	    private TModel CreateResourceModel<TModel>(IResourceIdentifier resource)
+        #region ICollectionSession
+
+        public void InitializeCollection(IRemoteCollection collection)
+        {
+            // TODO: determine if {id/type} from owner relationship are cached already
+            // TODO: abstract this into a collection loader/initializer
+
+            // TODO: brute force this for now
+
+            // TODO: don't run this task if the resource collection is empty/null!
+            
+            var related = GetManyRelated(collection.Owner, collection.Name);
+
+            if (related.IsNullOrEmpty())
+            {
+                return;
+            }
+
+            collection.SetItems(related);
+        }
+
+        #endregion
+
+        public TModel CreateResourceModel<TModel>(IResourceIdentifier resource)
 		    where TModel : class
 	    {
-			// TODO: check if model.GetType() is assignable to TModel, but then what? ¯\_(ツ)_/¯
 			return (TModel)CreateResourceModel(resource);
 	    }
 
-        private object CreateResourceModel(IResourceIdentifier resource)
+        public object CreateResourceModel(IResourceIdentifier resource)
         {
+            if (resource == null) return null;
+
 	        var type = ModelRegistry.GetModelType(resource.Type);
-            Log.Debug(() => $"activating new session-managed instance of {type}:{{{resource.Id}}}");
+            Log.Debug(() => $"activating session-managed instance of {type.FullName}:{{{resource.Id}}}");
             return Activator.CreateInstance(type, resource, this);
         }
 
-	    private Resource CreateModelResource(object model)
+	    public Resource CreateModelResource(object model)
 	    {
 			var modelType = model.GetType();
 			var resourceType = ModelRegistry.GetResourceType(modelType);
@@ -577,7 +548,7 @@ namespace RedArrow.Argo.Client.Session
 	    {
 		    if (ModelRegistry.IsUnmanagedModel(model) || !ModelRegistry.IsManagedBy(this, model))
 		    {
-			    throw new UnmanagedModelException(ModelRegistry.GetId(model), model.GetType());
+			    throw new UnmanagedModelException(model.GetType(), ModelRegistry.GetId(model));
 			}
 		}
     }

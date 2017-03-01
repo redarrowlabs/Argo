@@ -11,6 +11,8 @@ namespace RedArrow.Argo.Client.Cache
 
         private IDictionary<Guid, object> PoorMansCache { get; }
 
+        public IEnumerable<object> Items => new List<object>(PoorMansCache.Values);
+
         public BasicCacheProvider()
         {
             PoorMansCache = new ConcurrentDictionary<Guid, object>();

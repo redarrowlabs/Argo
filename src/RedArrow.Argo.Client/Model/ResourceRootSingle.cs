@@ -7,7 +7,7 @@ namespace RedArrow.Argo.Client.Model
     {
         internal ResourceRootSingle() { }
 
-        internal static ResourceRootSingle FromResource(Resource resource, IEnumerable<Resource> included)
+        internal static ResourceRootSingle FromResource(Resource resource, IEnumerable<Resource> included = null)
         {
             var root = new ResourceRootSingle {Data = resource};
             if (!included.IsNullOrEmpty())
