@@ -7,6 +7,6 @@ namespace RedArrow.Argo.Client.Collections
         object Owner { get; }
         string Name { get; }
 
-        void SetItems(IEnumerable items);
+        void AddRange(IEnumerable items);
     }
 }

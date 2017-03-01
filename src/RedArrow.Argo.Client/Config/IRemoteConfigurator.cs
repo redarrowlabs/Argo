@@ -15,7 +15,7 @@ namespace RedArrow.Argo.Client.Config
 
         IRemoteConfigure ConfigureAsync(Func<HttpClient, Task> httpClient);
 
-        IRemoteConfigure UseMessageHandler(HttpMessageHandler handler);
+        IRemoteConfigure UseMessageHandler(Func<HttpMessageHandler> createHandler);
 
 	    IRemoteConfigure OnHttpResponse(Func<HttpResponseMessage, Task> responseReceived);
 		IRemoteConfigure OnResourceCreated(Func<HttpResponseMessage, Task> resourceCreated);

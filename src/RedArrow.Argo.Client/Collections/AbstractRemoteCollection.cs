@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using RedArrow.Argo.Client.Session.Registry;
 
 namespace RedArrow.Argo.Client.Collections
@@ -10,20 +9,18 @@ namespace RedArrow.Argo.Client.Collections
         protected Session.Session Session { get; }
         protected IModelRegistry ModelRegistry => Session.ModelRegistry;
 
-        public object Owner { get; internal set; }
-        public string Name { get; internal set; }
+        public object Owner { get; }
+        public string Name { get; }
      
         protected bool Initializing { get; set; }
 
         protected bool Initialized { get; set; }
         
-        protected AbstractRemoteCollection()
-        {
-        }
-
-        protected AbstractRemoteCollection(Session.Session session)
+        protected AbstractRemoteCollection(Session.Session session, object owner, string name)
         {
             Session = session;
+	        Owner = owner;
+	        Name = name;
         }
 
         // TODO: read and write are the same, for now - this will likely change
@@ -40,7 +37,7 @@ namespace RedArrow.Argo.Client.Collections
             Initialized = true;
         }
 
-        public abstract void SetItems(IEnumerable items);
+        public abstract void AddRange(IEnumerable items);
 
         public abstract IEnumerator GetEnumerator();
         public abstract void CopyTo(Array array, int index);

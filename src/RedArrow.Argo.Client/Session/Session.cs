@@ -6,12 +6,10 @@ using RedArrow.Argo.Session;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using RedArrow.Argo.Client.Collections;
 using RedArrow.Argo.Client.Collections.Generic;
 using RedArrow.Argo.Client.Exceptions;
@@ -77,7 +75,7 @@ namespace RedArrow.Argo.Client.Session
 			// set Id if unset
 	        var modelId = model == null
 				? Guid.NewGuid()
-				: ModelRegistry.GetId(model);
+				: ModelRegistry.GetOrCreateId(model);
 	        if (modelId == Guid.Empty)
 	        {
 				modelId = Guid.NewGuid();
@@ -191,7 +189,11 @@ namespace RedArrow.Argo.Client.Session
 			var root = await response.GetContentModel<ResourceRootSingle>();
             model = CreateResourceModel<TModel>(root.Data);
             Cache.Update(id, model);
-
+			root.Included.Each(x =>
+			{
+				var includedModel = CreateResourceModel(x);
+				Cache.Update(x.Id, includedModel);
+			});
             return model;
         }
 		
@@ -214,25 +216,6 @@ namespace RedArrow.Argo.Client.Session
 	        Cache.Update(rltn.Id, rltnModel);
 	        return rltnModel;
 	    }
-
-        private IEnumerable GetManyRelated(object model, string rltnName)
-        {
-            var resource = ModelRegistry.GetResource(model);
-            var request = HttpRequestBuilder.GetRelated(resource.Id, resource.Type, rltnName);
-            var response = HttpClient.SendAsync(request).GetAwaiter().GetResult();
-            if (response.StatusCode == HttpStatusCode.NotFound) return null;
-
-            response.EnsureSuccessStatusCode();
-
-            // TODO: perhaps use a 3rd ResourceRoot with JToken Data to determine if object was erroneously returned
-            var root = response.GetContentModel<ResourceRootCollection>().GetAwaiter().GetResult();
-            return root.Data?.Select(rltn =>
-            {
-                var rltnModel = CreateResourceModel(rltn);
-                Cache.Update(rltn.Id, rltnModel);
-                return rltnModel;
-            }).ToArray();
-        }
 
         public Task Delete<TModel>(TModel model)
             where TModel : class
@@ -423,11 +406,7 @@ namespace RedArrow.Argo.Client.Session
 
             // TODO: configure collection based on rltnConfig
 
-            return new RemoteGenericBag<TElmnt>(this)
-            {
-                Name = rltnName,
-                Owner = model
-            };
+            return new RemoteGenericBag<TElmnt>(this, model, rltnName);
         }
 
         private RemoteGenericBag<TElmnt> SetRemoteCollection<TModel, TElmnt>(TModel model, string rltnName, IEnumerable<TElmnt> value)
@@ -438,11 +417,7 @@ namespace RedArrow.Argo.Client.Session
 
             // TODO: configure collection based on rltnConfig
 
-            return new RemoteGenericBag<TElmnt>(this, value)
-            {
-                Name = rltnName,
-                Owner = model
-            };
+            return new RemoteGenericBag<TElmnt>(this, model, rltnName, value);
         }
 
         #endregion IModelSession
@@ -451,21 +426,40 @@ namespace RedArrow.Argo.Client.Session
 
         public void InitializeCollection(IRemoteCollection collection)
         {
-            // TODO: determine if {id/type} from owner relationship are cached already
-            // TODO: abstract this into a collection loader/initializer
+			// TODO: abstract this into a collection loader/initializer
+			// TODO: brute force this for now
+			// TODO: don't run this task if the resource collection is empty/null!
+			
+			var resource = ModelRegistry.GetResource(collection.Owner);
 
-            // TODO: brute force this for now
+			// determine if the cache is missing any models for this relationship
+			//Relationship rltn;
+			//var relationships = ModelRegistry.GetPatch(collection.Owner)?.Relationships;
+			//if (relationships != null && relationships.TryGetValue(collection.Name, out rltn))
+			//{
+			//	if (rltn?.Data.Type == JTokenType.Array
+			//	    && rltn.Data.ToObject<IEnumerable<ResourceIdentifier>>()
+			//		    .All(x => Cache.Retrieve<object>(x.Id) != null))
+			//	{
+			//		return;
+			//	}
+			//}
 
-            // TODO: don't run this task if the resource collection is empty/null!
-            
-            var related = GetManyRelated(collection.Owner, collection.Name);
+			var request = HttpRequestBuilder.GetRelated(resource.Id, resource.Type, collection.Name);
+			var response = HttpClient.SendAsync(request).GetAwaiter().GetResult();
+			if (response.StatusCode == HttpStatusCode.NotFound) return;
 
-            if (related.IsNullOrEmpty())
-            {
-                return;
-            }
+			response.EnsureSuccessStatusCode();
 
-            collection.SetItems(related);
+			// TODO: perhaps use a 3rd ResourceRoot with JToken Data to determine if object was erroneously returned
+			var root = response.GetContentModel<ResourceRootCollection>().GetAwaiter().GetResult();
+			var related = root.Data?.Select(x =>
+			{
+				var rltnModel = CreateResourceModel(x);
+				Cache.Update(x.Id, rltnModel);
+				return rltnModel;
+			}).ToArray();
+	        collection.AddRange(related);
         }
 
         #endregion
@@ -492,31 +486,12 @@ namespace RedArrow.Argo.Client.Session
 
 			JObject attrs = null;
 			IDictionary<string, Relationship> rltns = null;
-
-			// attribute bag
-			var modelAttributeBag = ModelRegistry.GetAttributeBag(model);
-			if (modelAttributeBag != null)
-			{
-				attrs = modelAttributeBag;
-			}
-
+			
 			// attributes
 			var modelAttributes = ModelRegistry.GetAttributeValues(model);
 			if (modelAttributes != null)
 			{
-				if (attrs == null)
-				{
-					attrs = modelAttributes;
-				}
-				else // occurs when we already set from AttrBag
-				{
-					// mapped attrs override anything also in the AttrBag
-					attrs.Merge(modelAttributes, new JsonMergeSettings
-					{
-						MergeNullValueHandling = MergeNullValueHandling.Ignore,
-						MergeArrayHandling = MergeArrayHandling.Replace
-					});
-				}
+				attrs = modelAttributes;
 			}
 
 			// relationships

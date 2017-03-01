@@ -18,9 +18,7 @@ namespace RedArrow.Argo.Client.Config.Model
         public PropertyInfo PatchProperty { get; }
 
         public PropertyInfo IdProperty { get; }
-
-        public PropertyInfo AttributeBagProperty { get; }
-
+		
         // resource attribute name => model property
         public IDictionary<string, AttributeConfiguration> AttributeConfigs { get; }
 
@@ -48,8 +46,6 @@ namespace RedArrow.Argo.Client.Config.Model
 
             HasOneProperties = modelType.GetModelHasOneConfigurations();
             HasManyProperties = modelType.GetModelHasManyConfigurations();
-
-            AttributeBagProperty = modelType.GetPropertyBagProperty();
         }
     }
 }

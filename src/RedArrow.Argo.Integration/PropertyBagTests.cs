@@ -20,71 +20,7 @@ namespace RedArrow.Argo.Integration
             Fixture = fixture;
             Fixture.ConfigureLogging(outputHelper);
         }
-
-        [Theory, AutoData, Trait("Category", "Integration")]
-        public async Task CreateModelWithPropertyBag
-            (Guid expectedFoo, Guid expectedBar)
-        {
-            var sessionFactory = CreateSessionFactory();
-            Guid patientId;
-            using (var session = sessionFactory.CreateSession())
-            {
-                var patient = new Patient
-                {
-                    Unmapped = JObject.FromObject(new
-                    {
-                        foo = expectedFoo,
-                        bar = expectedBar
-                    })
-                };
-
-                patient = await session.Create(patient);
-
-                patientId = patient.Id;
-            }
-
-            using (var session = sessionFactory.CreateSession())
-            {
-                var patient = await session.Get<Patient>(patientId);
-
-                Assert.Equal(expectedFoo, patient.Unmapped["foo"].ToObject<Guid>());
-                Assert.Equal(expectedBar, patient.Unmapped["bar"].ToObject<Guid>());
-            }
-        }
-
-        [Theory, AutoData, Trait("Category", "Integration")]
-        public async Task UpdateModelWithPropertyBag
-            (Guid expectedFoo, Guid expectedBar)
-        {
-            var sessionFactory = CreateSessionFactory();
-            Guid patientId;
-
-            using (var session = sessionFactory.CreateSession())
-            {
-                var patient = await session.Create<Patient>();
-                patientId = patient.Id;
-            }
-
-            using (var session = sessionFactory.CreateSession())
-            {
-                var patient = await session.Get<Patient>(patientId);
-                patient.Unmapped = JObject.FromObject(new
-                {
-                    foo = expectedFoo,
-                    bar = expectedBar
-                });
-                await session.Update(patient);
-            }
-
-            using (var session = sessionFactory.CreateSession())
-            {
-                var patient = await session.Get<Patient>(patientId);
-
-                Assert.Equal(expectedFoo, patient.Unmapped["foo"].ToObject<Guid>());
-                Assert.Equal(expectedBar, patient.Unmapped["bar"].ToObject<Guid>());
-            }
-        }
-
+		
         private ISessionFactory CreateSessionFactory()
         {
             return Fluently.Configure($"{Fixture.Host}/data/")

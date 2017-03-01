@@ -22,6 +22,13 @@ namespace RedArrow.Argo.Client.Config
         private IList<Action<HttpClient>> ClientConfigurators { get; }
         private IList<Func<HttpClient, Task>> AsyncClientConfigurators { get; }
 
+	    private bool HasDevDefinedCallbacks =>
+		    HttpResponseMessageCallbacks.Any() ||
+		    ResourceCreatedCallbacks.Any() ||
+		    ResourceUpdatedCallbacks.Any() ||
+		    ResourceRetrievedCallbacks.Any() ||
+		    ResourceDeletedCallbacks.Any();
+
 		private IList<Func<HttpResponseMessage, Task>> HttpResponseMessageCallbacks { get; }
 		private IList<Func<HttpResponseMessage, Task>> ResourceCreatedCallbacks { get; }
 		private IList<Func<HttpResponseMessage, Task>> ResourceUpdatedCallbacks { get; }
@@ -31,7 +38,7 @@ namespace RedArrow.Argo.Client.Config
 		private SessionFactoryConfiguration SessionFactoryConfiguration { get; }
 
         private Uri ApiHost { get; }
-        private HttpMessageHandler HttpMessageHandler { get; set; }
+        private Func<HttpMessageHandler> CreateHttpMessageHandler { get; set; }
 
         internal FluentConfigurator(string apiHost)
             : this(apiHost, new SessionFactoryConfiguration()) { }
@@ -87,9 +94,9 @@ namespace RedArrow.Argo.Client.Config
             return this;
         }
 
-        public IRemoteConfigure UseMessageHandler(HttpMessageHandler handler)
+        public IRemoteConfigure UseMessageHandler(Func<HttpMessageHandler> createHandler)
         {
-            HttpMessageHandler = handler;
+            CreateHttpMessageHandler = createHandler;
             return this;
         }
 
@@ -137,20 +144,20 @@ namespace RedArrow.Argo.Client.Config
 
             ClientConfigurators.Add(client => client.BaseAddress = ApiHost);
 
-	        var innerHandler = HttpResponseMessageCallbacks.IsNullOrEmpty()
-		        ? new DefaultHttpMessageHandler(HttpMessageHandler)
-		        : new DefaultHttpMessageHandler(new HttpMessageCallbackHandler(
-					HttpResponseMessageCallbacks.ToArray(),
-					ResourceCreatedCallbacks.ToArray(),
-					ResourceUpdatedCallbacks.ToArray(),
-					ResourceRetrievedCallbacks.ToArray(),
-					ResourceDeletedCallbacks.ToArray(),
-					HttpMessageHandler)); 
-
             // build HttpClient factory
             SessionFactoryConfiguration.HttpClientFactory = () =>
             {
-                var client = (ClientCreator ?? (() => new HttpClient(innerHandler)))();
+	            var innerHandler = HasDevDefinedCallbacks
+		            ? new DefaultHttpMessageHandler(new HttpMessageCallbackHandler(
+			            HttpResponseMessageCallbacks.ToArray(),
+			            ResourceCreatedCallbacks.ToArray(),
+			            ResourceUpdatedCallbacks.ToArray(),
+			            ResourceRetrievedCallbacks.ToArray(),
+			            ResourceDeletedCallbacks.ToArray(),
+			            CreateHttpMessageHandler?.Invoke()))
+		            : new DefaultHttpMessageHandler(CreateHttpMessageHandler?.Invoke());
+
+				var client = (ClientCreator ?? (() => new HttpClient(innerHandler)))();
 
                 client
                     .DefaultRequestHeaders

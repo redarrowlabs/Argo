@@ -70,12 +70,12 @@ namespace RedArrow.Argo.Client.Session.Registry
             GetModelConfig(modelType).PatchProperty.SetValue(model, resource);
         }
 
-        public Resource GetOrCreatePatch<TModel>(TModel model)
+        public Resource GetOrCreatePatch(object model)
         {
             var patch = GetPatch(model);
             if (patch == null)
             {
-                patch = new Resource {Id = GetId(model), Type = GetResourceType<TModel>()};
+                patch = new Resource {Id = GetId(model), Type = GetResourceType(model.GetType())};
                 SetPatch(model, patch);
             }
             return patch;
@@ -210,30 +210,7 @@ namespace RedArrow.Argo.Client.Session.Registry
 
             return ret;
         }
-
-        public JObject GetAttributeBag(object model)
-        {
-            var modelType = model.GetType();
-            var attributeBag = GetModelConfig(modelType).AttributeBagProperty?.GetValue(model);
-
-            return attributeBag != null
-                ? JObject.FromObject(attributeBag)
-                : null;
-        }
-
-        public void SetAttributeBag(object model, JObject attributes)
-        {
-            var modelType = model.GetType();
-            var attrBagProp = GetModelConfig(modelType).AttributeBagProperty;
-
-            if (attrBagProp == null) return;
-
-            var mappedAttrNames = GetAttributeConfigs(modelType).Select(x => x.AttributeName);
-            var unmappedAttrs = (attributes ?? new JObject()).Properties().Where(x => !mappedAttrNames.Contains(x.Name));
-            var jAttrBag = new JObject(unmappedAttrs);
-            attrBagProp.SetValue(model, jAttrBag.ToObject(attrBagProp.PropertyType));
-        }
-
+		
 	    private ModelConfiguration GetModelConfig<TModel>()
 	    {
 		    return GetModelConfig(typeof (TModel));
@@ -306,7 +283,7 @@ namespace RedArrow.Argo.Client.Session.Registry
 			    if (collection == null) continue;
 		        ret[hasMany.RelationshipName] = new Relationship
 		        {
-		            Data = JObject.FromObject(collection
+		            Data = JArray.FromObject(collection
                         .Cast<object>()
 		                .Select(related =>
 		                {

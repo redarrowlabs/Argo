@@ -96,12 +96,5 @@ namespace RedArrow.Argo.Client.Extensions
                     hasMCfg => hasMCfg.RelationshipName,
                     hasMCfg => hasMCfg);
         }
-
-        internal static PropertyInfo GetPropertyBagProperty(this Type type)
-        {
-            return type.GetTypeInfo()
-                .DeclaredProperties
-                .SingleOrDefault(prop => prop.IsDefined(typeof(PropertyBagAttribute)));
-        }
     }
 }

@@ -19,8 +19,5 @@ namespace WovenByTest
 
         [HasMany]
         public IEnumerable<Patient> Patients { get; set; }
-
-        [PropertyBag]
-        public IDictionary<string, JToken> Bag { get; set; }
     }
 }
