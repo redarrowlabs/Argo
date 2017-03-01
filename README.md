@@ -69,7 +69,7 @@ Argo takes advantage of [Fody](https://github.com/Fody/Fody) to weave code into 
 Advantages:
  1. Cross Platform!
  2. Most expensive reflection-based mapping logic is executed at compile time and not at runtime.
- 3. Simple.  Argo targets netstandard 1.3
+ 3. Simple.  Argo targets netstandard 1.4
 
 Most all ORMs leverage proxies to abstract your POCO from your database.  Unfortunately, the most popular .net proxy implementation, [Castle DynamicProxy](https://github.com/castleproject/Core/blob/master/docs/dynamicproxy.md), will not play nice with Xamarin iOS projects due to its use of `Reflection.Emit` APIs, which are not permitted on iOS.  We get around this by modifying the POCO itself at compile time instead of proxying it at runtime.
 
