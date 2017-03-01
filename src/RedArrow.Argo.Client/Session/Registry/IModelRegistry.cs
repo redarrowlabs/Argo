@@ -2,39 +2,47 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using RedArrow.Argo.Client.Config.Model;
+using RedArrow.Argo.Client.Model;
+using RedArrow.Argo.Session;
 
 namespace RedArrow.Argo.Client.Session.Registry
 {
     public interface IModelRegistry
     {
         string GetResourceType<TModel>();
-
         string GetResourceType(Type modelType);
 
         Type GetModelType(string resourceType);
 
-        Guid GetModelId(object model);
+	    Resource GetResource(object model);
+        Resource GetPatch(object model);
+	    Resource GetOrCreatePatch(object model);
+	    void ApplyPatch(object model);
 
-        void SetModelId(object model, Guid id);
+		bool IsManagedModel(object model);
+		bool IsManagedBy(IModelSession session, object model);
+		bool IsUnmanagedModel(object model);
+	    void DetachModel(object model);
 
-        IEnumerable<AttributeConfiguration> GetModelAttributes<TModel>();
+	    string GetInclude<TModel>();
 
-        IEnumerable<AttributeConfiguration> GetModelAttributes(Type modelType);
+        Guid GetId(object model);
+        void SetId(object model, Guid id);
+        Guid GetOrCreateId(object model);
 
-        JObject GetModelAttributeBag(object model);
+        IEnumerable<AttributeConfiguration> GetAttributeConfigs<TModel>();
+        IEnumerable<AttributeConfiguration> GetAttributeConfigs(Type modelType);
+        AttributeConfiguration GetAttributeConfig(Type modelType, string attrName);
 
-        void SetModelAttributeBag(object model, JObject attributes);
+        JObject GetAttributeValues(object model);
+	    IDictionary<string, Relationship> GetRelationshipValues(object model);
 
-        IEnumerable<HasOneConfiguration> GetSingleConfigurations<TModel>();
-
-        IEnumerable<HasOneConfiguration> GetSingleConfigurations(Type modelType);
-
-        IEnumerable<HasManyConfiguration> GetCollectionConfigurations<TModel>();
-
-        IEnumerable<HasManyConfiguration> GetCollectionConfigurations(Type modelType);
-
-        HasManyConfiguration GetCollectionConfiguration<TModel>(string rltnName);
-
-        HasManyConfiguration GetCollectionConfiguration(Type modelType, string rltnName);
+	    IEnumerable<RelationshipConfiguration> GetHasOneConfigs(Type modelType);
+        IEnumerable<RelationshipConfiguration> GetHasManyConfigs<TModel>();
+        IEnumerable<RelationshipConfiguration> GetHasManyConfigs(Type modelType);
+        RelationshipConfiguration GetHasManyConfig<TModel>(string rltnName);
+        RelationshipConfiguration GetHasManyConfig(Type modelType, string rltnName);
+		
+        object[] IncludedModelsCreate(object model);
     }
 }

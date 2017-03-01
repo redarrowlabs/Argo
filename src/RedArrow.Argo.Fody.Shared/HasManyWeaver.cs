@@ -3,8 +3,6 @@ using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using RedArrow.Argo.Extensions;
 
 namespace RedArrow.Argo
@@ -13,7 +11,6 @@ namespace RedArrow.Argo
     {
         private void WeaveHasManys(ModelWeavingContext context)
         {
-
             if (_session_GetGenericEnumerable == null
              || _session_SetGenericEnumerable == null
              || _session_GetGenericCollection == null
@@ -30,19 +27,20 @@ namespace RedArrow.Argo
                 MethodReference getRltnMethRef;
                 MethodReference setRltnMethRef;
 
-                if (propertyTypeDef.FullName == _genericIEnumerableTypeDef.FullName)
+                if (propertyTypeDef == context.ImportReference(typeof(IEnumerable<>)).Resolve())
                 {
                     getRltnMethRef = _session_GetGenericEnumerable;
                     setRltnMethRef = _session_SetGenericEnumerable;
                 }
-                else if (propertyTypeDef.FullName == _genericICollectionTypeDef.FullName)
+                else if (propertyTypeDef == context.ImportReference(typeof(ICollection<>)).Resolve())
                 {
                     getRltnMethRef = _session_GetGenericCollection;
                     setRltnMethRef = _session_SetGenericCollection;
                 }
                 else
                 {
-                    throw new Exception($"Argo encountered a HasMany relationship on non IEnumerable<T> or ICollection<T> property {propertyDef.FullName}");
+                    LogError($"Argo encountered a HasMany relationship on non IEnumerable<T> or ICollection<T> property {propertyDef.FullName}");
+                    continue;
                 }
 
                 // get the backing field
@@ -50,15 +48,12 @@ namespace RedArrow.Argo
 
                 if (backingField == null)
                 {
-                    throw new Exception($"Failed to load backing field for property {propertyDef.FullName}");
+                    LogError($"Failed to load backing field for property {propertyDef.FullName}");
+                    continue;
                 }
 
                 // find the rltnName, if there is one
-                var propAttr = propertyDef.CustomAttributes.GetAttribute(Constants.Attributes.HasMany);
-                var rltnName = propAttr.ConstructorArguments
-                    .Where(x => x.Type == TypeSystem.String)
-                    .Select(x => x.Value as string)
-                    .SingleOrDefault() ?? propertyDef.Name.Camelize();
+                var rltnName = propertyDef.JsonApiName(TypeSystem, Constants.Attributes.HasMany);
 
                 // find property generic element type
                 var elementTypeDef = ((GenericInstanceType)propertyTypeRef).GenericArguments.First().Resolve();
@@ -80,7 +75,7 @@ namespace RedArrow.Argo
         {
             // supply generic type args to template
             var sessionGetRltn = sessionGetRltnGeneric.MakeGenericMethod(
-                context.ModelTypeRef,
+                context.ModelTypeDef,
                 elementTypeDef);
 
             rltnPropDef.GetMethod.Body.Instructions.Clear();
@@ -102,12 +97,11 @@ namespace RedArrow.Argo
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
             proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
             proc.Emit(OpCodes.Ldarg_0); // load 'this'
-            proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
             proc.Emit(OpCodes.Ldstr, rltnName); // load attrName onto stack
             proc.Emit(OpCodes.Callvirt, context.ImportReference(
                 sessionGetRltn,
                 rltnPropDef.PropertyType.IsGenericParameter
-                    ? context.ModelTypeRef
+                    ? context.ModelTypeDef
                     : null)); // invoke session.GetAttribute(..)
 
             proc.Emit(OpCodes.Stfld, backingField); // store return value in 'this'.<backing field>
@@ -127,7 +121,7 @@ namespace RedArrow.Argo
         {
             // supply generic type arguments to template
             var sessionSetRltn = sessionSetRltnGeneric.MakeGenericMethod(
-                context.ModelTypeRef,
+                context.ModelTypeDef,
                 elementTypeDef);
 
             rltnPropDef.SetMethod.Body.Instructions.Clear();
@@ -159,13 +153,12 @@ namespace RedArrow.Argo
             proc.Emit(OpCodes.Ldarg_0);
             proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
             proc.Emit(OpCodes.Ldarg_0); // load 'this'
-            proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
             proc.Emit(OpCodes.Ldstr, rltnName); // load attrName onto stack
             proc.Emit(OpCodes.Ldarg_1); // load 'value'
             proc.Emit(OpCodes.Callvirt, context.ImportReference(
                 sessionSetRltn,
                 rltnPropDef.PropertyType.IsGenericParameter
-                    ? context.ModelTypeRef
+                    ? context.ModelTypeDef
                     : null)); // invoke session.GetReference(..)
 
             proc.Emit(OpCodes.Stfld, backingField);

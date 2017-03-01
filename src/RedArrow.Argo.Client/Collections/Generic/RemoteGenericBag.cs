@@ -2,16 +2,17 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using RedArrow.Argo.Client.Collections.Operations;
+using Newtonsoft.Json.Linq;
+using RedArrow.Argo.Client.Exceptions;
 using RedArrow.Argo.Client.Extensions;
-using RedArrow.Argo.Client.Session.Patch;
+using RedArrow.Argo.Client.Model;
 
 namespace RedArrow.Argo.Client.Collections.Generic
 {
-    internal class RemoteGenericBag<T> : AbstractRemoteCollection, ICollection<T>
-        where T : class
+    internal class RemoteGenericBag<TItem> : AbstractRemoteCollection, ICollection<TItem>
+        where TItem : class
     {
-        protected IDictionary<Guid, T> InternalIndex { get; set; }
+	    protected ICollection<Guid> Ids { get; } = new List<Guid>();
 
         public bool Empty => Count == 0;
 
@@ -20,140 +21,187 @@ namespace RedArrow.Argo.Client.Collections.Generic
             get
             {
                 Initialize();
-                return InternalIndex.Count;
+                return Ids.Count;
             }
         }
-
-        protected ICollection<IQueuedOperation> QueuedOperations { get; }
         
-        internal RemoteGenericBag(Session.Session session, IEnumerable<T> items = null) :
-            base(session)
+        internal RemoteGenericBag(Session.Session session, object owner, string name, IEnumerable<TItem> items = null) :
+            base(session, owner, name)
+		{
+			if (items == null) return;
+
+			foreach (var item in items)
+			{
+				AddInternal(item);
+			}
+		}
+        
+		// should only be used by session when loading remotely, so we can assume these models are cached
+        public override void AddRange(IEnumerable items)
         {
-            QueuedOperations = new List<IQueuedOperation>();
-            InternalIndex = new Dictionary<Guid, T>();
-            IndexItems(items);
+			if (items == null) return;
+
+	        foreach (var item in items.OfType<TItem>())
+	        {
+		        AddInternal(item);
+	        }
         }
         
-        public override void SetItems(IEnumerable items)
-        {
-            IndexItems(items?.OfType<T>());
-        }
-
-        public override void Patch(PatchContext patchContext)
-        {
-            foreach (var op in QueuedOperations)
-            {
-                op.Patch(patchContext);
-            }
-        }
-
-        public override void Clean()
-        {
-            QueuedOperations.Clear();
-            Dirty = false;
-        }
-
-        IEnumerator<T> IEnumerable<T>.GetEnumerator()
+        IEnumerator<TItem> IEnumerable<TItem>.GetEnumerator()
         {
             Initialize();
-            return InternalIndex.Values.GetEnumerator();
+            using (var itr = Ids.GetEnumerator())
+            {
+                while (itr.MoveNext())
+                {
+                    var id = itr.Current;
+                    // TODO: hit cache diectly? (cache hit is not async)
+                    yield return Session.Get<TItem>(id).GetAwaiter().GetResult();
+                }
+            }
         }
 
         public override IEnumerator GetEnumerator()
         {
-            IEnumerable<T> self = this;
+            IEnumerable<TItem> self = this;
             return self.GetEnumerator();
         }
 
-        public void Add(T item)
+        public void Add(TItem item)
         {
             if (item == null) return;
 
             Initialize();
 
-            IndexItems(item);
-            var itemId = Session.ModelRegistry.GetModelId(item);
-            var itemResourceType = Session.ModelRegistry.GetResourceType(item.GetType());
-            QueuedOperations.Add(new QueuedAddOperation(Name, itemId, itemResourceType));
-            Dirty = true;
+	        if (!AddInternal(item)) return;
+
+	        var rltn = GetOrCreateRelationship();
+	        rltn.Add(JObject.FromObject(new ResourceIdentifier
+	        {
+		        Id = ModelRegistry.GetId(item),
+		        Type = ModelRegistry.GetResourceType(item.GetType())
+	        }));
         }
+
+	    private bool AddInternal(TItem item)
+	    {
+		    if (item == null) return false;
+
+			if (ModelRegistry.IsManagedModel(item) && !ModelRegistry.IsManagedBy(Session, item))
+			{
+				var id = ModelRegistry.GetId(item);
+				throw new UnmanagedModelException(item.GetType(), id);
+			}
+
+			var itemId = ModelRegistry.GetOrCreateId(item);
+			Session.Cache.Update(itemId, item);
+
+			if (Ids.Contains(itemId)) return false;
+
+		    Ids.Add(itemId);
+		    return true;
+	    }
 
         public void Clear()
         {
-            if (InternalIndex.Count != 0)
+            if (Ids.Count != 0)
             {
                 Initialize();
-                InternalIndex.Clear();
-                QueuedOperations.Add(new QueuedClearOperation(Name));
-                Dirty = true;
+                Ids.Clear();
+	            var relationships = ModelRegistry.GetOrCreatePatch(Owner).GetRelationships();
+				Relationship rltn;
+				if (!relationships.TryGetValue(Name, out rltn))
+	            {
+		            rltn = new Relationship();
+		            relationships[Name] = rltn;
+	            }
+	            rltn.Data = new JArray();
             }
         }
 
-        public bool Contains(T item)
+        public bool Contains(TItem item)
         {
             if (item == null) return false;
 
             Initialize();
             
-            return InternalIndex.ContainsKey(GetItemId(item));
+            return Ids.Contains(ModelRegistry.GetId(item));
         }
 
-        public bool Remove(T item)
+        public bool Remove(TItem item)
         {
             if (item == null) return true;
 
             Initialize();
+			
+            var itemId = ModelRegistry.GetId(item);
+            
+			var removed = Ids.Remove(itemId);
+	        if (removed)
+	        {
+		        var rltn = GetOrCreateRelationship();
+		        rltn.SelectToken($"[?(@.id == '{itemId}')]")?.Remove();
+	        }
 
-            var result = false;
-
-            var itemId = Session.ModelRegistry.GetModelId(item);
-
-            T itemToRemove;
-            if (InternalIndex.TryGetValue(itemId, out itemToRemove))
-            {
-                result = InternalIndex.Remove(itemId);
-                if (result)
-                {
-                    QueuedOperations.Add(new QueuedRemoveOperation(Name, itemId));
-                    Dirty = true;
-                }
-            }
-            return result;
+	        return removed;
         }
 
-        public void CopyTo(T[] array, int index)
+        public void CopyTo(TItem[] array, int index)
         {
             Initialize();
-            var bag = InternalIndex.Values.ToList();
+            var bag = Ids.ToArray();
             for (var i = index; i < Count; i++)
             {
-                array.SetValue(bag[i], i);
+                var id = bag[i];
+                var model = Session.Get<TItem>(id).GetAwaiter().GetResult();
+                array.SetValue(model, i);
             }
         }
 
         public override void CopyTo(Array array, int index)
         {
             Initialize();
-            var bag = InternalIndex.Values.ToList();
+            var bag = Ids.ToArray();
             for (var i = index; i < Count; i++)
             {
-                array.SetValue(bag[i], i);
+                var id = bag[i];
+                var model = Session.Get<TItem>(id).GetAwaiter().GetResult();
+                array.SetValue(model, i);
             }
         }
 
-        private Guid GetItemId(T item)
-        {
-            return Session.ModelRegistry.GetModelId(item);
-        }
+		private JArray GetOrCreateRelationship()
+		{
+			Relationship rltn;
+			var relationships = ModelRegistry.GetPatch(Owner)?.Relationships;
+			if (relationships == null || !relationships.TryGetValue(Name, out rltn))
+			{
+				var modelResource = ModelRegistry.GetResource(Owner);
+				relationships = modelResource.Relationships;
+				if (relationships == null || !relationships.TryGetValue(Name, out rltn))
+				{
+                    //TODO: this shouldn't be necessary, maybe invert the above ifs
+					rltn = new Relationship { Data = new JArray() };
+				}
+				else if (rltn.Data != null && rltn.Data.Type != JTokenType.Array)
+				{
+					throw new ModelMapException(
+						   $"Relationship {Name} mapped as [HasMany] but json relationship data was not an array",
+						   Owner.GetType(),
+						   ModelRegistry.GetId(Owner));
+				}
 
-        private void IndexItems(IEnumerable<T> items)
-        {
-            IndexItems(items?.ToArray());
-        }
-
-        private void IndexItems(params T[] items)
-        {
-            items?.Each(x => InternalIndex[GetItemId(x)] = x);
-        }
-    }
+                rltn = new Relationship
+                {
+                    Data = rltn.Data != null
+                        ? rltn.Data.DeepClone()
+                        : new JArray(),
+                    Links = rltn.Links,
+                    Meta = rltn.Meta
+                };
+			    ModelRegistry.GetOrCreatePatch(Owner).GetRelationships()[Name] = rltn;
+			}
+			return (JArray)rltn.Data;
+		}
+	}
 }

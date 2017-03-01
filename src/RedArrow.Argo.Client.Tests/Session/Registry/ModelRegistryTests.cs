@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Ploeh.AutoFixture.Xunit2;
-using RedArrow.Argo.Attributes;
 using RedArrow.Argo.Client.Config.Model;
 using RedArrow.Argo.Client.Session.Registry;
+using RedArrow.Argo.Client.Tests.Session.Models;
 using WovenByFody;
 using Xunit;
 
@@ -20,11 +17,11 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
         {
             var config = new ModelConfiguration(typeof(ModelWithPrivateIdSetter));
 
-            var subject = new ModelRegistry(new [] {config});
+            var subject = new ModelRegistry(new[] {config});
 
             var model = new ModelWithPrivateIdSetter();
 
-            subject.SetModelId(model, id);
+            subject.SetId(model, id);
 
             Assert.Equal(id, model.Id);
         }
@@ -39,7 +36,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
 
             var model = new ModelWithPublicIdSetter();
 
-            subject.SetModelId(model, id);
+            subject.SetId(model, id);
 
             Assert.Equal(id, model.Id);
         }
@@ -54,7 +51,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
 
             var model = new ModelWithNoIdSetter();
 
-            subject.SetModelId(model, id);
+            subject.SetId(model, id);
 
             Assert.Equal(id, model.Id);
         }
@@ -65,14 +62,14 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
         {
             var config = new ModelConfiguration(typeof(ModelWithPublicIdSetter));
 
-            var subject = new ModelRegistry(new [] {config});
+            var subject = new ModelRegistry(new[] {config});
 
             var model = new ModelWithPublicIdSetter
             {
                 Id = id
             };
 
-            var result = subject.GetModelId(model);
+            var result = subject.GetId(model);
 
             Assert.Equal(id, result);
         }
@@ -84,7 +81,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
 
             var subject = new ModelRegistry(new[] {config});
 
-            var result = subject.GetModelAttributes(typeof(TestWovenModel));
+            var result = subject.GetAttributeConfigs(typeof(TestWovenModel));
 
             var camelizedConfig = result.Single(x => x.Property.Name == "CamelizedProperty");
             var customizedConfig = result.Single(x => x.Property.Name == "CustomizedProperty");
@@ -119,6 +116,178 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
 
             Assert.Equal("customized-model-name", result1);
             Assert.Equal("customized-model-name", result2);
+        }
+
+        [Fact]
+        public void GetIncludedModels__Given_Model__When_RelatedNull__Then_ReturnModels()
+        {
+            var subject = CreateSubject(
+                typeof(CircularReferenceA),
+                typeof(CircularReferenceB),
+                typeof(CircularReferenceC),
+                typeof(CircularReferenceD));
+
+            var a = new CircularReferenceA();
+            var b = new CircularReferenceB();
+            var c = new CircularReferenceC();
+
+            var ds = Enumerable.Range(0, 3)
+                .Select(x => new CircularReferenceD())
+                .ToArray();
+
+            a.B = b;
+
+            b.A = a;
+            b.C = c;
+
+            c.A = a;
+            c.PrimaryD = ds.First();
+            c.AllDs = ds;
+
+            var result = subject.IncludedModelsCreate(a);
+
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+
+            Assert.Equal(6, result.Count());
+
+            Assert.Contains(a, result);
+            Assert.Contains(b, result);
+            Assert.Contains(c, result);
+            Assert.All(ds, d => Assert.Contains(d, result));
+        }
+
+        [Fact]
+        public void GetIncludedModels__Given_Null__Then_ReturnNull()
+        {
+            var subject = CreateSubject(typeof(CircularReferenceA));
+
+            var result = subject.IncludedModelsCreate(null);
+
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public void GetIncludedModels__Given_NullHasOneReference__Then_ReturnModels()
+        {
+            var subject = CreateSubject(
+                typeof(CircularReferenceA),
+                typeof(CircularReferenceB));
+
+            var a = new CircularReferenceA();
+            var b = new CircularReferenceB();
+
+            a.B = b;
+
+            b.A = a;
+            b.C = null;
+
+            var result = subject.IncludedModelsCreate(a);
+
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+
+            Assert.Equal(2, result.Count());
+
+            Assert.Contains(a, result);
+            Assert.Contains(b, result);
+        }
+
+        [Fact]
+        public void GetIncludedMOdels__Given_NullHasManyReference__Then_ReturnModels()
+        {
+            var subject = CreateSubject(
+                typeof(CircularReferenceA),
+                typeof(CircularReferenceB),
+                typeof(CircularReferenceC));
+
+            var a = new CircularReferenceA();
+            var b = new CircularReferenceB();
+            var c = new CircularReferenceC();
+            
+            a.B = b;
+
+            b.A = a;
+            b.C = c;
+
+            c.A = a;
+            c.PrimaryD = null;
+            c.AllDs = null;
+
+            var result = subject.IncludedModelsCreate(a);
+
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+
+            Assert.Equal(3, result.Count());
+
+            Assert.Contains(a, result);
+            Assert.Contains(b, result);
+            Assert.Contains(c, result);
+        }
+
+        [Theory, AutoData]
+        public void GetAttributeValues__Given_Model__Then_ReturnAllAttributeValues
+            (string expectedAttr1, int expectedAttr2, long expectedAttr3)
+        {
+            var subject = CreateSubject(typeof(TestGetModelAttributeValues));
+
+            var model = new TestGetModelAttributeValues
+            {
+                Attribute1 = expectedAttr1,
+                Attribute2 = expectedAttr2,
+                Attribute3 = expectedAttr3
+            };
+
+            var result = subject.GetAttributeValues(model);
+
+            Assert.Equal(expectedAttr1, result.Value<string>("attribute1"));
+            Assert.Equal(expectedAttr2, result.Value<int>("attribute-2"));
+            Assert.Equal(expectedAttr3, result.Value<long>("attribute3"));
+        }
+
+        [Theory, AutoData]
+        public void GetAttributeValues__Given_Model__When_NullValues__Then_ReturnNonNullAttributeValues
+            (string expectedAttr1, long expectedAttr3)
+        {
+            var subject = CreateSubject(typeof(TestGetModelAttributeValues));
+
+            var model = new TestGetModelAttributeValues
+            {
+                Attribute1 = expectedAttr1,
+                Attribute3 = expectedAttr3
+            };
+
+            var result = subject.GetAttributeValues(model);
+
+            Assert.Equal(expectedAttr1, result.Value<string>("attribute1"));
+            Assert.Null(result["attribute-2"]);
+            Assert.Equal(expectedAttr3, result.Value<long>("attribute3"));
+        }
+
+        [Fact]
+        public void GetAttributeValues__Given_Model__When_ModelNull__Then_ReturnNull()
+        {
+            var subject = CreateSubject(typeof(TestGetModelAttributeValues));
+
+            var result = subject.GetAttributeValues(null);
+
+            Assert.Null(result);
+        }
+
+	    [Fact]
+	    public void GetInclude__Given_ModelType__Then_ReturnStaticIncludeValue()
+	    {
+		    var subject = CreateSubject(typeof (CircularReferenceB));
+			
+		    var result = subject.GetInclude<CircularReferenceB>();
+
+			Assert.Equal("a,c.a,c.primaryD", result);
+	    }
+
+        private static ModelRegistry CreateSubject(params Type[] modelTypes)
+        {
+            return new ModelRegistry(modelTypes.Select(x => new ModelConfiguration(x)));
         }
     }
 }

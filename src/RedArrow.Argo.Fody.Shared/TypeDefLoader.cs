@@ -1,23 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Mono.Cecil;
 
 namespace RedArrow.Argo
 {
     public partial class ModuleWeaver
     {
+        private MethodDefinition _compilerGeneratedAttribute;
+        private MethodDefinition _debuggerBrowsableAttribute;
+        private TypeDefinition _debuggerBrowsableStateTypeDef;
+
+        private TypeDefinition _hasOneAttributeTypeDef;
+        private TypeDefinition _hasManyAttributeTypeDef;
+        private TypeDefinition _loadStrategyTypeDef;
+
         private TypeDefinition _sessionTypeDef;
+        private TypeDefinition _resourceIdentifierTypeDef;
+
+        private MethodDefinition _session_DisposedGetter;
+        private MethodDefinition _session_GetId;
+        private MethodDefinition _session_GetAttribute;
         private MethodDefinition _session_GetGenericEnumerable;
         private MethodDefinition _session_SetGenericEnumerable;
         private MethodDefinition _session_GetGenericCollection;
         private MethodDefinition _session_SetGenericCollection;
-
-        private TypeDefinition _guidTypeDef;
-        private TypeDefinition _propBagTypeDef;
-        private TypeDefinition _genericIEnumerableTypeDef;
-        private TypeDefinition _genericICollectionTypeDef;
-
+        
         private int _stringComparison_ordinal;
         private MethodDefinition _string_equals;
         private TypeDefinition _equalityComparerTypeDef;
@@ -26,35 +36,47 @@ namespace RedArrow.Argo
         private void LoadTypeDefinitions()
         {
             var argoAssemblyDef = AssemblyResolver.Resolve("RedArrow.Argo");
-            _sessionTypeDef = argoAssemblyDef.MainModule.GetType("RedArrow.Argo.Session.IModelSession");
 
+            _hasOneAttributeTypeDef = argoAssemblyDef.MainModule.GetType("RedArrow.Argo.Attributes.HasOneAttribute");
+            _hasManyAttributeTypeDef = argoAssemblyDef.MainModule.GetType("RedArrow.Argo.Attributes.HasManyAttribute");
+            _loadStrategyTypeDef = argoAssemblyDef.MainModule.GetType("RedArrow.Argo.Attributes.LoadStrategy");
+
+            _sessionTypeDef = argoAssemblyDef.MainModule.GetType("RedArrow.Argo.Session.IModelSession");
+            _resourceIdentifierTypeDef = argoAssemblyDef.MainModule.GetType("RedArrow.Argo.Model.IResourceIdentifier");
+
+            _compilerGeneratedAttribute = argoAssemblyDef.MainModule
+                .ImportReference(typeof(CompilerGeneratedAttribute).GetConstructor(new Type[0]))
+                .Resolve();
+            _debuggerBrowsableAttribute = argoAssemblyDef.MainModule
+                .ImportReference(typeof(DebuggerBrowsableAttribute).GetConstructor(new [] {typeof(DebuggerBrowsableState) }))
+                .Resolve();
+            _debuggerBrowsableStateTypeDef = argoAssemblyDef.MainModule
+                .ImportReference(typeof(DebuggerBrowsableState))
+                .Resolve();
+
+            _session_DisposedGetter = _sessionTypeDef
+                .Properties
+                .Single(x => x.Name == "Disposed")
+                .GetMethod;
+            _session_GetId = _sessionTypeDef
+                .Methods
+                .Single(x => x.Name == "GetId");
+            _session_GetAttribute = _sessionTypeDef
+                .Methods
+                .Single(x => x.Name == "GetAttribute");
             _session_GetGenericEnumerable = _sessionTypeDef
                 .Methods
-                .SingleOrDefault(x => x.Name == "GetGenericEnumerable");
+                .Single(x => x.Name == "GetGenericEnumerable");
             _session_SetGenericEnumerable = _sessionTypeDef
                 .Methods
-                .SingleOrDefault(x => x.Name == "SetGenericEnumerable");
+                .Single(x => x.Name == "SetGenericEnumerable");
             _session_GetGenericCollection = _sessionTypeDef
                 .Methods
-                .SingleOrDefault(x => x.Name == "GetGenericCollection");
+                .Single(x => x.Name == "GetGenericCollection");
             _session_SetGenericCollection = _sessionTypeDef
                 .Methods
-                .SingleOrDefault(x => x.Name == "SetGenericCollection");
+                .Single(x => x.Name == "SetGenericCollection");
             
-            _propBagTypeDef = argoAssemblyDef.MainModule
-                .ImportReference(typeof(IDictionary<string, object>))
-                .Resolve();
-
-            _guidTypeDef = argoAssemblyDef.MainModule
-                .ImportReference(typeof(Guid))
-                .Resolve();
-            _genericIEnumerableTypeDef = argoAssemblyDef.MainModule
-                .ImportReference(typeof(IEnumerable<>))
-                .Resolve();
-            _genericICollectionTypeDef = argoAssemblyDef.MainModule
-                .ImportReference(typeof(ICollection<>))
-                .Resolve();
-
             _string_equals = ModuleDefinition
                 .TypeSystem
                 .String

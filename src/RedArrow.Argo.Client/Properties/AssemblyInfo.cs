@@ -8,3 +8,4 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyFileVersion("0.0.0.0")]
 [assembly: AssemblyInformationalVersion("0.0.0.0")]
 [assembly: InternalsVisibleTo("RedArrow.Argo.Client.Tests")]
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]

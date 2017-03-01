@@ -19,16 +19,19 @@ namespace RedArrow.Argo.Client.Session
             ModelConfigurations = modelConfigurations;
         }
 
-        public ISession CreateSession()
+        public ISession CreateSession(Action<HttpClient> configureClient = null)
         {
-            var modelRegistry = new ModelRegistry(ModelConfigurations);
-            var httpRequestBuider = new HttpRequestBuilder(modelRegistry);
-
-            return new Session(
-                HttpClientFactory,
-                httpRequestBuider,
-                new BasicCacheProvider(),
-                modelRegistry);
+            // TODO? perhaps a way to use a real DI container here...
+	        return new Session(
+		        () =>
+		        {
+			        var client = HttpClientFactory();
+			        configureClient?.Invoke(client);
+			        return client;
+		        },
+		        new HttpRequestBuilder(),
+		        new BasicCacheProvider(),
+		        new ModelRegistry(ModelConfigurations));
         }
     }
 }

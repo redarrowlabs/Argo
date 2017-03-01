@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AllPropertyTypes.cs" />
+    <Compile Include="EagerLoaded.cs" />
     <Compile Include="IdPropertyTestModels.cs" />
     <Compile Include="Patient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

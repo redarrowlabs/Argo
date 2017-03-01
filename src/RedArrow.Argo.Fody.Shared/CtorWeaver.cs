@@ -12,10 +12,11 @@ namespace RedArrow.Argo
     {
         private void AddCtor(ModelWeavingContext context)
         {
-            // Ctor(Guid id, IModelSession session)
+            // public Ctor(Guid id, IResourceIdentifier resource, IModelSession session)
             // {
             //   Id = id;
-            //   _argo_generated_session = session;
+			//   __argo__generated_Resource = resource;
+            //   __argo__generated_session = session;
             //  }
             var ctor = new MethodDefinition(
                 ".ctor",
@@ -23,10 +24,10 @@ namespace RedArrow.Argo
                 TypeSystem.Void);
 
             ctor.Parameters.Add(
-                new ParameterDefinition(
-                    "id",
-                    ParameterAttributes.None,
-                    context.ImportReference(_guidTypeDef)));
+				new ParameterDefinition(
+					"resource",
+					ParameterAttributes.None,
+					context.ImportReference(_resourceIdentifierTypeDef)));
             ctor.Parameters.Add(
                 new ParameterDefinition(
                     "session",
@@ -35,21 +36,42 @@ namespace RedArrow.Argo
 
             var objectCtor = context.ImportReference(TypeSystem.Object.Resolve().GetConstructors().First());
 
+			var idBackingField = context
+				.IdPropDef
+				?.GetMethod
+				?.Body
+				?.Instructions
+				?.SingleOrDefault(x => x.OpCode == OpCodes.Ldfld)
+				?.Operand as FieldReference;
+			// supply generic type arguments to template
+			var sessionGetId = _session_GetId.MakeGenericMethod(context.ModelTypeDef);
+
             var proc = ctor.Body.GetILProcessor();
 
-            // public Patient(Guid id, IModelSession session)
+            // public Patient(IResourceIdentifier resource, IModelSession session)
             // {
-            //   this.Id = id;
-            //   this._argo_generated_session = session;
+            //   this.__argo__generated_Resource = resource;
+            //   this.__argo__generated_session = session;
+            //   this.__argo__generated_includePath = "model.include.path";
+			//   this.Id = __argo__generated_session.GetId<TModel>();
             // }
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
             proc.Emit(OpCodes.Call, objectCtor); // call base ctor on 'this'
+
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-            proc.Emit(OpCodes.Ldarg_1); // load 'id' onto stack
-            proc.Emit(OpCodes.Callvirt, context.IdPropDef.SetMethod); // this.Id = id;
+            proc.Emit(OpCodes.Ldarg_1); // load arg 'resource' onto stack
+            proc.Emit(OpCodes.Callvirt, context.ResourcePropDef.SetMethod);
+
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-            proc.Emit(OpCodes.Ldarg_2); // load 'session' onto stack
+            proc.Emit(OpCodes.Ldarg_2); // load arg 'session' onto stack
             proc.Emit(OpCodes.Stfld, context.SessionField); // this.__argo__generated_session = session;
+            
+            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+            proc.Emit(OpCodes.Ldfld, context.SessionField); // load this.__argo__generated_session
+            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+            proc.Emit(OpCodes.Callvirt, context.ImportReference(sessionGetId));
+            proc.Emit(OpCodes.Stfld, idBackingField); // this.<Id>K_backingField = this.__argo__generated_session.GetId<TModel>();
 
             // this._attrBackingField = this.__argo__generated_session.GetAttribute
             WeaveAttributeFieldInitializers(context, proc, context.MappedAttributes);
@@ -59,16 +81,49 @@ namespace RedArrow.Argo
             context.Methods.Add(ctor);
         }
 
-        private void WeaveAttributeFieldInitializers(ModelWeavingContext context, ILProcessor proc, IEnumerable<PropertyDefinition> attrPropDefs)
-        {
-            var sessionGetAttrGeneric = _sessionTypeDef
-                   .Methods
-                   .SingleOrDefault(x => x.Name == "GetAttribute");
+	    private void AddStaticCtor(ModelWeavingContext context)
+	    {
+		    var ctor = context.ModelTypeDef.GetStaticConstructor();
 
+			var include = GetIncludePath(context);
+
+		    if (ctor == null)
+		    {
+			    ctor = new MethodDefinition(
+				".cctor",
+				MethodAttributes.Private |
+				MethodAttributes.HideBySig |
+				MethodAttributes.Static |
+				MethodAttributes.SpecialName |
+				MethodAttributes.RTSpecialName,
+				TypeSystem.Void);
+
+				context.Methods.Add(ctor);
+
+			    var proc = ctor.Body.GetILProcessor();
+
+				proc.Emit(OpCodes.Ldstr, include);
+				proc.Emit(OpCodes.Stsfld, context.IncludePathField);
+				proc.Emit(OpCodes.Ret);
+		    }
+		    else
+			{
+				var proc = ctor.Body.GetILProcessor();
+				var originalFirst = ctor.Body.Instructions[0];
+
+				proc.InsertBefore(originalFirst, proc.Create(OpCodes.Ldstr, include));
+				proc.InsertBefore(originalFirst, proc.Create(OpCodes.Stsfld, context.IncludePathField));
+			}
+
+		    context.ModelTypeDef.IsBeforeFieldInit = false;
+	    }
+
+	    private void WeaveAttributeFieldInitializers(ModelWeavingContext context, ILProcessor proc, IEnumerable<PropertyDefinition> attrPropDefs)
+        {
             foreach (var attrPropDef in attrPropDefs)
             {
                 // supply generic type arguments to template
-                var sessionGetAttr = sessionGetAttrGeneric.MakeGenericMethod(context.ModelTypeRef, attrPropDef.PropertyType);
+                var sessionGetAttr = _session_GetAttribute.MakeGenericMethod(context.ModelTypeDef, attrPropDef.PropertyType);
 
                 var backingField = attrPropDef.BackingField();
 
@@ -87,12 +142,11 @@ namespace RedArrow.Argo
                 proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
                 proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
                 proc.Emit(OpCodes.Ldarg_0); // load 'this'
-                proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
                 proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack
                 proc.Emit(OpCodes.Callvirt, context.ImportReference(
                     sessionGetAttr,
                     attrPropDef.PropertyType.IsGenericParameter
-                        ? context.ModelTypeRef
+                        ? context.ModelTypeDef
                         : null)); // invoke session.GetAttribute(..)
 
                 proc.Emit(OpCodes.Stfld, backingField); // store return value in 'this'.<backing field>

@@ -6,11 +6,13 @@
     <SharedGUID>08771a46-2734-466e-ba0d-ddec49301eea</SharedGUID>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
-    <Import_RootNamespace>RedArrow.Argo.Fody.Shared</Import_RootNamespace>
+    <Import_RootNamespace>RedArrow.Argo</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)AttributeWeaver.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)ClassWeaver.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IncludeWeaver.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IntroPrinter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ModelFieldWeaver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Constants.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CtorWeaver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\CecilExtensions.cs" />
@@ -20,8 +22,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\TypeReferenceExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)HasManyWeaver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)HasOneWeaver.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)IdVerifier.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IdWeaver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ModelFinder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ModelPropertyWeaver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ModelWeavingContext.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ModuleWeaver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TypeDefLoader.cs" />

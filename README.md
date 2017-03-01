@@ -1,6 +1,6 @@
 ![Argo](argo.png?raw=true)
 # Argo
-A Json Api 1.0 C# ORM client to translate Json Api semantics into familiar, friendly POCOs.
+A Json.API 1.0 C# ORM client to translate Json.API semantics into familiar, friendly POCOs.
 
 [![GitHub license](https://img.shields.io/github/license/redarrowlabs/argo.svg)](https://raw.githubusercontent.com/redarrowlabs/argo/development/LICENSE)
 
@@ -18,7 +18,7 @@ A Json Api 1.0 C# ORM client to translate Json Api semantics into familiar, frie
 
 
 ## What
-With the advent of NoSQL databases, we all need to decide how to relate these schemaless resources over web apis.  This often introduces new challenges, like how to model relationships bewteen resources.  These challenges compound when you introduce filtering or paging and sorting features to your api. [JSON API](http://jsonapi.org/) is a specification to define a common approach to overcoming these challenges.  However, additional challenges arise when you realize you need to somehow map a JSON API resource to a POCO.  The goal of Argo is to solve all of these challenges (and then some!) for you.
+With the advent of NoSQL databases, we all need to decide how to relate these schemaless resources over web APIs.  This often introduces new challenges, like how to model relationships bewteen resources.  These challenges compound when you introduce filtering or paging and sorting features to your API. [JSON API](http://jsonapi.org/) is a specification to define a common approach to overcoming these challenges.  However, additional challenges arise when you realize you need to somehow map a JSON API resource to a POCO.  The goal of Argo is to solve all of these challenges (and then some!) for you.
 ## Why
 Here is an example of a JSON API resource:
 ```javascript
@@ -51,7 +51,7 @@ public class Article
     public IEnumerable<Comment> Comments { get; set; }  // => $.relationships.comments
 }
 ```
-Let's imagine we fetched the above resource from our JSON API spec web api and wanted to map it to our POCO.  First, notice `author` and `comments` in the json resource are not fully fleshed out objects, but just `id` and `type` - the minimum information needed to fetch (read: lazy load) thier respective resources from the web api.  Pseudo code to fetch `Comments` might look something like
+Let's imagine we fetched the above resource from our JSON API spec web API and wanted to map it to our POCO.  First, notice `author` and `comments` in the json resource are not fully fleshed out objects, but just `id` and `type` - the minimum information needed to fetch (read: lazy load) thier respective resources from the web API.  Pseudo code to fetch `Comments` might look something like
 ```csharp
 //fetch article with "dehydrated" comments
 var article = await JsonApiClient.GetResourceAsync<Article>(articleId);
@@ -69,13 +69,19 @@ Argo takes advantage of [Fody](https://github.com/Fody/Fody) to weave code into 
 Advantages:
  1. Cross Platform!
  2. Most expensive reflection-based mapping logic is executed at compile time and not at runtime.
- 3. Simple.  Argo targets netstandard 1.3
+ 3. Simple.  Argo targets netstandard 1.4
 
-Most all ORMs leverage proxies to abstract your POCO from your database.  Unfortunately, the most popular .net proxy implementation, [Castle DynamicProxy](https://github.com/castleproject/Core/blob/master/docs/dynamicproxy.md), will not play nice with Xamarin iOS projects due to its use of `Reflection.Emit` apis, which are not permitted on iOS.  We get around this by modifying the POCO itself at compile time instead of proxying it at runtime.
+Most all ORMs leverage proxies to abstract your POCO from your database.  Unfortunately, the most popular .net proxy implementation, [Castle DynamicProxy](https://github.com/castleproject/Core/blob/master/docs/dynamicproxy.md), will not play nice with Xamarin iOS projects due to its use of `Reflection.Emit` APIs, which are not permitted on iOS.  We get around this by modifying the POCO itself at compile time instead of proxying it at runtime.
 
 Maybe the thought of a 3rd party library modifying your code is scary.  Let's see some examples.
 ## Examples
-Just show the code, right?  Below are some examples of how Argo transforms your POCO into a session-aware ORM proxy.
+Just show the code, right?  Below are some examples of how Argo transforms your POCO into a session-aware ORM proxy.  But first, some helpful domain language definitions:
+ - Model: The c# poco representation of your domain entity that is used by your c# runtime
+ - Resource: The Json.API representation of your domain entity that is used to communicate with a json.api web api
+ - Session: A stateful instance that may be used to invoke one or many transactions with the API.  Models are cached for the duration of a session, so session lifetime should be scoped accordingly.  The longer a session lives, the larger the risk of stale data, conflicts, and contention.
+
+### Model Weaving
+Below, you'll find an example Model.  Models must be marked with the `[Model]` attribute, as well as contain a `System.Guid` property marked with the `[Id]` attribute.
 ```csharp
 [Model]
 public class Person
@@ -86,37 +92,61 @@ public class Person
 	public string FirstName { get; set; }
 	[Property]
 	public string LastName { get; set; }
- +	[Property]
- +	public int Age { get; set; }
+ 	[Property]
+ 	public int Age { get; set; }
 	[HasOne]
 	public Friend BestFriend { get; set; }
 }
 ```
-At a minimum, each model needs an `[Id]` defined.  Argo will weave this class into:
+Argo will weave some magic into your Model:
 ```csharp
 [Model]
 public class Person
 {
-    private IModelSession __argo_session;
+    private static readonly string __argo__generated_include = "";
+    private IModelSession __argo__generated_session;
+    public IResourceIdentifier __argo__generated_Patch { get; set; }
+    public IResourceIdentifier __argo__generated_Resource { get; set; }
+    public bool __argo__generated_SessionManaged => this.__argo__generated_session != null && !this.__argo__generated_session.Disposed;
 
+    private Guid id;
     [Id]
-	public Guid Id { get; set; }
+	public Guid Id
+	{
+	    get
+	    {
+	        return this.id;
+	    }
+	    private set
+	    {
+	        if(!this.__argo__generated_SessionManaged)
+	        {
+	            this.id = value;
+	        }
+	    }
+    }
 
-    public Person(Guid id, IModelSession session)
+    public Person(IResourceIdentifier resource, IModelSession session)
     {
-        this.Id = id;
-        this.__argo_session = session;
+        this.__argo__generated_Resource = resource;
+        this.__argo__generated_session = session;
+        this.id = this.__argo__generated_session.GetId<Person>(this);
 		
-		this.firstName = __argo_session.GetAttribute<Person, string>(this.Id, "firstName");
-		this.lastName = __argo_session.GetAttribute<Person, string>(this.Id, "lastName");
+		this.firstName = __argo__generated_session.GetAttribute<Person, string>(this, "firstName");
+		this.lastName = __argo__generated_session.GetAttribute<Person, string>(this, "lastName");
     }
 	
-	// properties explained below
+	// property weaving explained below
 }
 ```
-A ctor is added that will be only be used by the session.  Notice `BestFriend` marked as `[HasOne]` was not initialized.  Relationships are lazy-loaded by default.  (Configurable eager loading coming soon...)
+Take note of the fields added to your Model.  `__argo__generated_Resource` is the backing Json.API Resource for this Model.  This repsresents the transport object used to communicate with the API.  Additionally, `__argo__generated_Patch` is also a Resource, but only contains the changes made to its Model since the last server sync.  Both of these reside directly in your Model, so you can easily inspect them when debugging.  `__argo__generated_include` specifies the relationships Argo should load during a GET operation - more on this later.
 
-A basic property:
+A ctor is added that will be only be used by the Session.  Notice `BestFriend` marked as `[HasOne]` was not initialized.  Relationships are lazy-loaded by default.
+
+You may also notice the `Id` was enhanced a bit.  Model Ids are settable as long as the Model is not currently bound to a Session.  This means you may create a new Model, set its Id, and persist it.  However, if you use the Session to fetch a Model by Id, you may not change that Id anymore.
+
+### Property Weaving
+This Model property...
 ```csharp
 [Property]
 public string FirstName { get; set; }
@@ -133,41 +163,33 @@ public string FirstName
 	}
 	set
 	{
-		if (this.__argo_session != null && !string.Equals(this.firstName, value, StringComparison.Ordinal))
+		if (this.__argo__generated_session != null && !string.Equals(this.firstName, value, StringComparison.Ordinal))
 		{
-			this.__argo_session.SetAttribute<Person, string>(this.Id, "firstName", this.firstName);
+			this.__argo__generated_session.SetAttribute<Person, string>(this, "firstName", this.firstName);
 		}
 		this.firstName = value;
 	}
 }
 ```
-Notice the ordinal comparison string equality check.  All attributes are also overridable to allow you to chose your own naming convention to map to your json.api convention.
+Notice the string equality check.  Most property setters have type-specific equality checks to verify the value is actually being changed before delegating that change to the Session.
+
+The default naming convention for Model property to Resource attribute names is camel-case.  However, all names are overridable to allow you to chose your own naming convention.
+```csharp
+[Model("person")]
+public class Actor
+{
+    ...
+}
+```
+or
 ```csharp
 [Property("first-name")]
 public string FirstName { get; set; }
 ```
-becomes...
-```csharp
-private string firstName;
-[Property]
-public string FirstName
-{
-	get
-	{
-		return this.firstName;
-	}
-	set
-	{
-		if (this.__argo_session != null && !string.Equals(this.firstName, value, StringComparison.Ordinal))
-		{
-			this.__argo_session.SetAttribute<Person, string>(this.Id, "first-name", this.firstName);
-		}
-		this.firstName = value;
-	}
-}
-```
+### Relationship Weaving
 We can also relate models
 ```csharp
+[HasOne]
 public Friend BestFriend { get; set; }
 ```
 will be woven into
@@ -178,31 +200,42 @@ public Friend BestFriend
 {
     get
     {
-		if(this.__argo_session != null)
+		if(this.__argo__generated_session != null)
         {
-            this.bestFriend = this.__argo_session.GetReference<Person, Friend>(this.Id, "bestFriend");
+            this.bestFriend = this.__argo__generated_session.GetReference<Person, Friend>(this, "bestFriend");
         }
         return this.bestFriend;
     }
     set
     {
         this.bestFriend = value;
-        if(this.__argo_session != null && this.bestFriend != value)
+        if(this.__argo__generated_session != null && this.bestFriend != value)
         {
-            this.__argo_session.SetReference<Person, Friend>(this.Id, "bestFriend", this.bestFriend);
+            this.__argo__generated_session.SetReference<Person, Friend>(this, "bestFriend", this.bestFriend);
         }
     }
 }
 ```
-
-With the model delegating to the session, the session can do a lot of cool stuff for us.
- - track property changes for building `PATCH` requests
- - manage lazy-loading relationships via session-managed collections in place of `IEnumerable<T>`
- - linq provider to allow session-managed sorting, paging, and filtering on collections
+With the Model delegating to the Session, the Session can do a lot of cool stuff for us.
+ - track changes for building `PATCH` requests
+ - manage lazy-loading relationships via Session-managed collections in place of `IEnumerable<T>`
+ - linq provider to allow Session-managed sorting, paging, and filtering on collections
  - cache retrieved models for subsequent gets
 
+### Eager Loading
+By default, relationships are lazy loaded.  You may override this behavior by specifying the `LoadStrategy` of a relationship.
+```csharp
+[HasOne(LoadStrategy.Eager)]
+public Friend BestFriend { get; set; }
+```
+This will update the value of `__argo__generated_include` in your Model.  The Session will use this value for all GET requests for the respective Model type.  In this case, Argo would weave:
+```csharp
+private static readonly string __argo__generated_include = "bestFriend";
+```
+The Session will use the value `"bestFriend"` when retrieving the `Person` Model, so the data for both the primary `Person` and `Person.BestFriend` is retrieved in a single request.  For more info on this behavior, read up on the behavior of fetching included relationships in the [Json.API spec](http://jsonapi.org/format/#fetching-includes).
+
 ## Configuring
-Argo gives you a pleasent, easy-to-understand configuration Api.  If you've worked with [Fluent NHibernate](https://github.com/jagregory/fluent-nhibernate), this should look a little familiar.
+Argo gives you a pleasent, easy-to-understand configuration API.  If you've worked with [Fluent NHibernate](https://github.com/jagregory/fluent-nhibernate), this should look a little familiar.  This configuration step performs a potentially significant amount of reflection and caching and should only be performed once throughout your application's lifecycle, typically at startup.
 ```csharp
 // the ISessionFactory is the long-lived object you would (ideally) register in your IoC container
 var sessionFactory = Fluently.Configure("http://api.host.com")
@@ -216,6 +249,12 @@ var sessionFactory = Fluently.Configure("http://api.host.com")
 		    .Authorization = new AuthenticationHeaderValue("Bearer", token))
 		// and/or...
 		.ConfigureAsync(() => YourTokenManagerInstance.GetAccessTokenAsync())
+		// you may add callbacks to asynchronously inspect a *copy* of the HttpResponseMessage
+        .OnHttpResponse(response => Task.CompletedTask)
+        .OnResourceCreated(response => Task.CompletedTask)
+        .OnResourceRetreived(response => Task.CompletedTask)
+        .OnResourceUpdated(response => Task.CompletedTask)
+        .OnResourceDeleted(response => Task.CompletedTask)
 	.Models()
 		// tell Argo where your models are
 		.Configure(scan => scan.AssemblyOf<Person>())
@@ -267,6 +306,19 @@ using (var session = sessionFactory.CreateSession())
     await session.Delete<Person>(crossSessionPersonId);
 }
 ```
+You may have requirements to provide Session-specific connection configuration.  For example, if authenticating as a user, the access token will typically not be valid forever and will be refreshed throughout the lifetime of your application.  As a result, the current access token value will typically need to be provided for each Session instance.
+```csharp
+using (var session = sessionFactory.CreateSession(YourHttpClientConfigureFunction))
+{
+    // do some stuff
+}
+
+private void YourHttpClientConfigureFunction(HttpClient client)
+{
+    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "access token value")
+}
+```
+
 ## The Future
 We're still evaluating the long-term roadmap for this project, but initial tentative ideas:
 - Linq provider

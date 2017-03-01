@@ -77,6 +77,7 @@ namespace RedArrow.Argo
 
         public void Execute()
         {
+			PrintIntro();
 	        LoadTypeDefinitions();
 			FindModels();
 
@@ -91,12 +92,18 @@ namespace RedArrow.Argo
                     LogWarningPoint,
                     LogError,
                     LogWarningPoint);
-                VerifyIdProperty(context);
+
+				AddSessionField(context);
+	            AddIncludePathField(context);
+                AddSessionManagedProperty(context);
+				WeaveId(context);
 	            if (context.IdPropDef != null)
 	            {
-	                AddSessionField(context);
+                    AddResourceIdentifierProperty(context);
+                    AddPatchProperty(context);
 	                AddCtor(context);
-	                WeaveAttributes(context);
+		            AddStaticCtor(context);
+					WeaveAttributes(context);
 	                WeaveHasOnes(context);
 	                WeaveHasManys(context);
                 }

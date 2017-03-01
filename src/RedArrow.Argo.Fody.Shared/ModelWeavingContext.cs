@@ -31,14 +31,18 @@ namespace RedArrow.Argo
         public IEnumerable<PropertyDefinition> MappedHasOnes { get; }
         public IEnumerable<PropertyDefinition> MappedHasManys { get; }
 
-        private TypeDefinition ModelTypeDef { get; }
-        public TypeReference ModelTypeRef => ModelTypeDef;
+        public TypeDefinition ModelTypeDef { get; }
 
         public Collection<FieldDefinition> Fields => ModelTypeDef.Fields;
         public Collection<MethodDefinition> Methods => ModelTypeDef.Methods;
         public Collection<PropertyDefinition> Properties => ModelTypeDef.Properties;
 
         public FieldDefinition SessionField { get; set; }
+        public FieldDefinition IncludePathField { get; set; }
+
+        public PropertyDefinition ResourcePropDef { get; set; }
+        public PropertyDefinition PatchProperty { get; set; }
+	    public PropertyDefinition SessionManagedProperty { get; set; }
 
         public ModelWeavingContext(
             TypeDefinition modelTypeDef,
@@ -98,6 +102,11 @@ namespace RedArrow.Argo
                 .Where(x => x.HasCustomAttributes)
                 .Where(p => p.CustomAttributes.ContainsAttribute(attrFullName))
                 .ToArray();
+        }
+
+        public TypeReference ImportReference(Type type)
+        {
+            return ModelTypeDef.Module.ImportReference(type);
         }
 
         public TypeReference ImportReference(TypeReference typeRef)

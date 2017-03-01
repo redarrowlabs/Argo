@@ -11,6 +11,8 @@ namespace RedArrow.Argo.Client.Cache
 
         private IDictionary<Guid, object> PoorMansCache { get; }
 
+        public IEnumerable<object> Items => new List<object>(PoorMansCache.Values);
+
         public BasicCacheProvider()
         {
             PoorMansCache = new ConcurrentDictionary<Guid, object>();
@@ -18,23 +20,22 @@ namespace RedArrow.Argo.Client.Cache
 
         public void Update(Guid id, object model)
         {
-            Log.Debug(() => $"caching model {id}");
+            Log.Debug(() => $"caching model {{{id}}}");
             PoorMansCache[id] = model;
         }
 
-        public object Retrieve(Guid id)
+        public TModel Retrieve<TModel>(Guid id)
+			where TModel : class
         {
-            if (PoorMansCache.ContainsKey(id))
-            {
-                Log.Debug(() => $"retrieved cached model {id}");
-                return PoorMansCache[id];
-            }
-            return null;
+	        if (!PoorMansCache.ContainsKey(id)) return null;
+	        Log.Debug(() => $"retrieved cached model {{{id}}}");
+	        // TODO: verify model.GetType is assignable to TModel
+	        return (TModel)PoorMansCache[id];
         }
 
         public void Remove(Guid id)
         {
-            Log.Debug(() => $"removing cached model {id}");
+            Log.Debug(() => $"removing cached model {{{id}}}");
             PoorMansCache.Remove(id);
         }
     }

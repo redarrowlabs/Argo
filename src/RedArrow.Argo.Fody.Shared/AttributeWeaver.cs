@@ -36,10 +36,7 @@ namespace RedArrow.Argo
                 }
 
                 // find the attrName, if there is one
-                var propAttr = propertyDef.CustomAttributes.GetAttribute(Constants.Attributes.Property);
-                var attrName = propAttr.ConstructorArguments
-                    .Select(x => x.Value as string)
-                    .SingleOrDefault() ?? propertyDef.Name.Camelize();
+                var attrName = propertyDef.JsonApiName(TypeSystem, Constants.Attributes.Property);
 
                 LogInfo($"\tWeaving {propertyDef} => {attrName}");
 
@@ -55,7 +52,7 @@ namespace RedArrow.Argo
             string attrName)
         {
             // supply generic type arguments to template
-            var sessionSetAttr = sessionSetAttrGeneric.MakeGenericMethod(context.ModelTypeRef, attrPropDef.PropertyType);
+            var sessionSetAttr = sessionSetAttrGeneric.MakeGenericMethod(context.ModelTypeDef, attrPropDef.PropertyType);
 
             attrPropDef.SetMethod.Body.Instructions.Clear();
 
@@ -63,7 +60,7 @@ namespace RedArrow.Argo
             // {
             //     if (this.__argo__generated_session != null && this.<[PropName]>k__BackingField != value)
             //     {
-            //         this.__argo__generated_session.SetRelationship<[ModelType], [ReturnType]>(this.Id, "[AttrName]", value);
+            //         this.__argo__generated_session.SetRelationship<[ModelType], [ReturnType]>(this, "[AttrName]", value);
             //     }
             //     this.<[PropName]>k__BackingField = value;
             // }
@@ -80,13 +77,12 @@ namespace RedArrow.Argo
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
             proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
             proc.Emit(OpCodes.Ldarg_0); // load 'this'
-            proc.Emit(OpCodes.Call, context.IdPropDef.GetMethod); // invoke id property and push return onto stack
             proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack
             proc.Emit(OpCodes.Ldarg_1); // load 'value'
             proc.Emit(OpCodes.Callvirt, context.ImportReference(
                 sessionSetAttr,
                 attrPropDef.PropertyType.IsGenericParameter
-                    ? context.ModelTypeRef
+                    ? context.ModelTypeDef
                     : null)); // invoke session.GetAttribute(..)
 
             proc.Append(endif); // load 'this' onto stack

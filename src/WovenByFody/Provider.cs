@@ -7,7 +7,7 @@ namespace WovenByFody
     [Model("integration-test-provider")]
     public class Provider
     {
-        [Id]
+		[Id]
         public Guid Id { get; protected set; }
 
         [Property]

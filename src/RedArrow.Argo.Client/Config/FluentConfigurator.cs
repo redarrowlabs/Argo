@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Http;
 using RedArrow.Argo.Client.Session;
 
@@ -21,10 +22,23 @@ namespace RedArrow.Argo.Client.Config
         private IList<Action<HttpClient>> ClientConfigurators { get; }
         private IList<Func<HttpClient, Task>> AsyncClientConfigurators { get; }
 
-        private SessionFactoryConfiguration SessionFactoryConfiguration { get; }
+	    private bool HasDevDefinedCallbacks =>
+		    HttpResponseMessageCallbacks.Any() ||
+		    ResourceCreatedCallbacks.Any() ||
+		    ResourceUpdatedCallbacks.Any() ||
+		    ResourceRetrievedCallbacks.Any() ||
+		    ResourceDeletedCallbacks.Any();
+
+		private IList<Func<HttpResponseMessage, Task>> HttpResponseMessageCallbacks { get; }
+		private IList<Func<HttpResponseMessage, Task>> ResourceCreatedCallbacks { get; }
+		private IList<Func<HttpResponseMessage, Task>> ResourceUpdatedCallbacks { get; }
+		private IList<Func<HttpResponseMessage, Task>> ResourceRetrievedCallbacks { get; }
+		private IList<Func<HttpResponseMessage, Task>> ResourceDeletedCallbacks { get; }
+
+		private SessionFactoryConfiguration SessionFactoryConfiguration { get; }
 
         private Uri ApiHost { get; }
-        private HttpMessageHandler HttpMessageHandler { get; set; }
+        private Func<HttpMessageHandler> CreateHttpMessageHandler { get; set; }
 
         internal FluentConfigurator(string apiHost)
             : this(apiHost, new SessionFactoryConfiguration()) { }
@@ -35,7 +49,13 @@ namespace RedArrow.Argo.Client.Config
             ClientConfigurators = new List<Action<HttpClient>>();
             AsyncClientConfigurators = new List<Func<HttpClient, Task>>();
 
-            ApiHost = new Uri(apiHost);
+			HttpResponseMessageCallbacks = new List<Func<HttpResponseMessage, Task>>();
+			ResourceCreatedCallbacks = new List<Func<HttpResponseMessage, Task>>();
+			ResourceUpdatedCallbacks = new List<Func<HttpResponseMessage, Task>>();
+			ResourceRetrievedCallbacks = new List<Func<HttpResponseMessage, Task>>();
+			ResourceDeletedCallbacks = new List<Func<HttpResponseMessage, Task>>();
+
+			ApiHost = new Uri(apiHost);
 
             SessionFactoryConfiguration = config;
         }
@@ -74,11 +94,41 @@ namespace RedArrow.Argo.Client.Config
             return this;
         }
 
-        public IRemoteConfigure UseMessageHandler(HttpMessageHandler handler)
+        public IRemoteConfigure UseMessageHandler(Func<HttpMessageHandler> createHandler)
         {
-            HttpMessageHandler = handler;
+            CreateHttpMessageHandler = createHandler;
             return this;
         }
+
+	    public IRemoteConfigure OnHttpResponse(Func<HttpResponseMessage, Task> responseReceived)
+	    {
+		    HttpResponseMessageCallbacks.Add(responseReceived);
+		    return this;
+	    }
+
+	    public IRemoteConfigure OnResourceCreated(Func<HttpResponseMessage, Task> resourceCreated)
+	    {
+		    ResourceCreatedCallbacks.Add(resourceCreated);
+		    return this;
+	    }
+
+	    public IRemoteConfigure OnResourceUpdated(Func<HttpResponseMessage, Task> resourceUpdated)
+	    {
+		    ResourceUpdatedCallbacks.Add(resourceUpdated);
+		    return this;
+	    }
+
+	    public IRemoteConfigure OnResourceRetreived(Func<HttpResponseMessage, Task> resourceRetrieved)
+	    {
+		    ResourceRetrievedCallbacks.Add(resourceRetrieved);
+		    return this;
+	    }
+
+	    public IRemoteConfigure OnResourceDeleted(Func<HttpResponseMessage, Task> resourceDeleted)
+	    {
+		    ResourceDeletedCallbacks.Add(resourceDeleted);
+		    return this;
+	    }
 
         public SessionFactoryConfiguration BuildFactoryConfiguration()
         {
@@ -97,7 +147,17 @@ namespace RedArrow.Argo.Client.Config
             // build HttpClient factory
             SessionFactoryConfiguration.HttpClientFactory = () =>
             {
-                var client = (ClientCreator ?? (() => new HttpClient(new DefaultHttpMessageHandler(HttpMessageHandler))))();
+	            var innerHandler = HasDevDefinedCallbacks
+		            ? new DefaultHttpMessageHandler(new HttpMessageCallbackHandler(
+			            HttpResponseMessageCallbacks.ToArray(),
+			            ResourceCreatedCallbacks.ToArray(),
+			            ResourceUpdatedCallbacks.ToArray(),
+			            ResourceRetrievedCallbacks.ToArray(),
+			            ResourceDeletedCallbacks.ToArray(),
+			            CreateHttpMessageHandler?.Invoke()))
+		            : new DefaultHttpMessageHandler(CreateHttpMessageHandler?.Invoke());
+
+				var client = (ClientCreator ?? (() => new HttpClient(innerHandler)))();
 
                 client
                     .DefaultRequestHeaders
