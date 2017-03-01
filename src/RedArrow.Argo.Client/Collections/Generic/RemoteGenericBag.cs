@@ -108,7 +108,7 @@ namespace RedArrow.Argo.Client.Collections.Generic
             {
                 Initialize();
                 Ids.Clear();
-	            var relationships = ModelRegistry.GetPatch(Owner).GetRelationships();
+	            var relationships = ModelRegistry.GetOrCreatePatch(Owner).GetRelationships();
 				Relationship rltn;
 				if (!relationships.TryGetValue(Name, out rltn))
 	            {
@@ -180,10 +180,10 @@ namespace RedArrow.Argo.Client.Collections.Generic
 				relationships = modelResource.Relationships;
 				if (relationships == null || !relationships.TryGetValue(Name, out rltn))
 				{
+                    //TODO: this shouldn't be necessary, maybe invert the above ifs
 					rltn = new Relationship { Data = new JArray() };
 				}
-				
-				if (rltn.Data != null && rltn.Data.Type != JTokenType.Array)
+				else if (rltn.Data != null && rltn.Data.Type != JTokenType.Array)
 				{
 					throw new ModelMapException(
 						   $"Relationship {Name} mapped as [HasMany] but json relationship data was not an array",
@@ -191,14 +191,15 @@ namespace RedArrow.Argo.Client.Collections.Generic
 						   ModelRegistry.GetId(Owner));
 				}
 
-				ModelRegistry.GetOrCreatePatch(Owner).GetRelationships()[Name] = new Relationship
-				{
-					Data = rltn.Data != null
-						? new JArray(rltn.Data)
-						: new JArray(),
-					Links = rltn.Links,
-					Meta = rltn.Meta
-				};
+                rltn = new Relationship
+                {
+                    Data = rltn.Data != null
+                        ? rltn.Data.DeepClone()
+                        : new JArray(),
+                    Links = rltn.Links,
+                    Meta = rltn.Meta
+                };
+			    ModelRegistry.GetOrCreatePatch(Owner).GetRelationships()[Name] = rltn;
 			}
 			return (JArray)rltn.Data;
 		}
