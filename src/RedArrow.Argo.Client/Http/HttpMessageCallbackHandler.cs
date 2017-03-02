@@ -19,13 +19,11 @@ namespace RedArrow.Argo.Client.Http
 			IEnumerable<Func<HttpResponseMessage, Task>> resourceRetrieved,
 			IEnumerable<Func<HttpResponseMessage, Task>> resourceDeleted,
 			HttpMessageHandler innerHandler) :
-			base(innerHandler)
+			base(innerHandler ?? new HttpClientHandler())
 		{
-			InnerHandler = innerHandler ?? new HttpClientHandler();
-
 			Callbacks = new Dictionary<string, IEnumerable<Func<HttpResponseMessage, Task>>>
 			{
-				{null, responseReceived},
+				{string.Empty, responseReceived},
 				{HttpMethod.Post.Method, resourceCreated},
 				{"PATCH", resourceUpdated},
 				{HttpMethod.Get.Method, resourceRetrieved},
@@ -37,7 +35,7 @@ namespace RedArrow.Argo.Client.Http
 		{
 			var response = await base.SendAsync(request, cancellationToken);
 
-			var callbacks = new List<Func<HttpResponseMessage, Task>>(Callbacks[null]);
+			var callbacks = new List<Func<HttpResponseMessage, Task>>(Callbacks[string.Empty]);
 			var method = response.RequestMessage.Method.Method;
 			IEnumerable<Func<HttpResponseMessage, Task>> methodCallbacks;
 			if (Callbacks.TryGetValue(method, out methodCallbacks))
@@ -49,7 +47,7 @@ namespace RedArrow.Argo.Client.Http
 			{
 				var copy = CopyResponse(response);
 				// callbacks are run asyncronously
-				callbacks.Each(x => Task.Run(() => x(copy), cancellationToken));
+				callbacks.Each(x => Task.Run(() => x(copy)));
 			}
 
 			return response;
@@ -82,7 +80,7 @@ namespace RedArrow.Argo.Client.Http
 
 		private static Version CopyVersion(Version src)
 		{
-			return new Version(src.Major, src.Minor, src.Build, src.Revision);
+			return new Version(src.ToString());
 		}
 	}
 }

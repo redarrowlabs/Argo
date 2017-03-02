@@ -10,9 +10,9 @@ namespace RedArrow.Argo.Client.Http
     {
         private static readonly ILog Log = LogProvider.For<DefaultHttpMessageHandler>();
 
-        internal DefaultHttpMessageHandler(HttpMessageHandler innerHandler)
+        internal DefaultHttpMessageHandler(HttpMessageHandler innerHandler) :
+            base(innerHandler ?? new HttpClientHandler())
         {
-            InnerHandler = innerHandler ?? new HttpClientHandler();
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
