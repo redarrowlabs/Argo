@@ -432,20 +432,20 @@ namespace RedArrow.Argo.Client.Session
 			
 			var resource = ModelRegistry.GetResource(collection.Owner);
 
-			// determine if the cache is missing any models for this relationship
-			//Relationship rltn;
-			//var relationships = ModelRegistry.GetPatch(collection.Owner)?.Relationships;
-			//if (relationships != null && relationships.TryGetValue(collection.Name, out rltn))
-			//{
-			//	if (rltn?.Data.Type == JTokenType.Array
-			//	    && rltn.Data.ToObject<IEnumerable<ResourceIdentifier>>()
-			//		    .All(x => Cache.Retrieve<object>(x.Id) != null))
-			//	{
-			//		return;
-			//	}
-			//}
+            // determine if the cache is missing any models for this relationship
+            Relationship rltn;
+            var relationships = ModelRegistry.GetResource(collection.Owner).Relationships;
+            if (relationships != null && relationships.TryGetValue(collection.Name, out rltn))
+            {
+                if (rltn?.Data.Type == JTokenType.Array
+                    && rltn.Data.ToObject<IEnumerable<ResourceIdentifier>>()
+                        .All(x => Cache.Retrieve<object>(x.Id) != null))
+                {
+                    return;
+                }
+            }
 
-			var request = HttpRequestBuilder.GetRelated(resource.Id, resource.Type, collection.Name);
+            var request = HttpRequestBuilder.GetRelated(resource.Id, resource.Type, collection.Name);
 			var response = HttpClient.SendAsync(request).GetAwaiter().GetResult();
 			if (response.StatusCode == HttpStatusCode.NotFound) return;
 
