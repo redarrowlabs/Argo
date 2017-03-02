@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using RedArrow.Argo.Client.Exceptions;
+using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Model;
 
 namespace RedArrow.Argo.Client.Collections.Generic
@@ -27,16 +28,25 @@ namespace RedArrow.Argo.Client.Collections.Generic
         internal RemoteGenericBag(Session.Session session, object owner, string name, IEnumerable<TItem> items = null) :
             base(session, owner, name)
 		{
-			if (items == null) return;
-
-			foreach (var item in items)
-			{
-				AddInternal(item);
-			}
+		    if (items == null)
+		    {
+		        // pull from owner resource
+		        var relationships = ModelRegistry.GetResource(owner).Relationships;
+		        Relationship rltn;
+                if (relationships != null && relationships.TryGetValue(name, out rltn))
+                {
+                    var ids = rltn.Data?.SelectTokens("[*].id");
+                    ids.Each(id => Ids.Add(id.ToObject<Guid>()));
+                }
+		    }
+		    else
+            {
+                items.Each(Add);
+            }
 		}
         
 		// should only be used by session when loading remotely, so we can assume these models are cached
-        public override void AddRange(IEnumerable items)
+        public override void SetItems(IEnumerable items)
         {
 			if (items == null) return;
 

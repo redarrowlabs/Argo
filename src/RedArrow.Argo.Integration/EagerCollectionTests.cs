@@ -92,6 +92,44 @@ namespace RedArrow.Argo.Integration
             }
         }
 
+        [Fact]
+        public async Task GetModelWithEagerLoadedCollection()
+        {
+            var sessionFactory = CreateSessionFactory();
+
+            Guid id;
+            using (var session = sessionFactory.CreateSession())
+            {
+                var provider = new Provider
+                {
+                    FirstName = "Bill",
+                    LastName = "Nye",
+                    Patients = new List<Patient>
+                    {
+                        new Patient(),
+                        new Patient(),
+                        new Patient()
+                    }
+                };
+
+                provider = await session.Create(provider);
+                id = provider.Id;
+            }
+
+            using (var session = sessionFactory.CreateSession())
+            {
+                var provider = await session.Get<Provider>(id);
+
+                Assert.Equal(3, provider.Patients.Count);
+
+                foreach (var patient in provider.Patients)
+                {
+                    await session.Delete(patient);
+                }
+                await session.Delete(provider);
+            }
+        }
+
         private ISessionFactory CreateSessionFactory()
         {
             return Fluently.Configure($"{Fixture.Host}/data/")

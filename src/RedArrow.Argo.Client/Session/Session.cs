@@ -459,7 +459,7 @@ namespace RedArrow.Argo.Client.Session
 				Cache.Update(x.Id, rltnModel);
 				return rltnModel;
 			}).ToArray();
-	        collection.AddRange(related);
+	        collection.SetItems(related);
         }
 
         #endregion

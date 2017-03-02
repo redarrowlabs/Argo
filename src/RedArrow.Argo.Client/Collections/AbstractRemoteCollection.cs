@@ -37,7 +37,7 @@ namespace RedArrow.Argo.Client.Collections
             Initialized = true;
         }
 
-        public abstract void AddRange(IEnumerable items);
+        public abstract void SetItems(IEnumerable items);
 
         public abstract IEnumerator GetEnumerator();
         public abstract void CopyTo(Array array, int index);
