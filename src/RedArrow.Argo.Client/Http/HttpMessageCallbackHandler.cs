@@ -47,7 +47,7 @@ namespace RedArrow.Argo.Client.Http
 			{
 				var copy = CopyResponse(response);
 				// callbacks are run asyncronously
-				callbacks.Each(x => Task.Run(() => x(copy), cancellationToken));
+				callbacks.Each(x => Task.Run(() => x(copy)));
 			}
 
 			return response;
@@ -80,7 +80,7 @@ namespace RedArrow.Argo.Client.Http
 
 		private static Version CopyVersion(Version src)
 		{
-			return new Version(src.Major, src.Minor, src.Build, src.Revision);
+			return new Version(src.ToString());
 		}
 	}
 }

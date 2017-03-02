@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using RedArrow.Argo.Client.Exceptions;
-using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Model;
 
 namespace RedArrow.Argo.Client.Collections.Generic
@@ -186,9 +185,9 @@ namespace RedArrow.Argo.Client.Collections.Generic
 				else if (rltn.Data != null && rltn.Data.Type != JTokenType.Array)
 				{
 					throw new ModelMapException(
-						   $"Relationship {Name} mapped as [HasMany] but json relationship data was not an array",
-						   Owner.GetType(),
-						   ModelRegistry.GetId(Owner));
+						$"Relationship {Name} mapped as [HasMany] but json relationship data was not an array",
+						Owner.GetType(),
+						ModelRegistry.GetId(Owner));
 				}
 
                 rltn = new Relationship
