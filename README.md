@@ -190,9 +190,6 @@ public class Actor
 	public string FirstName { get; set; }
 }
 ```
-or
-```csharp
-```
 ### Relationship Weaving
 We can also relate models
 ```csharp
