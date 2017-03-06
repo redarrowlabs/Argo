@@ -3,6 +3,7 @@ using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace RedArrow.Argo.Client.Extensions
 {
@@ -21,9 +22,14 @@ namespace RedArrow.Argo.Client.Extensions
 	    {
 			using (var s = await response.Content.ReadAsStreamAsync())
 			using (var sr = new StreamReader(s))
-			using (var jtr = new JsonTextReader(sr))
+			using (var jtr = new JsonTextReader(sr)
 			{
-				return new JsonSerializer().Deserialize<TModel>(jtr);
+				DateParseHandling = DateParseHandling.None
+			})
+			{
+				return JsonSerializer
+					.Create()
+					.Deserialize<TModel>(jtr);
 			}
 		}
     }
