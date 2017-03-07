@@ -97,7 +97,9 @@
     <Compile Include="Model\ResourceRootSingle.cs" />
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Query\QueryContext.cs" />
     <Compile Include="Session\ICollectionSession.cs" />
+    <Compile Include="Session\IQuerySession.cs" />
     <Compile Include="Session\ISession.cs" />
     <Compile Include="Session\ISessionFactory.cs" />
     <Compile Include="Session\Registry\IModelRegistry.cs" />

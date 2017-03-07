@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace RedArrow.Argo.Client.Session
 {
-    public interface ISession : IDisposable
+    public interface ISession : IQuerySession, IDisposable
     {
         Task<TModel> Create<TModel>()
             where TModel : class;
