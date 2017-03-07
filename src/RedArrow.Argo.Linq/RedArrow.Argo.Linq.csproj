@@ -42,7 +42,9 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Extensions\ExpressionExtensions.cs" />
     <Compile Include="Extensions\SessionExtensions.cs" />
+    <Compile Include="Node\NodeBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RemoteQueryable.cs" />
     <Compile Include="RemoteQueryProvider.cs" />
@@ -52,6 +54,9 @@
       <Project>{ccf8a55f-64f2-4305-abad-2a3df0fd3fe0}</Project>
       <Name>RedArrow.Argo.Client</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="QueryModel\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

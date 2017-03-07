@@ -25,9 +25,9 @@ using Xunit.Abstractions;
 
 namespace RedArrow.Argo.Client.Tests.Session
 {
-    public class SessionTests
+    public class ISessionTests : SessionTestsBase
     {
-        public SessionTests(ITestOutputHelper outputHelper)
+        public ISessionTests(ITestOutputHelper outputHelper)
         {
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
@@ -254,136 +254,6 @@ namespace RedArrow.Argo.Client.Tests.Session
 			mockCacheProvider
 				.Verify(x => x.Update(It.IsAny<Guid>(), It.IsAny<CircularReferenceC>()), Times.Once);
 		}
-
-        [Theory, AutoData]
-        public void SetReference__Given_SessionManagedModel__When_RefNull__Then_SetNullValue
-            (Guid modelId)
-        {
-            var model = new CircularReferenceA {Id = modelId};
-            
-            var mockRequestBuilder = new Mock<IHttpRequestBuilder>();
-            var mockCacheProvider = new Mock<ICacheProvider>();
-            var modelRegistry = CreateModelRegistry(
-                 typeof(CircularReferenceA),
-                 typeof(CircularReferenceB));
-            
-            var subject = CreateSubject(
-                null,
-                mockRequestBuilder.Object,
-                mockCacheProvider.Object,
-                modelRegistry);
-
-            model = subject.ManageModel(model);
-
-            subject.SetReference(model, "b", (CircularReferenceB)null);
-
-            var patch = modelRegistry.GetPatch(model);
-            var resource = modelRegistry.GetResource(model);
-
-            Assert.NotNull(patch);
-            Assert.Equal(modelId, patch.Id);
-            Assert.Equal(modelRegistry.GetResourceType(typeof(CircularReferenceA)), patch.Type);
-            Assert.Null(patch.Attributes);
-            Assert.NotNull(patch.Relationships);
-            Assert.Contains("b", patch.Relationships.Keys);
-            Assert.NotNull(patch.Relationships["b"].Data);
-            Assert.Equal(JTokenType.Null, patch.Relationships["b"].Data.Type);
-
-            Assert.NotNull(resource);
-            Assert.Null(resource.Relationships);
-
-            mockCacheProvider.Verify(x => x.Update(It.IsAny<Guid>(), It.IsAny<object>()), Times.Never);
-        }
-
-        [Theory, AutoData]
-        public void SetReference__Given_SessionManagedModel__When_RefModelWithId__Then_CreateRelationship
-            (Guid modelId, Guid refId)
-        {
-            var model = new CircularReferenceA { Id = modelId };
-            var refModel = new CircularReferenceB {Id = refId};
-
-            var mockRequestBuilder = new Mock<IHttpRequestBuilder>();
-            var mockCacheProvider = new Mock<ICacheProvider>();
-            var modelRegistry = CreateModelRegistry(
-                 typeof(CircularReferenceA),
-                 typeof(CircularReferenceB));
-
-            var subject = CreateSubject(
-                null,
-                mockRequestBuilder.Object,
-                mockCacheProvider.Object,
-                modelRegistry);
-
-            model = subject.ManageModel(model);
-
-            subject.SetReference(model, "b", refModel);
-
-            var patch = modelRegistry.GetPatch(model);
-            var resource = modelRegistry.GetResource(model);
-
-            Assert.NotNull(patch);
-            Assert.Equal(modelId, patch.Id);
-            Assert.Equal(modelRegistry.GetResourceType<CircularReferenceA>(), patch.Type);
-            Assert.Null(patch.Attributes);
-            Assert.NotNull(patch.Relationships);
-            Assert.Contains("b", patch.Relationships.Keys);
-            Assert.NotNull(patch.Relationships["b"].Data);
-            Assert.Equal(JTokenType.Object, patch.Relationships["b"].Data.Type);
-            var refIdentifier = patch.Relationships["b"].Data.ToObject<ResourceIdentifier>();
-            Assert.Equal(refId, refIdentifier.Id);
-            Assert.Equal(modelRegistry.GetResourceType<CircularReferenceB>(), refIdentifier.Type);
-
-            Assert.NotNull(resource);
-            Assert.Null(resource.Relationships);
-
-            mockCacheProvider.Verify(x => x.Update(refModel.Id, refModel), Times.Once);
-        }
-
-        [Theory, AutoData]
-        public void SetReference__Given_SessionManagedModel__When_RefModelWithoutId__Then_CreateRelationship
-            (Guid modelId)
-        {
-            var model = new CircularReferenceA { Id = modelId };
-            var refModel = new CircularReferenceB();
-
-            var mockRequestBuilder = new Mock<IHttpRequestBuilder>();
-            var mockCacheProvider = new Mock<ICacheProvider>();
-            var modelRegistry = CreateModelRegistry(
-                 typeof(CircularReferenceA),
-                 typeof(CircularReferenceB));
-
-            var subject = CreateSubject(
-                null,
-                mockRequestBuilder.Object,
-                mockCacheProvider.Object,
-                modelRegistry);
-
-            model = subject.ManageModel(model);
-
-            subject.SetReference(model, "b", refModel);
-
-            var patch = modelRegistry.GetPatch(model);
-            var resource = modelRegistry.GetResource(model);
-
-            Assert.NotNull(patch);
-            Assert.Equal(modelId, patch.Id);
-            Assert.Equal(modelRegistry.GetResourceType<CircularReferenceA>(), patch.Type);
-            Assert.Null(patch.Attributes);
-            Assert.NotNull(patch.Relationships);
-            Assert.Contains("b", patch.Relationships.Keys);
-            Assert.NotNull(patch.Relationships["b"].Data);
-            Assert.Equal(JTokenType.Object, patch.Relationships["b"].Data.Type);
-            var refIdentifier = patch.Relationships["b"].Data.ToObject<ResourceIdentifier>();
-            Assert.NotEqual(Guid.Empty, refIdentifier.Id);
-            Assert.NotEqual(Guid.Empty, refModel.Id);
-            Assert.Equal(refModel.Id, refIdentifier.Id);
-            Assert.Equal(modelRegistry.GetResourceType<CircularReferenceB>(), refIdentifier.Type);
-
-            Assert.NotNull(resource);
-            Assert.Null(resource.Relationships);
-
-            mockCacheProvider.Verify(x => x.Update(refModel.Id, refModel), Times.Once);
-        }
 
         [Fact]
         public async Task Update__Given_NullModel__Then_ThrowEx()
@@ -650,28 +520,5 @@ namespace RedArrow.Argo.Client.Tests.Session
             Assert.True(((Client.Session.Session) session).Disposed);
             Assert.True(fakeHandler.Disposed);
         }
-
-	    private static Client.Session.Session CreateSubject(
-		    HttpMessageHandler mockHandler = null,
-			IHttpRequestBuilder requestBuilder = null,
-			ICacheProvider cacheProvider = null,
-			IModelRegistry modelRegistry = null)
-	    {
-            if (mockHandler == null)
-            {
-                mockHandler = new HttpClientHandler();
-            }
-
-            return new Client.Session.Session(
-				() => new HttpClient(mockHandler),
-				requestBuilder ?? Mock.Of<IHttpRequestBuilder>(),
-				cacheProvider ?? Mock.Of<ICacheProvider>(),
-				modelRegistry ?? Mock.Of<IModelRegistry>());
-	    }
-
-	    private static IModelRegistry CreateModelRegistry(params Type[] types)
-	    {
-		    return new ModelRegistry(types.Select(x => new ModelConfiguration(x)));
-	    }
     }
 }

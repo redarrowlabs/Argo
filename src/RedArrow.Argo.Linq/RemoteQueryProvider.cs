@@ -1,38 +1,40 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
-using RedArrow.Argo.Client.Session;
+using System.Reflection;
 
 namespace RedArrow.Argo.Linq
 {
-	internal class RemoteQueryProvider<TIn> : IQueryProvider
-	{
-		private ISession Session { get; }
+	internal class RemoteQueryProvider : IQueryProvider
+    {
+        public IQueryable CreateQuery(Expression expression)
+        {
+            var elementType = expression.Type.GetElementType();
+            try
+            {
+                return (IQueryable)Activator.CreateInstance(typeof(RemoteQueryable<>).MakeGenericType(elementType), this, expression);
+            }
+            catch (TargetInvocationException tie)
+            {
+                throw tie.InnerException;
+            }
+        }
 
-		public RemoteQueryProvider(ISession session)
+        // Queryable's collection-returning standard query operators call this method.
+        public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
 		{
-			Session = session;
+            return new RemoteQueryable<TElement>(this, expression);
 		}
 
-		public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
-		{
-			return new RemoteQueryable<TIn, TElement>(Session, this, expression);
-		}
 
 		public TResult Execute<TResult>(Expression expression)
-		{
-			throw new NotImplementedException();
-		}
+        {
+            throw new NotImplementedException();
+        }
 
-		public IQueryable CreateQuery(Expression expression)
-		{
-			throw new NotImplementedException();
-		}
-
-		public object Execute(Expression expression)
+        // Queryable's "single value" standard query operators call this method.
+        // It is also called from .GetEnumerator(). 
+        public object Execute(Expression expression)
 		{
 			throw new NotImplementedException();
 		}

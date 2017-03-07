@@ -2,11 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Newtonsoft.Json.Linq;
 using RedArrow.Argo.Client.Config.Model;
 using RedArrow.Argo.Client.Exceptions;
-using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Model;
 using RedArrow.Argo.Session;
 
@@ -64,7 +62,7 @@ namespace RedArrow.Argo.Client.Session.Registry
             return (Resource)GetModelConfig(modelType).PatchProperty.GetValue(model);
         }
 
-        private void SetPatch(object model, Resource resource)
+        public void SetPatch(object model, Resource resource)
         {
             var modelType = model.GetType();
             GetModelConfig(modelType).PatchProperty.SetValue(model, resource);

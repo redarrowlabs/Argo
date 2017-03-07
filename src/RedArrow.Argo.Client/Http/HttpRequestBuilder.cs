@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Text;
 using RedArrow.Argo.Client.Flurl.Shared;
 using RedArrow.Argo.Client.Model;
+using RedArrow.Argo.Client.Query;
 
 namespace RedArrow.Argo.Client.Http
 {
@@ -52,6 +53,36 @@ namespace RedArrow.Argo.Client.Http
             {
                 Content = BuildHttpContent(root.ToJson())
             };
+        }
+
+        public HttpRequestMessage GetResources(string resourceType, QueryContext query, string include)
+        {
+            var path = resourceType;
+            if (!string.IsNullOrEmpty(include))
+            {
+                path = path.SetQueryParam("include", include);
+            }
+
+            if (!string.IsNullOrEmpty(query?.Filter))
+            {
+                path = path.SetQueryParam("filter", query.Filter);
+            }
+
+            if (!string.IsNullOrEmpty(query?.Sort))
+            {
+                path = path.SetQueryParam("sort", query.Sort);
+                
+                if (query.PageSize != null)
+                {
+                    path = path.SetQueryParam("page[size]", query.PageSize);
+                }
+                if (query.PageNumber != null)
+                {
+                    path = path.SetQueryParam("page[number]", query.PageNumber);
+                }
+            }
+
+            return new HttpRequestMessage(HttpMethod.Get, path);
         }
 
         private static HttpContent BuildHttpContent(string content)

@@ -15,6 +15,7 @@ using RedArrow.Argo.Client.Exceptions;
 using RedArrow.Argo.Client.Http;
 using RedArrow.Argo.Client.Logging;
 using RedArrow.Argo.Client.Model;
+using RedArrow.Argo.Client.Query;
 using RedArrow.Argo.Model;
 
 namespace RedArrow.Argo.Client.Session
@@ -188,11 +189,11 @@ namespace RedArrow.Argo.Client.Session
 			var root = await response.GetContentModel<ResourceRootSingle>();
             model = CreateResourceModel<TModel>(root.Data);
             Cache.Update(id, model);
-			root.Included.Each(x =>
+			await Task.WhenAll(root.Included.Select(x => Task.Run(() => 
 			{
 				var includedModel = CreateResourceModel(x);
 				Cache.Update(x.Id, includedModel);
-			});
+			})));
             return model;
         }
 		
@@ -258,9 +259,47 @@ namespace RedArrow.Argo.Client.Session
 
         #endregion ISession
 
-		#region IModelSession
+        #region IQuerySession
 
-		public Guid GetId<TModel>(TModel model)
+        public async Task<IEnumerable<TModel>> Query<TModel>(QueryContext query)
+            where TModel : class
+        {
+            var resourceType = ModelRegistry.GetResourceType<TModel>();
+            var include = ModelRegistry.GetInclude<TModel>();
+            var request = HttpRequestBuilder.GetResources(resourceType, query, include);
+            var response = await HttpClient.SendAsync(request);
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+            response.EnsureSuccessStatusCode();
+
+            var root = await response.GetContentModel<ResourceRootCollection>();
+
+            var createData = Task.WhenAll(root.Data.Select(x => Task.Run(() =>
+            {
+                var dataModel = CreateResourceModel<TModel>(x);
+                Cache.Update(x.Id, dataModel);
+                return dataModel;
+            })));
+            var createIncludes = root.Included != null
+                ? Task.WhenAll(root.Included.Select(x => Task.Run(() =>
+                {
+                    var includedModel = CreateResourceModel(x);
+                    Cache.Update(x.Id, includedModel);
+                })))
+                : Task.CompletedTask;
+
+            await Task.WhenAll(createIncludes, createData);
+
+            return createData.Result;
+        }
+
+        #endregion
+
+        #region IModelSession
+
+        public Guid GetId<TModel>(TModel model)
         {
             return ModelRegistry.GetResource(model).Id;
         }

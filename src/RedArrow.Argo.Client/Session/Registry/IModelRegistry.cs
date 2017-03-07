@@ -16,6 +16,7 @@ namespace RedArrow.Argo.Client.Session.Registry
 
 	    Resource GetResource(object model);
         Resource GetPatch(object model);
+        void SetPatch(object model, Resource patch);
 	    Resource GetOrCreatePatch(object model);
 	    void ApplyPatch(object model);
 
