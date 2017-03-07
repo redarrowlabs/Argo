@@ -189,11 +189,14 @@ namespace RedArrow.Argo.Client.Session
 			var root = await response.GetContentModel<ResourceRootSingle>();
             model = CreateResourceModel<TModel>(root.Data);
             Cache.Update(id, model);
-			await Task.WhenAll(root.Included.Select(x => Task.Run(() => 
-			{
-				var includedModel = CreateResourceModel(x);
-				Cache.Update(x.Id, includedModel);
-			})));
+            if (root.Included != null)
+            {
+                await Task.WhenAll(root.Included.Select(x => Task.Run(() =>
+                {
+                    var includedModel = CreateResourceModel(x);
+                    Cache.Update(x.Id, includedModel);
+                })));
+            }
             return model;
         }
 		
