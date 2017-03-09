@@ -43,14 +43,22 @@ namespace RedArrow.Argo.Client.Extensions
 
         internal static PropertyInfo GetModelResourceProperty(this Type type)
         {
-            return type.GetTypeInfo()
+            var resourceProp = type.GetTypeInfo()
+                .DeclaredProperties
+                .SingleOrDefault(prop => prop.IsDefined(typeof(ResourceAttribute)));
+
+            return resourceProp ?? type.GetTypeInfo()
                 .DeclaredProperties
                 .Single(prop => prop.Name == "__argo__generated_Resource");
         }
 
         internal static PropertyInfo GetModelPatchProperty(this Type type)
         {
-            return type.GetTypeInfo()
+            var patchProp = type.GetTypeInfo()
+                .DeclaredProperties
+                .SingleOrDefault(prop => prop.IsDefined(typeof(PatchAttribute)));
+
+            return patchProp ?? type.GetTypeInfo()
                 .DeclaredProperties
                 .Single(prop => prop.Name == "__argo__generated_Patch");
         }
@@ -61,7 +69,7 @@ namespace RedArrow.Argo.Client.Extensions
                 .DeclaredProperties
                 .Single(prop => prop.IsDefined(typeof(IdAttribute)));
         }
-
+        
         internal static IDictionary<string, AttributeConfiguration> GetModelAttributeConfigurations(this Type type)
         {
             return type.GetTypeInfo()

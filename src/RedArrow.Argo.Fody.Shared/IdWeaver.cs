@@ -53,7 +53,7 @@ namespace RedArrow.Argo
                 var ret = proc.Create(OpCodes.Ret);
 
                 proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-                proc.Emit(OpCodes.Callvirt, context.SessionManagedProperty.GetMethod);
+                proc.Emit(OpCodes.Callvirt, context.SessionManagedPropDef.GetMethod);
                 proc.Emit(OpCodes.Brtrue_S, ret);
 
                 proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack

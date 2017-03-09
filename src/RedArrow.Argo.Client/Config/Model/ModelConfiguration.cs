@@ -18,7 +18,7 @@ namespace RedArrow.Argo.Client.Config.Model
         public PropertyInfo PatchProperty { get; }
 
         public PropertyInfo IdProperty { get; }
-		
+        
         // resource attribute name => model property
         public IDictionary<string, AttributeConfiguration> AttributeConfigs { get; }
 

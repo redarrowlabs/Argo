@@ -41,8 +41,8 @@ namespace RedArrow.Argo
         public FieldDefinition IncludePathField { get; set; }
 
         public PropertyDefinition ResourcePropDef { get; set; }
-        public PropertyDefinition PatchProperty { get; set; }
-	    public PropertyDefinition SessionManagedProperty { get; set; }
+        public PropertyDefinition PatchPropDef { get; set; }
+	    public PropertyDefinition SessionManagedPropDef { get; set; }
 
         public ModelWeavingContext(
             TypeDefinition modelTypeDef,
@@ -63,7 +63,6 @@ namespace RedArrow.Argo
             LogErrorPoint = logErrorPoint;
             
             GetMappedIdProperty();
-            GetMappedPropertyBagProperty();
 
             MappedAttributes = GetMappedProperties(Constants.Attributes.Property);
             MappedHasOnes = GetMappedProperties(Constants.Attributes.HasOne);
@@ -84,19 +83,8 @@ namespace RedArrow.Argo
 
             IdPropDef = idProperties.Single();
         }
-
-        private void GetMappedPropertyBagProperty()
-        {
-            var propertyBags = GetMappedProperties(Constants.Attributes.PropertyBag);
-            if (propertyBags.Count() > 1)
-            {
-                LogError($"{ModelTypeDef.FullName} has multiple [PropertyBag]s defined - only one is allowed per model");
-            }
-
-            PropertyBagPropDef = propertyBags.SingleOrDefault();
-        }
-
-        private IEnumerable<PropertyDefinition> GetMappedProperties(string attrFullName)
+        
+        public IEnumerable<PropertyDefinition> GetMappedProperties(string attrFullName)
         {
             return ModelTypeDef.Properties
                 .Where(x => x.HasCustomAttributes)
