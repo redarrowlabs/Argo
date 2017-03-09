@@ -4,7 +4,6 @@ using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Session.Registry;
 using RedArrow.Argo.Session;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
