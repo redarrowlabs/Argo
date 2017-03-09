@@ -9,7 +9,6 @@
     <Import_RootNamespace>RedArrow.Argo</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)GeneratedOverridesVerifier.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AttributeWeaver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IncludeWeaver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IntroPrinter.cs" />

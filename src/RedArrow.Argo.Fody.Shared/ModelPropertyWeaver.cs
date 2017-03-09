@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -9,60 +8,14 @@ namespace RedArrow.Argo
     {
         private void AddResourceIdentifierProperty(ModelWeavingContext context)
         {
-            var mappedResourceProps = context.GetMappedProperties(Constants.Attributes.Resource);
-
-            if (mappedResourceProps.Any())
-            {
-                if (mappedResourceProps.Count() > 1)
-                {
-                    LogError($"{context.ModelTypeDef.FullName} has multiple [Resource]s defined - only one is allowed per model");
-                }
-                else // mappedResourceProps.Count() == 1
-                {
-                    var patchProp = mappedResourceProps.Single();
-
-                    if (patchProp.PropertyType.FullName != "RedArrow.Argo.Client.Model.Resource")
-                    {
-                        LogError($"{context.ModelTypeDef.FullName} [Resource] property must be type RedArrow.Argo.Client.Model.Resource");
-                    }
-                    else
-                    {
-                        context.ResourcePropDef = patchProp;
-                        return;
-                    }
-                }
-            }
             context.ResourcePropDef = AddAutoProperty("__argo__generated_Resource", context);
         }
 
         private void AddPatchProperty(ModelWeavingContext context)
         {
-            var mappedPatchProps = context.GetMappedProperties(Constants.Attributes.Patch);
-
-            if (mappedPatchProps.Any())
-            {
-                if (mappedPatchProps.Count() > 1)
-                {
-                    LogError($"{context.ModelTypeDef.FullName} has multiple [Patch]s defined - only one is allowed per model");
-                }
-                else // mappedResourceProps.Count() == 1
-                {
-                    var patchProp = mappedPatchProps.Single();
-
-                    if (patchProp.PropertyType.FullName != "RedArrow.Argo.Client.Model.Resource")
-                    {
-                        LogError($"{context.ModelTypeDef.FullName} [Patch] property must be type RedArrow.Argo.Client.Model.Resource");
-                    }
-                    else
-                    {
-                        context.ResourcePropDef = patchProp;
-                        return;
-                    }
-                }
-            }
-            context.PatchPropDef = AddAutoProperty("__argo__generated_Patch", context);
+            context.PatchProperty = AddAutoProperty("__argo__generated_Patch", context);
         }
-
+        
         private PropertyDefinition AddAutoProperty(string propertyName, ModelWeavingContext context)
         {
             var backingField = new FieldDefinition(
@@ -166,7 +119,7 @@ namespace RedArrow.Argo
             proc.Append(loadRet);
             proc.Emit(OpCodes.Ret);
 
-            context.SessionManagedPropDef = new PropertyDefinition(
+            context.SessionManagedProperty = new PropertyDefinition(
                 propertyName,
                 PropertyAttributes.None,
                 context.ImportReference(typeof(bool)))
@@ -175,7 +128,7 @@ namespace RedArrow.Argo
             };
             
             context.Methods.Add(getter);
-            context.Properties.Add(context.SessionManagedPropDef);
+            context.Properties.Add(context.SessionManagedProperty);
         }
     }
 }
