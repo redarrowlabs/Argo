@@ -42,7 +42,10 @@ namespace RedArrow.Argo.Client.Session.Registry
         IEnumerable<RelationshipConfiguration> GetHasManyConfigs(Type modelType);
         RelationshipConfiguration GetHasManyConfig<TModel>(string rltnName);
         RelationshipConfiguration GetHasManyConfig(Type modelType, string rltnName);
-		
+
+        JObject GetUnmappedAttributes(object model);
+        void SetUnmappedAttributes(object model, JObject attributes);
+
         object[] IncludedModelsCreate(object model);
     }
 }

@@ -2,11 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Newtonsoft.Json.Linq;
 using RedArrow.Argo.Client.Config.Model;
 using RedArrow.Argo.Client.Exceptions;
-using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Model;
 using RedArrow.Argo.Session;
 
@@ -210,8 +208,31 @@ namespace RedArrow.Argo.Client.Session.Registry
 
             return ret;
         }
-		
-	    private ModelConfiguration GetModelConfig<TModel>()
+
+        public JObject GetUnmappedAttributes(object model)
+        {
+            var modelType = model.GetType();
+            var unmapped = GetModelConfig(modelType).UnmappedAttributesProperty?.GetValue(model);
+
+            return unmapped != null
+                ? JObject.FromObject(unmapped)
+                : null;
+        }
+
+        public void SetUnmappedAttributes(object model, JObject attributes)
+        {
+            var modelType = model.GetType();
+            var unmappedProp = GetModelConfig(modelType).UnmappedAttributesProperty;
+
+            if (unmappedProp == null) return;
+
+            var mappedAttrNames = GetAttributeConfigs(modelType).Select(x => x.AttributeName);
+            var unmappedAttrs = attributes?.Properties().Where(x => !mappedAttrNames.Contains(x.Name));
+            if (unmappedAttrs == null) return;
+            unmappedProp.SetValue(model, new JObject(unmappedAttrs).ToObject(unmappedProp.PropertyType));
+        }
+
+        private ModelConfiguration GetModelConfig<TModel>()
 	    {
 		    return GetModelConfig(typeof (TModel));
 	    }
