@@ -143,11 +143,24 @@ namespace RedArrow.Argo.Client.Session
 			if(model == null) throw new ArgumentNullException(nameof(model));
 			ThrowIfUnmanaged(model);
 
-			var patch = ModelRegistry.GetPatch(model);
-			// if nothing was updated, no need to continue
-			if (patch == null) return;
+		    var unmapped = ModelRegistry.GetUnmappedAttributes(model);
+            if (unmapped != null)
+            {
+                var stagingPatch = ModelRegistry.GetOrCreatePatch(model).GetAttributes() as IDictionary<string, JToken>;
+                foreach (var kvp in unmapped)
+                {
+                    if (!stagingPatch.ContainsKey(kvp.Key))
+                    {
+                        stagingPatch[kvp.Key] = kvp.Value;
+                    }
+                }
+            }
 
-			var includes = Cache.Items
+            var patch = ModelRegistry.GetPatch(model);
+            // if nothing was updated, no need to continue
+            if (patch == null) return;
+
+            var includes = Cache.Items
                 .Where(ModelRegistry.IsUnmanagedModel)
 				.Select(CreateModelResource)
 				.ToArray();
@@ -505,19 +518,27 @@ namespace RedArrow.Argo.Client.Session
 
         #endregion
 
-        public TModel CreateResourceModel<TModel>(IResourceIdentifier resource)
+        public TModel CreateResourceModel<TModel>(IResourceIdentifier resourceIdentifier)
 		    where TModel : class
 	    {
-			return (TModel)CreateResourceModel(resource);
+			return (TModel)CreateResourceModel(resourceIdentifier);
 	    }
 
-        public object CreateResourceModel(IResourceIdentifier resource)
+        public object CreateResourceModel(IResourceIdentifier resourceIdentifier)
         {
-            if (resource == null) return null;
+            if (resourceIdentifier == null) return null;
 
-	        var type = ModelRegistry.GetModelType(resource.Type);
-            Log.Debug(() => $"activating session-managed instance of {type.FullName}:{{{resource.Id}}}");
-            return Activator.CreateInstance(type, resource, this);
+	        var type = ModelRegistry.GetModelType(resourceIdentifier.Type);
+            Log.Debug(() => $"activating session-managed instance of {type.FullName}:{{{resourceIdentifier.Id}}}");
+            var model = Activator.CreateInstance(type, resourceIdentifier, this);
+
+            var resource = resourceIdentifier as Resource;
+            if (resource != null)
+            {
+                ModelRegistry.SetUnmappedAttributes(model, resource.Attributes);
+            }
+
+            return model;
         }
 
 	    public Resource CreateModelResource(object model)
@@ -527,12 +548,31 @@ namespace RedArrow.Argo.Client.Session
 
 			JObject attrs = null;
 			IDictionary<string, Relationship> rltns = null;
-			
-			// attributes
-			var modelAttributes = ModelRegistry.GetAttributeValues(model);
-			if (modelAttributes != null)
+            
+            // unmapped attributes
+            var unmappedAttributes = ModelRegistry.GetUnmappedAttributes(model);
+            if (unmappedAttributes != null)
+            {
+                attrs = unmappedAttributes;
+            }
+
+            // attributes
+            var mappedAttributes = ModelRegistry.GetAttributeValues(model);
+			if (mappedAttributes != null)
 			{
-				attrs = modelAttributes;
+			    if (attrs == null)
+			    {
+			        attrs = mappedAttributes;
+			    }
+			    else
+			    {
+			        attrs.Merge(mappedAttributes,
+			            new JsonMergeSettings
+			            {
+			                MergeArrayHandling = MergeArrayHandling.Replace,
+			                MergeNullValueHandling = MergeNullValueHandling.Merge
+			            });
+			    }
 			}
 
 			// relationships

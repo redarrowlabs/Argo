@@ -19,5 +19,8 @@ namespace WovenByTest
 
         [HasMany]
         public IEnumerable<Patient> Patients { get; set; }
+
+        [Unmapped]
+        public JObject Unmapped { get; set; }
     }
 }
