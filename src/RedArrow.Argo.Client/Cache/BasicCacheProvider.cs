@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using RedArrow.Argo.Client.Logging;
+using RedArrow.Argo.Client.Session.Registry;
 
 namespace RedArrow.Argo.Client.Cache
 {
@@ -11,16 +12,30 @@ namespace RedArrow.Argo.Client.Cache
 
         private IDictionary<Guid, object> PoorMansCache { get; }
 
+        private IModelRegistry ModelRegistry { get; }
+
         public IEnumerable<object> Items => new List<object>(PoorMansCache.Values);
 
-        public BasicCacheProvider()
+        public BasicCacheProvider(IModelRegistry modelRegistry)
         {
             PoorMansCache = new ConcurrentDictionary<Guid, object>();
+            ModelRegistry = modelRegistry;
         }
 
         public void Update(Guid id, object model)
         {
-            Log.Debug(() => $"caching model {{{id}}}");
+            object prevModel;
+            if (PoorMansCache.TryGetValue(id, out prevModel))
+            {
+                if (model == prevModel) return;
+
+                Log.Debug(() => $"caching model {{{id}}}");
+                var patch = ModelRegistry.GetPatch(prevModel);
+                if (patch != null)
+                {
+                    ModelRegistry.SetPatch(model, patch);
+                }
+            }
             PoorMansCache[id] = model;
         }
 

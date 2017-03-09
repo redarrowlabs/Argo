@@ -62,7 +62,7 @@ namespace RedArrow.Argo.Client.Session.Registry
             return (Resource)GetModelConfig(modelType).PatchProperty.GetValue(model);
         }
 
-        private void SetPatch(object model, Resource resource)
+        public void SetPatch(object model, Resource resource)
         {
             var modelType = model.GetType();
             GetModelConfig(modelType).PatchProperty.SetValue(model, resource);
