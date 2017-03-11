@@ -18,7 +18,7 @@ namespace RedArrow.Argo.Client.Tests.Session
     public class IQuerySessionTests : SessionTestsBase
     {
         [Fact]
-        public async Task Query__Given_ResourceTypeAndQueryCtx__When_NotFound__Then_ReturnNull()
+        public async Task Query__Given_ResourceTypeAndQueryCtx__When_NotFound__Then_ReturnEmpty()
         {
             var uri = "http://www.test.com/";
 
@@ -59,7 +59,8 @@ namespace RedArrow.Argo.Client.Tests.Session
 
             var result = await subject.Query<BasicModel>(null);
 
-            Assert.Null(result);
+            Assert.NotNull(result);
+			Assert.Empty(result);
             
             mockCacheProvider.Verify(x => x.Update(It.IsAny<Guid>(), It.IsAny<object>()), Times.Never);
         }

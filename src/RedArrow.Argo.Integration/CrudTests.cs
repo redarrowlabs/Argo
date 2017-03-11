@@ -15,7 +15,7 @@ namespace RedArrow.Argo.Integration
         {
         }
 
-        [Theory, AutoData]
+        [Theory, AutoData, Trait("Category", "Integration")]
         public void GetSetAttributesTransient
             (string firstName, string lastName)
         {

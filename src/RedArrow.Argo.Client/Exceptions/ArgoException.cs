@@ -25,6 +25,6 @@ namespace RedArrow.Argo.Client.Exceptions
             Type = type;
         }
 
-        public override string Message => $"\tModel Id:\t{Id}\n\tModel Type:\t{Type.FullName}\n{base.Message}";
+        public override string Message => $"\n\tModel Id:\t{Id}\n\tModel Type:\t{Type.FullName}\n{base.Message}";
     }
 }
