@@ -6,7 +6,7 @@ using RedArrow.Argo.TestUtils.XUnitSink;
 using Serilog;
 using Xunit.Abstractions;
 
-namespace RedArrow.Argo.Integration
+namespace RedArrow.Argo.TestUtils
 {
     public class IntegrationTestFixture : IDisposable
     {

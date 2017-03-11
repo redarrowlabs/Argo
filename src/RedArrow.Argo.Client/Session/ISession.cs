@@ -5,28 +5,13 @@ namespace RedArrow.Argo.Client.Session
 {
     public interface ISession : IQuerySession, IDisposable
     {
-        Task<TModel> Create<TModel>()
-            where TModel : class;
-
-        Task<TModel> Create<TModel>(TModel model)
-            where TModel : class;
-        
-        Task<TModel> Get<TModel>(Guid id)
-            where TModel : class;
-
-        Task Update<TModel>(TModel model)
-            where TModel : class;
-
-        Task Delete<TModel>(TModel model)
-            where TModel : class;
-
-        Task Delete<TModel>(Guid id)
-            where TModel : class;
-
-	    void Detach<TModel>(Guid id)
-		    where TModel : class;
-
-	    void Detach<TModel>(TModel model)
-		    where TModel : class;
+        Task<TModel> Create<TModel>();
+        Task<TModel> Create<TModel>(TModel model);
+        Task<TModel> Get<TModel>(Guid id);
+        Task Update<TModel>(TModel model);
+        Task Delete<TModel>(TModel model);
+        Task Delete<TModel>(Guid id);
+        void Detach<TModel>(Guid id);
+        void Detach<TModel>(TModel model);
     }
 }

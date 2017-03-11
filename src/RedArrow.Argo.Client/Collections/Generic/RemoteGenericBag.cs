@@ -10,7 +10,6 @@ using RedArrow.Argo.Client.Model;
 namespace RedArrow.Argo.Client.Collections.Generic
 {
     internal class RemoteGenericBag<TItem> : AbstractRemoteCollection, ICollection<TItem>
-        where TItem : class
     {
 	    protected ICollection<Guid> Ids { get; } = new List<Guid>();
 

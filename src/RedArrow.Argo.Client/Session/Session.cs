@@ -56,19 +56,16 @@ namespace RedArrow.Argo.Client.Session
 		#region ISession
 
 		public async Task<TModel> Create<TModel>()
-            where TModel : class
         {
             return await Create<TModel>(typeof(TModel), null);
         }
 
         public async Task<TModel> Create<TModel>(TModel model)
-            where TModel : class
         {
             return await Create<TModel>(typeof(TModel), model);
         }
 
         private async Task<TModel> Create<TModel>(Type rootModelType, object model)
-			where TModel : class
         {
             ThrowIfDisposed();
 			
@@ -137,7 +134,6 @@ namespace RedArrow.Argo.Client.Session
 		}
 
 		public async Task Update<TModel>(TModel model)
-			where TModel : class
 		{
 			// guard from kunckleheads
 			if(model == null) throw new ArgumentNullException(nameof(model));
@@ -166,7 +162,6 @@ namespace RedArrow.Argo.Client.Session
 		}
 
 		public async Task<TModel> Get<TModel>(Guid id)
-            where TModel : class
         {
             ThrowIfDisposed();
 
@@ -221,7 +216,6 @@ namespace RedArrow.Argo.Client.Session
 	    }
 
         public Task Delete<TModel>(TModel model)
-            where TModel : class
         {
             ThrowIfDisposed();
 
@@ -231,7 +225,6 @@ namespace RedArrow.Argo.Client.Session
         }
 
         public async Task Delete<TModel>(Guid id)
-            where TModel : class
         {
             var resourceType = ModelRegistry.GetResourceType<TModel>();
             var response = await HttpClient.DeleteAsync($"{resourceType}/{id}");
@@ -239,7 +232,7 @@ namespace RedArrow.Argo.Client.Session
 			Detach<TModel>(id);
         }
 
-	    public void Detach<TModel>(Guid id) where TModel : class
+	    public void Detach<TModel>(Guid id)
 	    {
 		    var model = Cache.Retrieve<TModel>(id);
 		    if (model != null)
@@ -248,7 +241,7 @@ namespace RedArrow.Argo.Client.Session
 		    }
 	    }
 
-	    public void Detach<TModel>(TModel model) where TModel : class
+	    public void Detach<TModel>(TModel model)
 	    {
 		    var id = ModelRegistry.GetId(model);
 			Detach(id, model);
@@ -265,7 +258,6 @@ namespace RedArrow.Argo.Client.Session
         #region IQuerySession
 
         public async Task<IEnumerable<TModel>> Query<TModel>(QueryContext query)
-            where TModel : class
         {
             var resourceType = ModelRegistry.GetResourceType<TModel>();
             var include = ModelRegistry.GetInclude<TModel>();
@@ -308,7 +300,6 @@ namespace RedArrow.Argo.Client.Session
         }
         
         public TAttr GetAttribute<TModel, TAttr>(TModel model, string attrName)
-            where TModel : class
         {
             ThrowIfDisposed();
 			
@@ -326,7 +317,6 @@ namespace RedArrow.Argo.Client.Session
         }
 
 		public void SetAttribute<TModel, TAttr>(TModel model, string attrName, TAttr value)
-            where TModel : class
         {
 			ThrowIfDisposed();
 
@@ -334,8 +324,6 @@ namespace RedArrow.Argo.Client.Session
         }
 
         public TRltn GetReference<TModel, TRltn>(TModel model, string rltnName)
-            where TModel : class
-            where TRltn : class
         {
             ThrowIfDisposed();
 			
@@ -384,8 +372,6 @@ namespace RedArrow.Argo.Client.Session
         }
 
         public void SetReference<TModel, TRltn>(TModel model, string rltnName, TRltn rltn)
-            where TModel : class
-            where TRltn : class
         {
             ThrowIfDisposed();
 
@@ -410,38 +396,26 @@ namespace RedArrow.Argo.Client.Session
         }
 
         public IEnumerable<TElmnt> GetGenericEnumerable<TModel, TElmnt>(TModel model, string rltnName)
-            where TModel : class
-            where TElmnt : class
         {
             return GetRemoteCollection<TModel, TElmnt>(model, rltnName);
         }
 
-        public IEnumerable<TElmnt> SetGenericEnumerable<TModel, TElmnt>(TModel model, string attrName,
-            IEnumerable<TElmnt> value)
-            where TModel : class
-            where TElmnt : class
+        public IEnumerable<TElmnt> SetGenericEnumerable<TModel, TElmnt>(TModel model, string attrName, IEnumerable<TElmnt> value)
         {
             return SetRemoteCollection(model, attrName, value);
         }
 
         public ICollection<TElmnt> GetGenericCollection<TModel, TElmnt>(TModel model, string rltnName)
-            where TModel : class
-            where TElmnt : class
         {
             return GetRemoteCollection<TModel, TElmnt>(model, rltnName);
         }
 
-        public ICollection<TElmnt> SetGenericCollection<TModel, TElmnt>(TModel model, string attrName,
-            IEnumerable<TElmnt> value)
-            where TModel : class
-            where TElmnt : class
+        public ICollection<TElmnt> SetGenericCollection<TModel, TElmnt>(TModel model, string attrName, IEnumerable<TElmnt> value)
         {
             return SetRemoteCollection(model, attrName, value);
         }
 
         private RemoteGenericBag<TElmnt> GetRemoteCollection<TModel, TElmnt>(TModel model, string rltnName)
-            where TModel : class
-            where TElmnt : class
         {
             var rltnConfig = ModelRegistry.GetHasManyConfig<TModel>(rltnName);
 
@@ -451,8 +425,6 @@ namespace RedArrow.Argo.Client.Session
         }
 
         private RemoteGenericBag<TElmnt> SetRemoteCollection<TModel, TElmnt>(TModel model, string rltnName, IEnumerable<TElmnt> value)
-            where TModel : class
-            where TElmnt : class
         {
             var rltnConfig = ModelRegistry.GetHasManyConfig<TModel>(rltnName);
 
@@ -506,7 +478,6 @@ namespace RedArrow.Argo.Client.Session
         #endregion
 
         public TModel CreateResourceModel<TModel>(IResourceIdentifier resource)
-		    where TModel : class
 	    {
 			return (TModel)CreateResourceModel(resource);
 	    }

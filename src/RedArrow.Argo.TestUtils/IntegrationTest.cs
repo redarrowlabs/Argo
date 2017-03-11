@@ -1,27 +1,23 @@
-﻿using System;
-using System.Net.Http.Headers;
-using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
-using Ploeh.AutoFixture.Xunit2;
+﻿using System.Net.Http.Headers;
 using RedArrow.Argo.Client.Config;
 using RedArrow.Argo.Client.Session;
 using WovenByFody;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace RedArrow.Argo.Integration
+namespace RedArrow.Argo.TestUtils
 {
-    public class PropertyBagTests : IClassFixture<IntegrationTestFixture>
+    public abstract class IntegrationTest : IClassFixture<IntegrationTestFixture>
     {
-        private IntegrationTestFixture Fixture { get; }
+        protected IntegrationTestFixture Fixture { get; }
 
-        public PropertyBagTests(IntegrationTestFixture fixture, ITestOutputHelper outputHelper)
+        protected IntegrationTest(IntegrationTestFixture fixture, ITestOutputHelper outputHelper)
         {
             Fixture = fixture;
             Fixture.ConfigureLogging(outputHelper);
         }
-		
-        private ISessionFactory CreateSessionFactory()
+
+        protected ISessionFactory CreateSessionFactory()
         {
             return Fluently.Configure($"{Fixture.Host}/data/")
                 .Remote()

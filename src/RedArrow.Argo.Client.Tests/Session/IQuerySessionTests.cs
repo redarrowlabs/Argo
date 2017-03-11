@@ -10,7 +10,6 @@ using RedArrow.Argo.Client.Cache;
 using RedArrow.Argo.Client.Http;
 using RedArrow.Argo.Client.Model;
 using RedArrow.Argo.Client.Query;
-using RedArrow.Argo.Client.Tests.Session.Models;
 using WovenByFody;
 using Xunit;
 

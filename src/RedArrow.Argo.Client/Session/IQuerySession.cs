@@ -6,7 +6,6 @@ namespace RedArrow.Argo.Client.Session
 {
     public interface IQuerySession
     {
-        Task<IEnumerable<TModel>> Query<TModel>(QueryContext query = null)
-            where TModel : class;
+        Task<IEnumerable<TModel>> Query<TModel>(QueryContext query = null);
     }
 }
