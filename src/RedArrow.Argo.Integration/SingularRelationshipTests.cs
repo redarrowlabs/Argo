@@ -20,26 +20,24 @@ namespace RedArrow.Argo.Integration
         [Fact, Trait("Category", "Integration")]
         public async Task GetNullRelationship()
         {
-            var sessionFactory = CreateSessionFactory();
-
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var patient = await session.Create<Patient>();
 
                 var provider = patient.Provider;
 
                 Assert.Null(provider);
+
+	            await session.Delete(patient);
             }
         }
 
         [Fact, Trait("Category", "Integration")]
         public async Task UpdateHasOneRelationWithSessionAttached()
         {
-            var sessionFactory = CreateSessionFactory();
-
             Guid crossSessionPatientId;
             Guid crossSessionProviderId;
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var patient = await session.Create<Patient>();
                 crossSessionPatientId = patient.Id;
@@ -52,7 +50,7 @@ namespace RedArrow.Argo.Integration
                 await session.Update(patient);
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var patient = await session.Get<Patient>(crossSessionPatientId);
 
@@ -62,7 +60,7 @@ namespace RedArrow.Argo.Integration
                 Assert.Equal(crossSessionProviderId, provider.Id);
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 await session.Delete<Patient>(crossSessionPatientId);
                 await session.Delete<Provider>(crossSessionProviderId);
@@ -72,10 +70,8 @@ namespace RedArrow.Argo.Integration
         [Fact, Trait("Category", "Integration")]
         public async Task GetNullValueRelationship()
         {
-            var sessionFactory = CreateSessionFactory();
-
             Guid patientId;
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var patient = await session.Create<Patient>();
                 patientId = patient.Id;
@@ -84,7 +80,7 @@ namespace RedArrow.Argo.Integration
                 await session.Update(patient);
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var patient = await session.Get<Patient>(patientId);
                 Assert.Null(patient.Provider);
@@ -94,11 +90,9 @@ namespace RedArrow.Argo.Integration
         [Fact, Trait("Category", "Integration")]
         public async Task GetNonNullRelationship()
         {
-            var sessionFactory = CreateSessionFactory();
-
             Guid patientId;
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var patient = await session.Create<Patient>();
                 patientId = patient.Id;
@@ -114,7 +108,7 @@ namespace RedArrow.Argo.Integration
                 await session.Update(patient);
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var patient = await session.Get<Patient>(patientId);
 
@@ -130,9 +124,7 @@ namespace RedArrow.Argo.Integration
         [Fact, Trait("Category", "Integration")]
         public async Task SetNullReferenceToNull()
         {
-            var sessionFactory = CreateSessionFactory();
-
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var patient = await session.Create<Patient>();
 

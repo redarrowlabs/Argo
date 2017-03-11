@@ -98,10 +98,8 @@ namespace RedArrow.Argo.Integration
                 var response = await client.PostAsync("integration-test-provider", content);
                 response.EnsureSuccessStatusCode();
             }
-
-            var sessionFactory = CreateSessionFactory();
-
-            using (var session = sessionFactory.CreateSession())
+			
+            using (var session = SessionFactory.CreateSession())
             {
                 // this is a "reserved" provider I have created specifically for this test
                 var provider = await session.Get<Provider>(providerId);
@@ -157,10 +155,8 @@ namespace RedArrow.Argo.Integration
 
                 Assert.True(providerResponse.IsSuccessStatusCode);
             }
-
-            var sessionFactory = CreateSessionFactory();
-
-            using (var session = sessionFactory.CreateSession())
+			
+            using (var session = SessionFactory.CreateSession())
             {
                 // this is a "reserved" provider I have created specifically for this test
                 var provider = await session.Get<Provider>(providerId);
@@ -178,9 +174,7 @@ namespace RedArrow.Argo.Integration
         [Fact, Trait("Category", "Integration")]
         public async Task GetCollectionFromNullRelationship()
         {
-            var sessionFactory = CreateSessionFactory();
-
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var provider = await session.Create<Provider>();
 
@@ -194,11 +188,9 @@ namespace RedArrow.Argo.Integration
         [Fact, Trait("Category", "Integration")]
         public async Task ForEachLoopOverCollection()
         {
-            var sessionFactory = CreateSessionFactory();
-
             Guid providerId;
             ICollection<Guid> patientIds;
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var provider = await session.Create<Provider>();
                 providerId = provider.Id;
@@ -216,7 +208,7 @@ namespace RedArrow.Argo.Integration
                 await session.Update(provider);
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var provider = await session.Get<Provider>(providerId);
 
@@ -228,7 +220,7 @@ namespace RedArrow.Argo.Integration
                 }
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var deleteProviderTask = session.Delete<Provider>(providerId);
                 var deletePatientsTask = Task.WhenAll(patientIds.Select(x => session.Delete<Patient>(x)).ToArray());
@@ -240,12 +232,10 @@ namespace RedArrow.Argo.Integration
         [Fact, Trait("Category", "Integration")]
         public async Task ClearRelated()
         {
-            var sessionFactory = CreateSessionFactory();
-
             Guid providerId;
             IList<Guid> patientIds = new List<Guid>();
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var provider = await session.Create<Provider>();
                 providerId = provider.Id;
@@ -260,7 +250,7 @@ namespace RedArrow.Argo.Integration
                 await session.Update(provider);
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var provider = await session.Get<Provider>(providerId);
 
@@ -274,7 +264,7 @@ namespace RedArrow.Argo.Integration
                 await session.Update(provider);
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var provider = await session.Get<Provider>(providerId);
 
@@ -286,7 +276,7 @@ namespace RedArrow.Argo.Integration
                 Assert.Equal(0, patients.Length);
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 await session.Delete<Provider>(providerId);
                 foreach (var patientId in patientIds)
@@ -299,12 +289,10 @@ namespace RedArrow.Argo.Integration
         [Fact, Trait("Category", "Integration")]
         public async Task RemoveRelatedFetchedSeparately()
         {
-            var sessionFactory = CreateSessionFactory();
-
             Guid providerId;
             IList<Guid> patientIds = new List<Guid>();
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var provider = await session.Create<Provider>();
                 providerId = provider.Id;
@@ -319,7 +307,7 @@ namespace RedArrow.Argo.Integration
                 await session.Update(provider);
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var provider = await session.Get<Provider>(providerId);
 
@@ -340,7 +328,7 @@ namespace RedArrow.Argo.Integration
                 await session.Update(provider);
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var provider = await session.Get<Provider>(providerId);
 
@@ -354,7 +342,7 @@ namespace RedArrow.Argo.Integration
                 Assert.Equal(patientIds[2], patients[1].Id);
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 await session.Delete<Provider>(providerId);
                 foreach (var patientId in patientIds)
@@ -367,12 +355,10 @@ namespace RedArrow.Argo.Integration
         [Fact, Trait("Category", "Integration")]
         public async Task RemoveRelatedInCollection()
         {
-            var sessionFactory = CreateSessionFactory();
-
             Guid providerId;
             IList<Guid> patientIds = new List<Guid>();
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var provider = await session.Create<Provider>();
                 providerId = provider.Id;
@@ -387,7 +373,7 @@ namespace RedArrow.Argo.Integration
                 await session.Update(provider);
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var provider = await session.Get<Provider>(providerId);
 
@@ -404,7 +390,7 @@ namespace RedArrow.Argo.Integration
                 await session.Update(provider);
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var provider = await session.Get<Provider>(providerId);
 
@@ -418,7 +404,7 @@ namespace RedArrow.Argo.Integration
                 Assert.Equal(patientIds[2], patients[1].Id);
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 await session.Delete<Provider>(providerId);
                 foreach (var patientId in patientIds)
@@ -431,12 +417,10 @@ namespace RedArrow.Argo.Integration
         [Fact, Trait("Category", "Integration")]
         public async Task AddRelated()
         {
-            var sessionFactory = CreateSessionFactory();
-
             Guid providerId;
             Guid patientId;
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var provider = await session.Create<Provider>();
                 providerId = provider.Id;
@@ -448,7 +432,7 @@ namespace RedArrow.Argo.Integration
                 await session.Update(provider);
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var provider = await session.Get<Provider>(providerId);
 
@@ -461,7 +445,7 @@ namespace RedArrow.Argo.Integration
                 Assert.Equal(patientId, patient.Id);
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 await session.Delete<Provider>(providerId);
                 await session.Delete<Patient>(patientId);

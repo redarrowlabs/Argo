@@ -21,14 +21,12 @@ namespace RedArrow.Argo.Linq.Integration
         [Theory, AutoData, Trait("Category", "Integration")]
         public async Task QueryByType(Guid[] ids)
         {
-            var sessionFactory = CreateSessionFactory();
-
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 await Task.WhenAll(ids.Select(id => session.Create(new BasicModel { Id = id })).ToArray());
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var results = session.CreateQuery<BasicModel>().ToArray();
 
@@ -40,40 +38,9 @@ namespace RedArrow.Argo.Linq.Integration
                 });
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 await Task.WhenAll(ids.Select(id => session.Delete<BasicModel>(id)).ToArray());
-            }
-        }
-
-        [Theory, AutoData, Trait("Category", "Integration")]
-        public async Task OrderBySimple(Guid[] ids, string[] props)
-        {
-            var sessionFactory = CreateSessionFactory();
-
-            using (var session = sessionFactory.CreateSession())
-            {
-                await Task.WhenAll(ids.Select((t, i) => session.Create(new BasicModel
-                {
-                    Id = t,
-                    PropA = props[i]
-                })).ToArray());
-            }
-
-            using (var session = sessionFactory.CreateSession())
-            {
-                var results = session.CreateQuery<BasicModel>()
-                    .OrderByDescending(x => x.PropA)
-                    .ToArray();
-
-                Assert.NotNull(results);
-                Assert.Equal(ids.Length, results.Length);
-                Assert.All(results, result =>
-                {
-                    Assert.Contains(result.Id, ids);
-                });
-
-                await Task.WhenAll(results.Select(result => session.Delete(result)).ToArray());
             }
         }
     }

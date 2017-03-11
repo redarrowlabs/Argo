@@ -96,6 +96,10 @@
       <Project>{ccf8a55f-64f2-4305-abad-2a3df0fd3fe0}</Project>
       <Name>RedArrow.Argo.Client</Name>
     </ProjectReference>
+    <ProjectReference Include="..\RedArrow.Argo.Linq\RedArrow.Argo.Linq.csproj">
+      <Project>{6d5c7347-7797-4ce9-bd60-ca897f37e2b7}</Project>
+      <Name>RedArrow.Argo.Linq</Name>
+    </ProjectReference>
     <ProjectReference Include="..\WovenByFody.Net461\WovenByFody.Net461.csproj">
       <Project>{d7da07d0-aab7-44d5-b69b-46a7555c64f1}</Project>
       <Name>WovenByFody.Net461</Name>

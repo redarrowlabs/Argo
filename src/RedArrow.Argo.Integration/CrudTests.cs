@@ -33,10 +33,8 @@ namespace RedArrow.Argo.Integration
         public async Task GetSetAttributesPersisted
             (string firstName, string lastName)
         {
-            var sessionFactory = CreateSessionFactory();
-
             Guid id;
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var patient = await session.Create<Patient>();
                 id = patient.Id;
@@ -48,7 +46,7 @@ namespace RedArrow.Argo.Integration
                 Assert.Equal(lastName, patient.LastName);
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var patient = await session.Get<Patient>(id);
 
@@ -64,12 +62,10 @@ namespace RedArrow.Argo.Integration
             var initialLastName = "Achey";
 
             var updatedLastName = "Bull";
-
-            var sessionFactory = CreateSessionFactory();
-
+			
             Guid crossSessionId;
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var patient = new Patient
                 {
@@ -90,7 +86,7 @@ namespace RedArrow.Argo.Integration
                 Assert.Same(patient, patientRef);
             }
             // update!
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var patient = await session.Get<Patient>(crossSessionId);
 
@@ -111,7 +107,7 @@ namespace RedArrow.Argo.Integration
                 Assert.Same(patient, patient2);
             }
             // later that day...
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var patient = await session.Get<Patient>(crossSessionId);
 
@@ -120,7 +116,7 @@ namespace RedArrow.Argo.Integration
                 Assert.Equal(updatedLastName, patient.LastName);
             }
             // cleanup
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 await session.Delete<Patient>(crossSessionId);
             }

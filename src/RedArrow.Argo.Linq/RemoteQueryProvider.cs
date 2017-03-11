@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using RedArrow.Argo.Client.Session;
+using RedArrow.Argo.Linq.Executors;
 using RedArrow.Argo.Linq.Methods;
 
 namespace RedArrow.Argo.Linq
@@ -35,25 +36,13 @@ namespace RedArrow.Argo.Linq
         {
             return CreateQueryInternal<TModel>(expression);
         }
-
-        private RemoteQueryable<TModel> CreateQueryInternal<TModel>(Expression expression)
-        {
-            if (expression is ConstantExpression)
-            {
-                return new TypeQueryable<TModel>(Session);
-            }
-
-            var methodCallExpression = expression as MethodCallExpression;
-            if (methodCallExpression == null) throw new NotSupportedException();
-
-            return CreateQuery<TModel>(methodCallExpression);
-        }
-
+		
         // Queryable's "single value" standard query operators call this method.
         // It is also called from .GetEnumerator(). 
+		// TResult may not be TModel.  may be bool (.Any()) or int (.Count())
         public TResult Execute<TResult>(Expression expression)
         {
-            throw new NotImplementedException();
+	        return ExecuteInternal(expression).Execute<TResult>(Session);
         }
 
         // TODO: not sure how to support this since model type is not known?
@@ -63,15 +52,26 @@ namespace RedArrow.Argo.Linq
 			throw new NotImplementedException();
 		}
 
-        private RemoteQueryable<TModel> CreateQuery<TModel>(MethodCallExpression expression)
-        {
-            if (expression.Arguments.Count < 2) throw new NotSupportedException();
+        private RemoteQueryable<TModel> CreateQueryInternal<TModel>(Expression expression)
+		{
+			if (expression is ConstantExpression)
+			{
+				return new TypeQueryable<TModel>(Session);
+			}
 
-            var methodName = expression.Method.Name;
-            var target = expression.Arguments[0];
-            var operand = ((UnaryExpression) expression.Arguments[1]).Operand;
+			var mcExpression = expression as MethodCallExpression;
+			if (mcExpression == null) throw new NotSupportedException();
 
-            switch (methodName)
+			if (mcExpression.Arguments.Count < 2) throw new NotSupportedException();
+
+            var methodName = mcExpression.Method.Name;
+            var target = mcExpression.Arguments[0];
+            var operand = ((UnaryExpression)mcExpression.Arguments[1]).Operand;
+
+			// TODO: there's probably a better way...
+			// can't do a static string => func index due to type args
+			// index would need to be built in ctor per instance: memory vs. fugly code ¯\_(ツ)_/¯
+			switch (methodName)
             {
                 case "OrderBy":
                 {
@@ -83,13 +83,11 @@ namespace RedArrow.Argo.Linq
                 }
                 case "ThenBy":
                 {
-                    //return CreateOrderByQuery<TModel>(target, operand, false, true);
-                    throw new NotSupportedException();
+					return CreateOrderByQuery<TModel>(target, operand, false, true);
                 }
                 case "ThenByDescending":
                 {
-                    //return CreateOrderByQuery<TModel>(target, operand, true, true);
-                    throw new NotSupportedException();
+                    return CreateOrderByQuery<TModel>(target, operand, true, true);
                 }
                 default:
                 {
@@ -98,7 +96,64 @@ namespace RedArrow.Argo.Linq
             }
         }
 
-        private RemoteQueryable<TModel> CreateOrderByQuery<TModel>(Expression target, Expression operand, bool isDesc, bool isThenBy)
+	    private RemoteExecutor ExecuteInternal(Expression expression)
+	    {
+		    var mcExpression = expression as MethodCallExpression;
+		    if (mcExpression == null) throw new NotSupportedException();
+
+		    if (mcExpression.Arguments.Count == 0) throw new NotSupportedException();
+
+		    var methodName = mcExpression.Method.Name;
+		    var targetExpression = mcExpression.Arguments[0];
+
+		    Type targetType;
+		    object target;
+		    GetExecuteTarget(targetExpression, out target, out targetType);
+
+		    var predicate = mcExpression.Arguments.Count > 1
+			    ? ((UnaryExpression) mcExpression.Arguments[1]).Operand
+			    : null;
+
+		    switch (methodName)
+		    {
+			    case "First":
+			    {
+				    return (RemoteExecutor) GetExecutorCtor(typeof (SingularExecutor<>), targetType)
+					    .Invoke(new[] {target, predicate, SingularExecutorType.First, false});
+			    }
+			    case "FirstOrDefault":
+			    {
+				    return (RemoteExecutor) GetExecutorCtor(typeof (SingularExecutor<>), targetType)
+					    .Invoke(new[] {target, predicate, SingularExecutorType.First, true});
+			    }
+			    case "Single":
+			    {
+				    return (RemoteExecutor) GetExecutorCtor(typeof (SingularExecutor<>), targetType)
+					    .Invoke(new[] {target, predicate, SingularExecutorType.Single, false});
+			    }
+			    case "SingleOrDefault":
+			    {
+				    return (RemoteExecutor) GetExecutorCtor(typeof (SingularExecutor<>), targetType)
+					    .Invoke(new[] {target, predicate, SingularExecutorType.Single, true});
+			    }
+			    case "Last":
+			    {
+				    return (RemoteExecutor) GetExecutorCtor(typeof (SingularExecutor<>), targetType)
+					    .Invoke(new[] {target, predicate, SingularExecutorType.Last, false});
+			    }
+			    case "LastOrDefault":
+			    {
+				    return (RemoteExecutor) GetExecutorCtor(typeof (SingularExecutor<>), targetType)
+					    .Invoke(new[] {target, predicate, SingularExecutorType.Last, true});
+			    }
+			    default:
+			    {
+				    throw new NotSupportedException();
+			    }
+		    }
+	    }
+
+	    private RemoteQueryable<TModel> CreateOrderByQuery<TModel>(Expression target, Expression operand, bool isDesc, bool isThenBy)
         {
             var targetQueryable = CreateQueryInternal<TModel>(target);
 
@@ -118,5 +173,34 @@ namespace RedArrow.Argo.Linq
                 isThenBy
             });
         }
+
+	    private void GetExecuteTarget(Expression targetExpression, out object target, out Type targetType)
+	    {
+		    var cExpression = targetExpression as ConstantExpression;
+		    if (cExpression != null)
+		    {
+			    target = cExpression.Value;
+			    targetType = target.GetType().GenericTypeArguments[0];
+			    return;
+		    }
+
+		    var mcExpression = targetExpression as MethodCallExpression;
+			if(mcExpression == null) throw new NotSupportedException();
+
+		    targetType = mcExpression.Method.ReturnType;
+		    targetType = targetType.GenericTypeArguments[0];
+		    target = GetType().GetTypeInfo().DeclaredMethods
+			    .Single(x => x.IsGenericMethod && x.Name == "CreateQuery")
+				.MakeGenericMethod(targetType)
+				.Invoke(this, new object[] {targetExpression});
+	    }
+
+		private ConstructorInfo GetExecutorCtor(Type executorType, Type resultType)
+		{
+			return executorType.MakeGenericType(resultType)
+				.GetTypeInfo()
+				.DeclaredConstructors
+				.Single();
+		}
     }
 }

@@ -1,6 +1,9 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Linq;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using RedArrow.Argo.Client.Config;
 using RedArrow.Argo.Client.Session;
+using RedArrow.Argo.Linq.Extensions;
 using WovenByFody;
 using Xunit;
 using Xunit.Abstractions;
@@ -10,14 +13,16 @@ namespace RedArrow.Argo.TestUtils
     public abstract class IntegrationTest : IClassFixture<IntegrationTestFixture>
     {
         protected IntegrationTestFixture Fixture { get; }
+		protected ISessionFactory SessionFactory { get; }
 
         protected IntegrationTest(IntegrationTestFixture fixture, ITestOutputHelper outputHelper)
         {
             Fixture = fixture;
             Fixture.ConfigureLogging(outputHelper);
+	        SessionFactory = CreateSessionFactory();
         }
 
-        protected ISessionFactory CreateSessionFactory()
+        private ISessionFactory CreateSessionFactory()
         {
             return Fluently.Configure($"{Fixture.Host}/data/")
                 .Remote()
@@ -33,6 +38,16 @@ namespace RedArrow.Argo.TestUtils
                 .Models()
                     .Configure(scan => scan.AssemblyOf<Patient>())
                 .BuildSessionFactory();
-        }
-    }
+		}
+
+		protected async Task DeleteAll<TModel>()
+		{
+			using (var session = SessionFactory.CreateSession())
+			{
+				var models = session.CreateQuery<TModel>().ToArray();
+
+				await Task.WhenAll(models.Select(x => session.Delete(x)).ToArray());
+			}
+		}
+	}
 }

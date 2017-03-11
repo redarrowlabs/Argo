@@ -47,12 +47,6 @@ namespace RedArrow.Argo.Client.Session
             ModelRegistry = modelRegistry;
         }
 
-		public void Dispose()
-        {
-            HttpClient.Dispose();
-            Disposed = true;
-		}
-
 		#region ISession
 
 		public async Task<TModel> Create<TModel>()
@@ -251,13 +245,19 @@ namespace RedArrow.Argo.Client.Session
 	    {
 		    Cache.Remove(id);
 			ModelRegistry.DetachModel(model);
-	    }
+		}
 
-        #endregion ISession
+		public void Dispose()
+		{
+			HttpClient.Dispose();
+			Disposed = true;
+		}
 
-        #region IQuerySession
+		#endregion ISession
 
-        public async Task<IEnumerable<TModel>> Query<TModel>(QueryContext query)
+		#region IQuerySession
+
+		public async Task<IEnumerable<TModel>> Query<TModel>(QueryContext query)
         {
             var resourceType = ModelRegistry.GetResourceType<TModel>();
             var include = ModelRegistry.GetInclude<TModel>();
@@ -265,7 +265,7 @@ namespace RedArrow.Argo.Client.Session
             var response = await HttpClient.SendAsync(request);
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
-                return null;
+	            return Enumerable.Empty<TModel>();
             }
             response.EnsureSuccessStatusCode();
 

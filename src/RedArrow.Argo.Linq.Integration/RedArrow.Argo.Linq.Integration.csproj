@@ -99,6 +99,8 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QueryOrderByTests.cs" />
+    <Compile Include="QuerySingleTests.cs" />
     <Compile Include="QueryTypeTests.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -19,8 +19,6 @@ namespace RedArrow.Argo.Integration
         [Fact, Trait("Category", "Integration")]
         public async Task AddIncluded()
         {
-            var sessionFactory = CreateSessionFactory();
-
             Guid providerId;
             Guid patientId;
             Guid companyId;
@@ -57,14 +55,14 @@ namespace RedArrow.Argo.Integration
                 Patients = new List<Patient> { stubPatient1, stubPatient2 }
             };
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var provider = await session.Create(stubProvider);
                 providerId = provider.Id;
                 patientId = provider.Patients.First().Id;
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var provider = await session.Get<Provider>(providerId);
 
@@ -78,7 +76,7 @@ namespace RedArrow.Argo.Integration
                 Assert.Equal(patientId, patient.Id);
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 await session.Delete<Provider>(providerId);
                 await session.Delete<Patient>(patientId);
@@ -89,10 +87,8 @@ namespace RedArrow.Argo.Integration
         [Fact]
         public async Task GetModelWithEagerLoadedCollection()
         {
-            var sessionFactory = CreateSessionFactory();
-
             Guid id;
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var provider = new Provider
                 {
@@ -110,7 +106,7 @@ namespace RedArrow.Argo.Integration
                 id = provider.Id;
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var provider = await session.Get<Provider>(id);
 

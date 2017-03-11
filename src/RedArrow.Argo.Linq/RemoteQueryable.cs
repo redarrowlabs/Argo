@@ -13,7 +13,7 @@ namespace RedArrow.Argo.Linq
 {
 	internal abstract class RemoteQueryable<TModel> : IOrderedQueryable<TModel>
 	{
-        private static ISet<Type> PropAttrTypes = new HashSet<Type>
+        private static readonly ISet<Type> PropAttrTypes = new HashSet<Type>
         {
             typeof(PropertyAttribute),
             typeof(HasOneAttribute),
