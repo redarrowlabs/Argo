@@ -94,15 +94,5 @@ namespace RedArrow.Argo.Linq.Integration
 				await DeleteAll<BasicModel>();
 			}
 		}
-
-		private async Task DeleteAll<TModel>()
-		{
-			using (var session = SessionFactory.CreateSession())
-			{
-				var models = session.CreateQuery<TModel>().ToArray();
-
-				await Task.WhenAll(models.Select(x => session.Delete(x)).ToArray());
-			}
-		}
 	}
 }

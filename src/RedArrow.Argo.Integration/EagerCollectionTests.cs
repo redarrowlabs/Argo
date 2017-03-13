@@ -84,7 +84,7 @@ namespace RedArrow.Argo.Integration
             }
         }
 
-        [Fact]
+        [Fact, Trait("Category", "Integration")]
         public async Task GetModelWithEagerLoadedCollection()
         {
             Guid id;

@@ -20,11 +20,13 @@ namespace RedArrow.Argo.Linq.Integration
 
         [Theory, AutoData, Trait("Category", "Integration")]
         public async Task QueryByType(Guid[] ids)
-        {
-            using (var session = SessionFactory.CreateSession())
-            {
-                await Task.WhenAll(ids.Select(id => session.Create(new BasicModel { Id = id })).ToArray());
-            }
+		{
+			await DeleteAll<BasicModel>();
+
+			using (var session = SessionFactory.CreateSession())
+			{
+				await Task.WhenAll(ids.Select(id => session.Create(new BasicModel { Id = id })).ToArray());
+			}
 
             using (var session = SessionFactory.CreateSession())
             {
@@ -36,12 +38,9 @@ namespace RedArrow.Argo.Linq.Integration
                 {
                     Assert.Contains(result.Id, ids);
                 });
-            }
+			}
 
-            using (var session = SessionFactory.CreateSession())
-            {
-                await Task.WhenAll(ids.Select(id => session.Delete<BasicModel>(id)).ToArray());
-            }
-        }
+			await DeleteAll<BasicModel>();
+		}
     }
 }
