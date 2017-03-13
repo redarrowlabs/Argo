@@ -4,10 +4,10 @@ using RedArrow.Argo.Attributes;
 namespace WovenByFody
 {
 	[Model]
-	public class AllPropertyTypes<T>
+	public class AllPropertyTypes
 	{
 		[Id]
-		public Guid Id { get; }
+		public Guid Id { get; set; }
 
 		[Property]
 		public Guid GuidProperty { get; set; }
@@ -53,8 +53,5 @@ namespace WovenByFody
 
 		[Property]
 		public object ObjectProperty { get; set; }
-
-		[Property]
-		public T GenericProperty { get; set; }
 	}
 }

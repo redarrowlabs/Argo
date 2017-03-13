@@ -1,16 +1,42 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace RedArrow.Argo.Client.Query
 {
     public class QueryContext
     {
-        public string Sort => SortBuilder.ToString();
-        public string Filter => FilterBuilder.ToString();
-
-        public StringBuilder SortBuilder { get; } = new StringBuilder();
-        public StringBuilder FilterBuilder { get; } = new StringBuilder();
+        public string Sort => string.Join(",", SortBuilder);
+        private ICollection<string> SortBuilder { get; } = new List<string>();
 
         public int? PageSize { get; set; }
         public int? PageNumber { get; set; }
+
+        public IDictionary<string, string> Filters => FilterBuilders.ToDictionary(
+            x => x.Key,
+            x => string.Join(",", x.Value));
+        private IDictionary<string, ICollection<string>> FilterBuilders { get; } = new Dictionary<string, ICollection<string>>();
+
+
+        public void AppendSort(string sort, bool desc)
+        {
+            if (desc)
+            {
+                sort = sort.Insert(0, "-");
+            }
+            SortBuilder.Add(sort);
+        }
+
+        public void AppendFilter(string resourceType, string filter)
+        {
+            ICollection<string> builder;
+            if (!FilterBuilders.TryGetValue(resourceType, out builder))
+            {
+                builder = new List<string>();
+                FilterBuilders[resourceType] = builder;
+            }
+
+            builder.Add(filter);
+        }
     }
 }

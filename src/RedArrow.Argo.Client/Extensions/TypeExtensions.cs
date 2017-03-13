@@ -31,7 +31,6 @@ namespace RedArrow.Argo.Client.Extensions
 		    return type.GetTypeInfo()
 			    .DeclaredFields
 			    .Single(field => field.Name == "__argo__generated_include");
-
 	    }
 
         internal static PropertyInfo GetSessionManagedProperty(this Type type)

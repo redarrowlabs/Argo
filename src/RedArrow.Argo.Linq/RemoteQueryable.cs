@@ -64,6 +64,16 @@ namespace RedArrow.Argo.Linq
 
 	    public abstract QueryContext BuildQuery();
 
+	    protected string GetJsonName(Type type)
+        {
+            return type.GetTypeInfo()
+                .CustomAttributes
+                .Single(a => a.AttributeType == typeof(ModelAttribute))
+                .ConstructorArguments
+                .Select(arg => arg.Value as string)
+                .FirstOrDefault() ?? type.Name.Camelize();
+        }
+
 	    protected string GetJsonName(MemberInfo member)
 	    {
 	        return member.CustomAttributes

@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using RedArrow.Argo.Client.Session;
 using RedArrow.Argo.Linq.Executors;
-using RedArrow.Argo.Linq.Methods;
+using RedArrow.Argo.Linq.Queryables;
 
 namespace RedArrow.Argo.Linq
 {
@@ -73,21 +73,25 @@ namespace RedArrow.Argo.Linq
 			// index would need to be built in ctor per instance: memory vs. fugly code ¯\_(ツ)_/¯
 			switch (methodName)
             {
+                case "Where":
+                {
+                    return CreateWhereQuery<TModel>(target, operand);
+                }
                 case "OrderBy":
                 {
-                    return CreateOrderByQuery<TModel>(target, operand, false, false);
+                    return CreateOrderByQuery<TModel>(target, operand, false);
                 }
                 case "OrderByDescending":
                 {
-                    return CreateOrderByQuery<TModel>(target, operand, true, false);
+                    return CreateOrderByQuery<TModel>(target, operand, true);
                 }
                 case "ThenBy":
                 {
-					return CreateOrderByQuery<TModel>(target, operand, false, true);
+					return CreateOrderByQuery<TModel>(target, operand, false);
                 }
                 case "ThenByDescending":
                 {
-                    return CreateOrderByQuery<TModel>(target, operand, true, true);
+                    return CreateOrderByQuery<TModel>(target, operand, true);
                 }
                 default:
                 {
@@ -153,7 +157,17 @@ namespace RedArrow.Argo.Linq
 		    }
 	    }
 
-	    private RemoteQueryable<TModel> CreateOrderByQuery<TModel>(Expression target, Expression operand, bool isDesc, bool isThenBy)
+        private RemoteQueryable<TModel> CreateWhereQuery<TModel>(Expression target, Expression operand)
+        {
+            var targetQueryable = CreateQueryInternal<TModel>(target);
+
+            return new WhereQueryable<TModel>(
+                targetQueryable,
+                operand as Expression<Func<TModel, bool>>,
+                Session);
+        }
+
+	    private RemoteQueryable<TModel> CreateOrderByQuery<TModel>(Expression target, Expression operand, bool isDesc)
         {
             var targetQueryable = CreateQueryInternal<TModel>(target);
 
@@ -169,8 +183,7 @@ namespace RedArrow.Argo.Linq
                 targetQueryable,
                 operand,
                 Session,
-                isDesc,
-                isThenBy
+                isDesc
             });
         }
 
@@ -195,7 +208,7 @@ namespace RedArrow.Argo.Linq
 				.Invoke(this, new object[] {targetExpression});
 	    }
 
-		private ConstructorInfo GetExecutorCtor(Type executorType, Type resultType)
+		private static ConstructorInfo GetExecutorCtor(Type executorType, Type resultType)
 		{
 			return executorType.MakeGenericType(resultType)
 				.GetTypeInfo()

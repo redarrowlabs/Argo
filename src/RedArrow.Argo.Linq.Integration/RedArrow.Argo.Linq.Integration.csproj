@@ -102,6 +102,7 @@
     <Compile Include="QueryOrderByTests.cs" />
     <Compile Include="QuerySingleTests.cs" />
     <Compile Include="QueryTypeTests.cs" />
+    <Compile Include="QueryWhereTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RedArrow.Argo.Client\RedArrow.Argo.Client.csproj">

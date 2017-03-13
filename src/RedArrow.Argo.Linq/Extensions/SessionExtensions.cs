@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using RedArrow.Argo.Client.Session;
-using RedArrow.Argo.Linq.Methods;
+using RedArrow.Argo.Linq.Queryables;
 
 namespace RedArrow.Argo.Linq.Extensions
 {
