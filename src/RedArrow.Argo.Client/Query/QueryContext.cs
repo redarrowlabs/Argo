@@ -19,6 +19,8 @@ namespace RedArrow.Argo.Client.Query
 
         public void AppendSort(string sort, bool desc)
         {
+            if (string.IsNullOrWhiteSpace(sort)) return;
+
             if (desc)
             {
                 sort = sort.Insert(0, "-");
@@ -28,6 +30,8 @@ namespace RedArrow.Argo.Client.Query
 
         public void AppendFilter(string resourceType, string filter)
         {
+            if (string.IsNullOrWhiteSpace(resourceType) || string.IsNullOrWhiteSpace(filter)) return;
+
             ICollection<string> builder;
             if (!FilterBuilders.TryGetValue(resourceType, out builder))
             {
