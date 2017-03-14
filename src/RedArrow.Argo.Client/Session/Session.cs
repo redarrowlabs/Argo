@@ -16,6 +16,8 @@ using RedArrow.Argo.Client.Http;
 using RedArrow.Argo.Client.Logging;
 using RedArrow.Argo.Client.Model;
 using RedArrow.Argo.Client.Query;
+using RedArrow.Argo.Linq;
+using RedArrow.Argo.Linq.Queryables;
 using RedArrow.Argo.Model;
 
 namespace RedArrow.Argo.Client.Session
@@ -257,7 +259,12 @@ namespace RedArrow.Argo.Client.Session
 
 		#region IQuerySession
 
-		public async Task<IEnumerable<TModel>> Query<TModel>(QueryContext query)
+        public IQueryable<TModel> CreateQuery<TModel>()
+        {
+            return new TypeQueryable<TModel>(this, new RemoteQueryProvider(this));
+        }
+
+		public async Task<IEnumerable<TModel>> Query<TModel>(IQueryContext query)
         {
             var resourceType = ModelRegistry.GetResourceType<TModel>();
             var include = ModelRegistry.GetInclude<TModel>();

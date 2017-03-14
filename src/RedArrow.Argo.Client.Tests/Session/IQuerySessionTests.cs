@@ -32,7 +32,7 @@ namespace RedArrow.Argo.Client.Tests.Session
             var mockRequestBuilder = new Mock<IHttpRequestBuilder>();
             mockRequestBuilder
                 .Setup(x => x.GetResources(resourceType, null, include))
-                .Callback<string, QueryContext, string>((r, c, i) =>
+                .Callback<string, IQueryContext, string>((r, c, i) =>
                 {
                     Assert.Equal(resourceType, r);
                     Assert.Null(c);
@@ -81,7 +81,7 @@ namespace RedArrow.Argo.Client.Tests.Session
             var mockRequestBuilder = new Mock<IHttpRequestBuilder>();
             mockRequestBuilder
                 .Setup(x => x.GetResources(resourceType, null, include))
-                .Callback<string, QueryContext, string>((r, c, i) =>
+                .Callback<string, IQueryContext, string>((r, c, i) =>
                 {
                     Assert.Equal(resourceType, r);
                     Assert.Null(c);

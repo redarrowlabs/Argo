@@ -57,7 +57,7 @@ namespace RedArrow.Argo.Client.Http
             };
         }
 
-        public HttpRequestMessage GetResources(string resourceType, QueryContext query, string include)
+        public HttpRequestMessage GetResources(string resourceType, IQueryContext query, string include)
         {
             var path = resourceType;
             if (!string.IsNullOrEmpty(include))

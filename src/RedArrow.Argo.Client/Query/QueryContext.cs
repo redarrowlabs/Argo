@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace RedArrow.Argo.Client.Query
 {
-    public class QueryContext
+    public class QueryContext : IQueryContext
     {
         public string Sort => string.Join(",", SortBuilder);
         private ICollection<string> SortBuilder { get; } = new List<string>();

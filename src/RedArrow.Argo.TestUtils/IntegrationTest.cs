@@ -3,7 +3,6 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using RedArrow.Argo.Client.Config;
 using RedArrow.Argo.Client.Session;
-using RedArrow.Argo.Linq.Extensions;
 using WovenByFody;
 using Xunit;
 using Xunit.Abstractions;

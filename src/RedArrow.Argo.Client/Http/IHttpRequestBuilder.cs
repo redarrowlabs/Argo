@@ -13,6 +13,6 @@ namespace RedArrow.Argo.Client.Http
         HttpRequestMessage CreateResource(Resource resource, IEnumerable<Resource> included);
         HttpRequestMessage UpdateResource(Resource patch, IEnumerable<Resource> included);
 
-        HttpRequestMessage GetResources(string resourceType, QueryContext query, string include);
+        HttpRequestMessage GetResources(string resourceType, IQueryContext query, string include);
     }
 }

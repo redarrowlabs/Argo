@@ -53,5 +53,8 @@ namespace WovenByFody
 
 		[Property]
 		public object ObjectProperty { get; set; }
+
+        [Property]
+        public DateTime DateTimeProperty { get; set; }
 	}
 }
