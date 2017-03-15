@@ -162,6 +162,7 @@
   <ItemGroup>
     <Compile Include="Linq\Queryables\QueryOrderByTests.cs" />
     <Compile Include="Linq\Queryables\QuerySingleTests.cs" />
+    <Compile Include="Linq\Queryables\QuerySkipTests.cs" />
     <Compile Include="Linq\Queryables\QueryTypeTests.cs" />
     <Compile Include="Linq\Queryables\QueryWhereTests.cs" />
     <Compile Include="Session\LazyCollectionTests.cs" />

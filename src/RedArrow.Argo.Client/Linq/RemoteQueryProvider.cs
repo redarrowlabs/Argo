@@ -2,11 +2,11 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using RedArrow.Argo.Client.Linq.Executors;
+using RedArrow.Argo.Client.Linq.Queryables;
 using RedArrow.Argo.Client.Session;
-using RedArrow.Argo.Linq.Executors;
-using RedArrow.Argo.Linq.Queryables;
 
-namespace RedArrow.Argo.Linq
+namespace RedArrow.Argo.Client.Linq
 {
     internal class RemoteQueryProvider : IQueryProvider
     {
@@ -65,39 +65,49 @@ namespace RedArrow.Argo.Linq
 
             var methodName = mcExpression.Method.Name;
             var target = mcExpression.Arguments[0];
-            var operand = ((UnaryExpression)mcExpression.Arguments[1]).Operand;
 
 			// TODO: there's probably a better way...
 			// can't do a static string => func index due to type args
 			// index would need to be built in ctor per instance: memory vs. fugly code ¯\_(ツ)_/¯
-			switch (methodName)
-            {
-                case "Where":
-                {
-                    return CreateWhereQuery<TModel>(target, operand);
-                }
-                case "OrderBy":
-                {
-                    return CreateOrderByQuery<TModel>(target, operand, false);
-                }
-                case "OrderByDescending":
-                {
-                    return CreateOrderByQuery<TModel>(target, operand, true);
-                }
-                case "ThenBy":
-                {
-					return CreateOrderByQuery<TModel>(target, operand, false);
-                }
-                case "ThenByDescending":
-                {
-                    return CreateOrderByQuery<TModel>(target, operand, true);
-                }
-                default:
-                {
+		    switch (methodName)
+		    {
+		        case "Where":
+		        {
+		            var operand = ((UnaryExpression) mcExpression.Arguments[1]).Operand;
+		            return CreateWhereQuery<TModel>(target, operand);
+		        }
+		        case "OrderBy":
+		        {
+		            var operand = ((UnaryExpression) mcExpression.Arguments[1]).Operand;
+		            return CreateOrderByQuery<TModel>(target, operand, false);
+		        }
+		        case "OrderByDescending":
+		        {
+		            var operand = ((UnaryExpression) mcExpression.Arguments[1]).Operand;
+		            return CreateOrderByQuery<TModel>(target, operand, true);
+		        }
+		        case "ThenBy":
+		        {
+		            var operand = ((UnaryExpression) mcExpression.Arguments[1]).Operand;
+		            return CreateOrderByQuery<TModel>(target, operand, false);
+		        }
+		        case "ThenByDescending":
+		        {
+		            var operand = ((UnaryExpression) mcExpression.Arguments[1]).Operand;
+		            return CreateOrderByQuery<TModel>(target, operand, true);
+		        }
+		        case "Skip":
+		        {
                     throw new NotSupportedException();
-                }
-            }
-        }
+		            var operand = mcExpression.Arguments[1];
+		            return CreateSkipQuery<TModel>(target, operand);
+		        }
+		        default:
+		        {
+		            throw new NotSupportedException();
+		        }
+		    }
+		}
 
 	    private RemoteExecutor ExecuteInternal(Expression expression)
 	    {
@@ -184,6 +194,13 @@ namespace RedArrow.Argo.Linq
                 operand,
                 isDesc
             });
+        }
+
+        private RemoteQueryable<TModel> CreateSkipQuery<TModel>(Expression target, Expression operand)
+        {
+            var targetQueryable = CreateQueryInternal<TModel>(target);
+
+            return new SkipQueryable<TModel>(Session, targetQueryable, operand);
         }
 
 	    private void GetExecuteTarget(Expression targetExpression, out object target, out Type targetType)

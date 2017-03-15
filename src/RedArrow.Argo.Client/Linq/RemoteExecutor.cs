@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using RedArrow.Argo.Client.Session;
 
-namespace RedArrow.Argo.Linq
+namespace RedArrow.Argo.Client.Linq
 {
 	internal abstract class RemoteExecutor
 	{

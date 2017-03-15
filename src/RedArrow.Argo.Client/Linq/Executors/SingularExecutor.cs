@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using RedArrow.Argo.Client.Linq.Queryables;
 using RedArrow.Argo.Client.Session;
-using RedArrow.Argo.Linq.Queryables;
 
-namespace RedArrow.Argo.Linq.Executors
+namespace RedArrow.Argo.Client.Linq.Executors
 {
 	internal enum SingularExecutorType
 	{

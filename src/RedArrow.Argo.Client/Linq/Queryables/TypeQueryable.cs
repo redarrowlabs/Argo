@@ -2,7 +2,7 @@
 using RedArrow.Argo.Client.Query;
 using RedArrow.Argo.Client.Session;
 
-namespace RedArrow.Argo.Linq.Queryables
+namespace RedArrow.Argo.Client.Linq.Queryables
 {
     internal class TypeQueryable<TModel> : RemoteQueryable<TModel>
     {

@@ -117,6 +117,7 @@
     <Compile Include="Extensions\HttpRequestMessageExtensions.cs" />
     <Compile Include="Extensions\SessionExtensions.cs" />
     <Compile Include="Linq\Queryable\OrderByQueryableTests.cs" />
+    <Compile Include="Linq\Queryable\SkipQueryableTests.cs" />
     <Compile Include="Linq\Queryable\TypeQueryableTests.cs" />
     <Compile Include="Linq\Queryable\WhereQueryableTests.cs" />
     <Compile Include="MockRequestHandler.cs" />

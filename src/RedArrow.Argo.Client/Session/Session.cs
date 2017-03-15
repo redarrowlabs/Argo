@@ -13,11 +13,11 @@ using RedArrow.Argo.Client.Collections;
 using RedArrow.Argo.Client.Collections.Generic;
 using RedArrow.Argo.Client.Exceptions;
 using RedArrow.Argo.Client.Http;
+using RedArrow.Argo.Client.Linq;
+using RedArrow.Argo.Client.Linq.Queryables;
 using RedArrow.Argo.Client.Logging;
 using RedArrow.Argo.Client.Model;
 using RedArrow.Argo.Client.Query;
-using RedArrow.Argo.Linq;
-using RedArrow.Argo.Linq.Queryables;
 using RedArrow.Argo.Model;
 
 namespace RedArrow.Argo.Client.Session

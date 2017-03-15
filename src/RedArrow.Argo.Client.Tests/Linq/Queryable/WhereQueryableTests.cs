@@ -3,10 +3,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using Moq;
 using Ploeh.AutoFixture.Xunit2;
+using RedArrow.Argo.Client.Linq;
+using RedArrow.Argo.Client.Linq.Queryables;
 using RedArrow.Argo.Client.Query;
 using RedArrow.Argo.Client.Session;
-using RedArrow.Argo.Linq;
-using RedArrow.Argo.Linq.Queryables;
 using WovenByFody;
 using Xunit;
 

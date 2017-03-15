@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 using RedArrow.Argo.Client.Query;
 using RedArrow.Argo.Client.Session;
 
-namespace RedArrow.Argo.Linq.Queryables
+namespace RedArrow.Argo.Client.Linq.Queryables
 {
     internal class OrderByQueryable<TModel, TComparable> : RemoteQueryable<TModel>
     {

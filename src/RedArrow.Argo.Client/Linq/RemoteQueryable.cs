@@ -9,7 +9,7 @@ using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Query;
 using RedArrow.Argo.Client.Session;
 
-namespace RedArrow.Argo.Linq
+namespace RedArrow.Argo.Client.Linq
 {
 	internal abstract class RemoteQueryable<TModel> : IOrderedQueryable<TModel>
 	{

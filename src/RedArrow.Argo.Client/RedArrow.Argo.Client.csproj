@@ -84,6 +84,7 @@
     <Compile Include="Exceptions\ModelTypeMismatchException.cs" />
     <Compile Include="Linq\Executors\SingularExecutor.cs" />
     <Compile Include="Linq\Queryables\OrderByQueryable.cs" />
+    <Compile Include="Linq\Queryables\SkipQueryable.cs" />
     <Compile Include="Linq\Queryables\TypeQueryable.cs" />
     <Compile Include="Linq\Queryables\WhereQueryable.cs" />
     <Compile Include="Linq\RemoteExecutor.cs" />
