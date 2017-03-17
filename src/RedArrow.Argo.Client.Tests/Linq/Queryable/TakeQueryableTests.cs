@@ -15,14 +15,14 @@ using Xunit;
 
 namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 {
-    public class SkipQueryableTests
+    public class TakeQueryableTests
     {
         [Theory, AutoData]
         [InlineData(5)]
         [InlineData(10)]
         [InlineData(25)]
         public void BuildQuery__Given_NumberToSkip__When_NumberGreaterThanZero__Then_SetQueryPaging
-            (int skip)
+               (int skip)
         {
             var mockQueryContext = new Mock<IQueryContext>();
 
@@ -36,17 +36,17 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
             var result = subject.BuildQuery();
 
             Assert.Same(mockQueryContext.Object, result);
-            
-            mockQueryContext.VerifySet(x => x.PageOffset = skip, Times.Once);
 
-            mockQueryContext.VerifySet(x => x.PageLimit = It.IsAny<int>(), Times.Never());
+            mockQueryContext.VerifySet(x => x.PageLimit = skip, Times.Once);
+
+            mockQueryContext.VerifySet(x => x.PageOffset = It.IsAny<int>(), Times.Never());
             mockQueryContext.VerifySet(x => x.PageSize = It.IsAny<int>(), Times.Never());
             mockQueryContext.VerifySet(x => x.PageNumber = It.IsAny<int>(), Times.Never());
         }
 
-        private static SkipQueryable<TModel> CreateSubject<TModel>(RemoteQueryable<TModel> target, Expression skip)
+        private static TakeQueryable<TModel> CreateSubject<TModel>(RemoteQueryable<TModel> target, Expression skip)
         {
-            return new SkipQueryable<TModel>(
+            return new TakeQueryable<TModel>(
                 Mock.Of<IQuerySession>(),
                 target,
                 skip);

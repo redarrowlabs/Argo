@@ -5,30 +5,30 @@ using RedArrow.Argo.Client.Session;
 
 namespace RedArrow.Argo.Client.Linq.Queryables
 {
-    internal class SkipQueryable<TModel> : RemoteQueryable<TModel>
+    internal class TakeQueryable<TModel> : RemoteQueryable<TModel>
     {
         private RemoteQueryable<TModel> Target { get; }
-        private Expression Skip { get; }
+        private Expression Take { get; }
 
-        public SkipQueryable(
+        public TakeQueryable(
             IQuerySession session,
             RemoteQueryable<TModel> target,
-            Expression skip) :
+            Expression take) :
             base(session, target.Provider)
         {
             Target = target;
-            Skip = skip;
+            Take = take;
         }
 
         public override IQueryContext BuildQuery()
         {
-            var cExpression = Skip as ConstantExpression;
+            var cExpression = Take as ConstantExpression;
             if (cExpression == null)
                 throw new NotSupportedException();
 
             var query = Target.BuildQuery();
 
-            query.PageOffset = (int) cExpression.Value;
+            query.PageLimit = (int)cExpression.Value;
 
             return query;
         }

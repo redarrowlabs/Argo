@@ -76,17 +76,23 @@ namespace RedArrow.Argo.Client.Http
             if (!string.IsNullOrEmpty(query?.Sort))
             {
                 path = path.SetQueryParam("sort", query.Sort);
-                
-                if (query.PageSize != null)
-                {
-                    path = path.SetQueryParam("page[size]", query.PageSize);
-                }
-                if (query.PageNumber != null)
-                {
-                    path = path.SetQueryParam("page[number]", query.PageNumber);
-                }
             }
-
+            if (query?.PageSize != null)
+            {
+                path = path.SetQueryParam("page[size]", query.PageSize);
+            }
+            if (query?.PageNumber != null)
+            {
+                path = path.SetQueryParam("page[number]", query.PageNumber);
+            }
+            if (query?.PageOffset != null)
+            {
+                path = path.SetQueryParam("page[offset]", query.PageOffset);
+            }
+            if (query?.PageLimit != null)
+            {
+                path = path.SetQueryParam("page[limit]", query.PageLimit);
+            }
             return new HttpRequestMessage(HttpMethod.Get, path);
         }
 

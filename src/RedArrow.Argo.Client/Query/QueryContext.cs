@@ -10,12 +10,13 @@ namespace RedArrow.Argo.Client.Query
 
         public int? PageSize { get; set; }
         public int? PageNumber { get; set; }
+        public int? PageOffset { get; set; }
+        public int? PageLimit { get; set; }
 
         public IDictionary<string, string> Filters => FilterBuilders.ToDictionary(
             x => x.Key,
             x => string.Join(",", x.Value));
         private IDictionary<string, ICollection<string>> FilterBuilders { get; } = new Dictionary<string, ICollection<string>>();
-
 
         public void AppendSort(string sort, bool desc)
         {

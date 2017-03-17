@@ -265,7 +265,10 @@ namespace RedArrow.Argo.Client.Session
         }
 
 		public async Task<IEnumerable<TModel>> Query<TModel>(IQueryContext query)
-        {
+		{
+		    if (query?.PageLimit != null && query.PageLimit <= 0) return Enumerable.Empty<TModel>();
+		    if (query?.PageSize != null && query.PageSize <= 0) return Enumerable.Empty<TModel>();
+
             var resourceType = ModelRegistry.GetResourceType<TModel>();
             var include = ModelRegistry.GetInclude<TModel>();
             var request = HttpRequestBuilder.GetResources(resourceType, query, include);

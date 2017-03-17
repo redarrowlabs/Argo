@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Ploeh.AutoFixture.Xunit2;
 using RedArrow.Argo.TestUtils;
@@ -23,19 +21,38 @@ namespace RedArrow.Argo.Client.Integration.Linq.Queryables
         {
             await DeleteAll<BasicModel>();
 
-            using (var session = SessionFactory.CreateSession())
-            {
-                await Task.WhenAll(Enumerable.Range(0, 20).Select(i => session.Create<BasicModel>()).ToArray());
-            }
+            var models = Enumerable.Range(0, 20)
+                .Select(i => new BasicModel
+                {
+                    Id = Guid.NewGuid(),
+                    PropA = Convert.ToBase64String(Guid.NewGuid().ToByteArray())
+                })
+                .ToArray();
 
             using (var session = SessionFactory.CreateSession())
             {
-                var result = session.CreateQuery<BasicModel>().Skip(5).ToArray();
+                await Task.WhenAll(models.Select(x => session.Create(x)).ToArray());
+            }
+
+            var expectedModels = models
+                .OrderBy(x => x.PropA)
+                .Skip(5)
+                .ToArray();
+
+            using (var session = SessionFactory.CreateSession())
+            {
+                var result = session.CreateQuery<BasicModel>()
+                    .OrderBy(x => x.PropA)
+                    .Skip(5)
+                    .ToArray();
 
                 Assert.NotNull(result);
                 Assert.NotEmpty(result);
-
-                Assert.Equal(15, result.Length);
+                Assert.Equal(expectedModels.Length, result.Length);
+                for (var i = 0; i < result.Length; i++)
+                {
+                    Assert.Equal(expectedModels[i], result[i]);
+                }
             }
 
             await DeleteAll<BasicModel>();

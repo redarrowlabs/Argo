@@ -53,10 +53,10 @@ namespace RedArrow.Argo.Client.Linq
 
         private RemoteQueryable<TModel> CreateQueryInternal<TModel>(Expression expression)
 		{
-			if (expression is ConstantExpression)
-			{
-				return new TypeQueryable<TModel>(Session, this);
-			}
+		    if (expression is ConstantExpression)
+		    {
+                return new TypeQueryable<TModel>(Session, this);   
+		    }
 
 			var mcExpression = expression as MethodCallExpression;
 			if (mcExpression == null) throw new NotSupportedException();
@@ -98,9 +98,13 @@ namespace RedArrow.Argo.Client.Linq
 		        }
 		        case "Skip":
 		        {
-                    throw new NotSupportedException();
 		            var operand = mcExpression.Arguments[1];
 		            return CreateSkipQuery<TModel>(target, operand);
+		        }
+                case "Take":
+		        {
+		            var operand = mcExpression.Arguments[1];
+		            return CreateTakeQuery<TModel>(target, operand);
 		        }
 		        default:
 		        {
@@ -113,7 +117,6 @@ namespace RedArrow.Argo.Client.Linq
 	    {
 		    var mcExpression = expression as MethodCallExpression;
 		    if (mcExpression == null) throw new NotSupportedException();
-
 		    if (mcExpression.Arguments.Count == 0) throw new NotSupportedException();
 
 		    var methodName = mcExpression.Method.Name;
@@ -201,6 +204,13 @@ namespace RedArrow.Argo.Client.Linq
             var targetQueryable = CreateQueryInternal<TModel>(target);
 
             return new SkipQueryable<TModel>(Session, targetQueryable, operand);
+        }
+
+        private RemoteQueryable<TModel> CreateTakeQuery<TModel>(Expression target, Expression operand)
+        {
+            var targetQueryable = CreateQueryInternal<TModel>(target);
+
+            return new TakeQueryable<TModel>(Session, targetQueryable, operand);
         }
 
 	    private void GetExecuteTarget(Expression targetExpression, out object target, out Type targetType)
