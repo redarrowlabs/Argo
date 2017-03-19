@@ -18,7 +18,7 @@ namespace RedArrow.Argo.Client.Config.Model
         public PropertyInfo PatchProperty { get; }
 
         public PropertyInfo IdProperty { get; }
-		
+
         // resource attribute name => model property
         public IDictionary<string, AttributeConfiguration> AttributeConfigs { get; }
 
@@ -27,6 +27,8 @@ namespace RedArrow.Argo.Client.Config.Model
         
         // resource relationship name => model property
         public IDictionary<string, RelationshipConfiguration> HasManyProperties { get; }
+        
+        public PropertyInfo UnmappedAttributesProperty { get; }
 
         internal ModelConfiguration(Type modelType)
         {
@@ -46,6 +48,8 @@ namespace RedArrow.Argo.Client.Config.Model
 
             HasOneProperties = modelType.GetModelHasOneConfigurations();
             HasManyProperties = modelType.GetModelHasManyConfigurations();
+
+            UnmappedAttributesProperty = modelType.GetUnmappedAttributesProperty();
         }
     }
 }

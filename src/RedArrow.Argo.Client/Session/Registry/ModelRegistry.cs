@@ -208,8 +208,31 @@ namespace RedArrow.Argo.Client.Session.Registry
 
             return ret;
         }
-		
-	    private ModelConfiguration GetModelConfig<TModel>()
+
+        public JObject GetUnmappedAttributes(object model)
+        {
+            var modelType = model.GetType();
+            var unmapped = GetModelConfig(modelType).UnmappedAttributesProperty?.GetValue(model);
+
+            return unmapped != null
+                ? JObject.FromObject(unmapped)
+                : null;
+        }
+
+        public void SetUnmappedAttributes(object model, JObject attributes)
+        {
+            var modelType = model.GetType();
+            var unmappedProp = GetModelConfig(modelType).UnmappedAttributesProperty;
+
+            if (unmappedProp == null) return;
+
+            var mappedAttrNames = GetAttributeConfigs(modelType).Select(x => x.AttributeName);
+            var unmappedAttrs = attributes?.Properties().Where(x => !mappedAttrNames.Contains(x.Name));
+            if (unmappedAttrs == null) return;
+            unmappedProp.SetValue(model, new JObject(unmappedAttrs).ToObject(unmappedProp.PropertyType));
+        }
+
+        private ModelConfiguration GetModelConfig<TModel>()
 	    {
 		    return GetModelConfig(typeof (TModel));
 	    }

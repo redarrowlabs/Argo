@@ -24,9 +24,7 @@ namespace RedArrow.Argo
         public Action<string, SequencePoint> LogErrorPoint { get; }
 
         public PropertyDefinition IdPropDef { get; private set; }
-
-        public PropertyDefinition PropertyBagPropDef { get; private set; }
-
+        
         public IEnumerable<PropertyDefinition> MappedAttributes { get; }
         public IEnumerable<PropertyDefinition> MappedHasOnes { get; }
         public IEnumerable<PropertyDefinition> MappedHasManys { get; }
@@ -63,7 +61,6 @@ namespace RedArrow.Argo
             LogErrorPoint = logErrorPoint;
             
             GetMappedIdProperty();
-            GetMappedPropertyBagProperty();
 
             MappedAttributes = GetMappedProperties(Constants.Attributes.Property);
             MappedHasOnes = GetMappedProperties(Constants.Attributes.HasOne);
@@ -84,18 +81,7 @@ namespace RedArrow.Argo
 
             IdPropDef = idProperties.Single();
         }
-
-        private void GetMappedPropertyBagProperty()
-        {
-            var propertyBags = GetMappedProperties(Constants.Attributes.PropertyBag);
-            if (propertyBags.Count() > 1)
-            {
-                LogError($"{ModelTypeDef.FullName} has multiple [PropertyBag]s defined - only one is allowed per model");
-            }
-
-            PropertyBagPropDef = propertyBags.SingleOrDefault();
-        }
-
+        
         private IEnumerable<PropertyDefinition> GetMappedProperties(string attrFullName)
         {
             return ModelTypeDef.Properties
