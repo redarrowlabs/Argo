@@ -17,7 +17,7 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 {
     public class SkipQueryableTests
     {
-        [Theory, AutoData]
+        [Theory]
         [InlineData(5)]
         [InlineData(10)]
         [InlineData(25)]
@@ -43,6 +43,40 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
             mockQueryContext.VerifySet(x => x.PageSize = It.IsAny<int>(), Times.Never());
             mockQueryContext.VerifySet(x => x.PageNumber = It.IsAny<int>(), Times.Never());
         }
+
+	    [Theory]
+		[InlineData(5, 5)]
+	    public void ToArray__When_Chained__Then_BuildQuery
+			(int skip, int take)
+	    {
+		    var expectedResults = Enumerable.Empty<BasicModel>();
+
+		    IQueryContext capturedQuery = null;
+
+		    var mockSession = new Mock<IQuerySession>();
+		    mockSession
+			    .Setup(x => x.Query<BasicModel>(It.IsAny<IQueryContext>()))
+			    .Callback<IQueryContext>(q => capturedQuery = q)
+			    .ReturnsAsync(expectedResults);
+
+			var results = new TypeQueryable<BasicModel>(mockSession.Object, new RemoteQueryProvider(mockSession.Object))
+				.OrderBy(x => x.PropA)
+				.Take(take)
+				.Skip(skip)
+				.ToArray();
+			
+			Assert.NotNull(results);
+			Assert.Empty(results);
+
+			Assert.NotNull(capturedQuery);
+			Assert.NotEmpty(capturedQuery.Sort);
+			Assert.NotNull(capturedQuery.PageOffset);
+			Assert.NotNull(capturedQuery.PageLimit);
+
+			Assert.Equal("propA", capturedQuery.Sort);
+			Assert.Equal(skip, capturedQuery.PageOffset);
+			Assert.Equal(take, capturedQuery.PageLimit);
+		}
 
         private static SkipQueryable<TModel> CreateSubject<TModel>(RemoteQueryable<TModel> target, Expression skip)
         {

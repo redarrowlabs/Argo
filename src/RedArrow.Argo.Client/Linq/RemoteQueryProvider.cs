@@ -52,11 +52,12 @@ namespace RedArrow.Argo.Client.Linq
 		}
 
         private RemoteQueryable<TModel> CreateQueryInternal<TModel>(Expression expression)
-		{
-		    if (expression is ConstantExpression)
-		    {
-                return new TypeQueryable<TModel>(Session, this);   
-		    }
+        {
+	        var cExpression = expression as ConstantExpression;
+	        if (cExpression != null)
+	        {
+		        return cExpression.Value as RemoteQueryable<TModel> ?? new TypeQueryable<TModel>(Session, this);
+	        }
 
 			var mcExpression = expression as MethodCallExpression;
 			if (mcExpression == null) throw new NotSupportedException();

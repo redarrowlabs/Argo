@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Ploeh.AutoFixture.Xunit2;
 using RedArrow.Argo.TestUtils;
@@ -13,29 +14,48 @@ namespace RedArrow.Argo.Client.Integration.Linq.Queryables
         public QueryTakeTests(IntegrationTestFixture fixture, ITestOutputHelper outputHelper) :
             base(fixture, outputHelper)
         {
-        }
+		}
 
-        [Theory, AutoData]
-        public async Task Take()
-        {
-            await DeleteAll<BasicModel>();
+		[Fact, Trait("Category", "Integration")]
+		public async Task Take()
+		{
+			await DeleteAll<BasicModel>();
 
-            using (var session = SessionFactory.CreateSession())
-            {
-                await Task.WhenAll(Enumerable.Range(0, 20).Select(i => session.Create<BasicModel>()).ToArray());
-            }
+			var models = Enumerable.Range(0, 20)
+				.Select(i => new BasicModel
+				{
+					Id = Guid.NewGuid(),
+					PropA = Convert.ToBase64String(Guid.NewGuid().ToByteArray())
+				})
+				.ToArray();
 
-            using (var session = SessionFactory.CreateSession())
-            {
-                var result = session.CreateQuery<BasicModel>().Take(5).ToArray();
+			using (var session = SessionFactory.CreateSession())
+			{
+				await Task.WhenAll(models.Select(x => session.Create(x)).ToArray());
+			}
 
-                Assert.NotNull(result);
-                Assert.NotEmpty(result);
+			var expectedModels = models
+				.OrderBy(x => x.PropA, StringComparer.Ordinal)
+				.Take(5)
+				.ToArray();
 
-                Assert.Equal(5, result.Length);
-            }
+			using (var session = SessionFactory.CreateSession())
+			{
+				var result = session.CreateQuery<BasicModel>()
+					.OrderBy(x => x.PropA)
+					.Take(5)
+					.ToArray();
 
-            await DeleteAll<BasicModel>();
-        }
-    }
+				Assert.NotNull(result);
+				Assert.NotEmpty(result);
+				Assert.Equal(expectedModels.Length, result.Length);
+				for (var i = 0; i < result.Length; i++)
+				{
+					Assert.Equal(expectedModels[i].Id, result[i].Id);
+				}
+			}
+
+			await DeleteAll<BasicModel>();
+		}
+	}
 }

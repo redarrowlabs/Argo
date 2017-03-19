@@ -16,7 +16,7 @@ namespace RedArrow.Argo.Client.Integration.Linq.Queryables
         {
         }
 
-        [Theory, AutoData]
+        [Fact, Trait("Category", "Integration")]
         public async Task Skip()
         {
             await DeleteAll<BasicModel>();
@@ -35,7 +35,7 @@ namespace RedArrow.Argo.Client.Integration.Linq.Queryables
             }
 
             var expectedModels = models
-                .OrderBy(x => x.PropA)
+                .OrderBy(x => x.PropA, StringComparer.Ordinal)
                 .Skip(5)
                 .ToArray();
 
@@ -51,7 +51,7 @@ namespace RedArrow.Argo.Client.Integration.Linq.Queryables
                 Assert.Equal(expectedModels.Length, result.Length);
                 for (var i = 0; i < result.Length; i++)
                 {
-                    Assert.Equal(expectedModels[i], result[i]);
+                    Assert.Equal(expectedModels[i].Id, result[i].Id);
                 }
             }
 
