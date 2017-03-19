@@ -1,32 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
-using RedArrow.Argo.Client.Config;
-using RedArrow.Argo.Client.Session;
+using RedArrow.Argo.TestUtils;
 using WovenByFody;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace RedArrow.Argo.Integration
+namespace RedArrow.Argo.Client.Integration.Session
 {
-    public class EagerCollectionTests : IClassFixture<IntegrationTestFixture>
+    public class EagerCollectionTests : IntegrationTest
     {
-        private IntegrationTestFixture Fixture { get; }
-
-        public EagerCollectionTests(IntegrationTestFixture fixture, ITestOutputHelper outputHelper)
+        public EagerCollectionTests(IntegrationTestFixture fixture, ITestOutputHelper outputHelper) :
+            base(fixture, outputHelper)
         {
-            Fixture = fixture;
-            Fixture.ConfigureLogging(outputHelper);
         }
 
         [Fact, Trait("Category", "Integration")]
         public async Task AddIncluded()
         {
-            var sessionFactory = CreateSessionFactory();
-
             Guid providerId;
             Guid patientId;
             Guid companyId;
@@ -63,14 +55,14 @@ namespace RedArrow.Argo.Integration
                 Patients = new List<Patient> { stubPatient1, stubPatient2 }
             };
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var provider = await session.Create(stubProvider);
                 providerId = provider.Id;
                 patientId = provider.Patients.First().Id;
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var provider = await session.Get<Provider>(providerId);
 
@@ -84,7 +76,7 @@ namespace RedArrow.Argo.Integration
                 Assert.Equal(patientId, patient.Id);
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 await session.Delete<Provider>(providerId);
                 await session.Delete<Patient>(patientId);
@@ -92,13 +84,11 @@ namespace RedArrow.Argo.Integration
             }
         }
 
-        [Fact]
+        [Fact, Trait("Category", "Integration")]
         public async Task GetModelWithEagerLoadedCollection()
         {
-            var sessionFactory = CreateSessionFactory();
-
             Guid id;
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var provider = new Provider
                 {
@@ -116,7 +106,7 @@ namespace RedArrow.Argo.Integration
                 id = provider.Id;
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var provider = await session.Get<Provider>(id);
 
@@ -128,24 +118,6 @@ namespace RedArrow.Argo.Integration
                 }
                 await session.Delete(provider);
             }
-        }
-
-        private ISessionFactory CreateSessionFactory()
-        {
-            return Fluently.Configure($"{Fixture.Host}/data/")
-                .Remote()
-                    .Configure(httpClient =>
-                    {
-                        httpClient
-                            .DefaultRequestHeaders
-                            .Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken);
-
-                        httpClient.DefaultRequestHeaders.Add("api-version", "2");
-                        httpClient.DefaultRequestHeaders.Add("Titan-Data-Segmentation-Key", "10000000-1000-0000-0000-000000000000");
-                    })
-                .Models()
-                    .Configure(scan => scan.AssemblyOf<Patient>())
-                .BuildSessionFactory();
         }
     }
 }

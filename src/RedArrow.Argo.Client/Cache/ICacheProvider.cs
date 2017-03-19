@@ -8,8 +8,7 @@ namespace RedArrow.Argo.Client.Cache
         IEnumerable<object> Items { get; }
 
         void Update(Guid id, object model);
-		TModel Retrieve<TModel>(Guid id)
-			where TModel : class;
+        TModel Retrieve<TModel>(Guid id);
 		void Remove(Guid id);
     }
 }

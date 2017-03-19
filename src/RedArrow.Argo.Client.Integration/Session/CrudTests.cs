@@ -1,26 +1,21 @@
 ﻿using System;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Ploeh.AutoFixture.Xunit2;
-using RedArrow.Argo.Client.Config;
-using RedArrow.Argo.Client.Session;
+using RedArrow.Argo.TestUtils;
 using WovenByFody;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace RedArrow.Argo.Integration
+namespace RedArrow.Argo.Client.Integration.Session
 {
-    public class CrudTests : IClassFixture<IntegrationTestFixture>
+    public class CrudTests : IntegrationTest
     {
-        private IntegrationTestFixture Fixture { get; }
-
-        public CrudTests(IntegrationTestFixture fixture, ITestOutputHelper outputHelper)
+        public CrudTests(IntegrationTestFixture fixture, ITestOutputHelper outputHelper) :
+            base(fixture, outputHelper)
         {
-            Fixture = fixture;
-            Fixture.ConfigureLogging(outputHelper);
         }
 
-        [Theory, AutoData]
+        [Theory, AutoData, Trait("Category", "Integration")]
         public void GetSetAttributesTransient
             (string firstName, string lastName)
         {
@@ -38,10 +33,8 @@ namespace RedArrow.Argo.Integration
         public async Task GetSetAttributesPersisted
             (string firstName, string lastName)
         {
-            var sessionFactory = CreateSessionFactory();
-
             Guid id;
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var patient = await session.Create<Patient>();
                 id = patient.Id;
@@ -53,7 +46,7 @@ namespace RedArrow.Argo.Integration
                 Assert.Equal(lastName, patient.LastName);
             }
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var patient = await session.Get<Patient>(id);
 
@@ -69,12 +62,10 @@ namespace RedArrow.Argo.Integration
             var initialLastName = "Achey";
 
             var updatedLastName = "Bull";
-
-            var sessionFactory = CreateSessionFactory();
-
+			
             Guid crossSessionId;
 
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var patient = new Patient
                 {
@@ -95,7 +86,7 @@ namespace RedArrow.Argo.Integration
                 Assert.Same(patient, patientRef);
             }
             // update!
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var patient = await session.Get<Patient>(crossSessionId);
 
@@ -116,7 +107,7 @@ namespace RedArrow.Argo.Integration
                 Assert.Same(patient, patient2);
             }
             // later that day...
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 var patient = await session.Get<Patient>(crossSessionId);
 
@@ -125,28 +116,10 @@ namespace RedArrow.Argo.Integration
                 Assert.Equal(updatedLastName, patient.LastName);
             }
             // cleanup
-            using (var session = sessionFactory.CreateSession())
+            using (var session = SessionFactory.CreateSession())
             {
                 await session.Delete<Patient>(crossSessionId);
             }
-        }
-
-        private ISessionFactory CreateSessionFactory()
-        {
-            return Fluently.Configure($"{Fixture.Host}/data/")
-                .Remote()
-                    .Configure(httpClient =>
-                    {
-                        httpClient
-                            .DefaultRequestHeaders
-                            .Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken);
-
-                        httpClient.DefaultRequestHeaders.Add("Api-Version", "2");
-                        httpClient.DefaultRequestHeaders.Add("Titan-Data-Segmentation-Key", "10000000-1000-0000-0000-000000000000");
-                    })
-                .Models()
-                    .Configure(scan => scan.AssemblyOf<Patient>())
-                .BuildSessionFactory();
         }
     }
 }

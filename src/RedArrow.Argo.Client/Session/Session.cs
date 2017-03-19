@@ -13,6 +13,8 @@ using RedArrow.Argo.Client.Collections;
 using RedArrow.Argo.Client.Collections.Generic;
 using RedArrow.Argo.Client.Exceptions;
 using RedArrow.Argo.Client.Http;
+using RedArrow.Argo.Client.Linq;
+using RedArrow.Argo.Client.Linq.Queryables;
 using RedArrow.Argo.Client.Logging;
 using RedArrow.Argo.Client.Model;
 using RedArrow.Argo.Client.Query;
@@ -47,28 +49,19 @@ namespace RedArrow.Argo.Client.Session
             ModelRegistry = modelRegistry;
         }
 
-		public void Dispose()
-        {
-            HttpClient.Dispose();
-            Disposed = true;
-		}
-
 		#region ISession
 
 		public async Task<TModel> Create<TModel>()
-            where TModel : class
         {
             return await Create<TModel>(typeof(TModel), null);
         }
 
         public async Task<TModel> Create<TModel>(TModel model)
-            where TModel : class
         {
             return await Create<TModel>(typeof(TModel), model);
         }
 
         private async Task<TModel> Create<TModel>(Type rootModelType, object model)
-			where TModel : class
         {
             ThrowIfDisposed();
 			
@@ -137,30 +130,16 @@ namespace RedArrow.Argo.Client.Session
 		}
 
 		public async Task Update<TModel>(TModel model)
-			where TModel : class
 		{
 			// guard from kunckleheads
 			if(model == null) throw new ArgumentNullException(nameof(model));
 			ThrowIfUnmanaged(model);
 
-		    var unmapped = ModelRegistry.GetUnmappedAttributes(model);
-            if (unmapped != null)
-            {
-                var stagingPatch = ModelRegistry.GetOrCreatePatch(model).GetAttributes() as IDictionary<string, JToken>;
-                foreach (var kvp in unmapped)
-                {
-                    if (!stagingPatch.ContainsKey(kvp.Key))
-                    {
-                        stagingPatch[kvp.Key] = kvp.Value;
-                    }
-                }
-            }
+			var patch = ModelRegistry.GetPatch(model);
+			// if nothing was updated, no need to continue
+			if (patch == null) return;
 
-            var patch = ModelRegistry.GetPatch(model);
-            // if nothing was updated, no need to continue
-            if (patch == null) return;
-
-            var includes = Cache.Items
+			var includes = Cache.Items
                 .Where(ModelRegistry.IsUnmanagedModel)
 				.Select(CreateModelResource)
 				.ToArray();
@@ -179,7 +158,6 @@ namespace RedArrow.Argo.Client.Session
 		}
 
 		public async Task<TModel> Get<TModel>(Guid id)
-            where TModel : class
         {
             ThrowIfDisposed();
 
@@ -234,7 +212,6 @@ namespace RedArrow.Argo.Client.Session
 	    }
 
         public Task Delete<TModel>(TModel model)
-            where TModel : class
         {
             ThrowIfDisposed();
 
@@ -244,7 +221,6 @@ namespace RedArrow.Argo.Client.Session
         }
 
         public async Task Delete<TModel>(Guid id)
-            where TModel : class
         {
             var resourceType = ModelRegistry.GetResourceType<TModel>();
             var response = await HttpClient.DeleteAsync($"{resourceType}/{id}");
@@ -252,7 +228,7 @@ namespace RedArrow.Argo.Client.Session
 			Detach<TModel>(id);
         }
 
-	    public void Detach<TModel>(Guid id) where TModel : class
+	    public void Detach<TModel>(Guid id)
 	    {
 		    var model = Cache.Retrieve<TModel>(id);
 		    if (model != null)
@@ -261,7 +237,7 @@ namespace RedArrow.Argo.Client.Session
 		    }
 	    }
 
-	    public void Detach<TModel>(TModel model) where TModel : class
+	    public void Detach<TModel>(TModel model)
 	    {
 		    var id = ModelRegistry.GetId(model);
 			Detach(id, model);
@@ -271,22 +247,35 @@ namespace RedArrow.Argo.Client.Session
 	    {
 		    Cache.Remove(id);
 			ModelRegistry.DetachModel(model);
-	    }
+		}
 
-        #endregion ISession
+		public void Dispose()
+		{
+			HttpClient.Dispose();
+			Disposed = true;
+		}
 
-        #region IQuerySession
+		#endregion ISession
 
-        public async Task<IEnumerable<TModel>> Query<TModel>(QueryContext query)
-            where TModel : class
+		#region IQuerySession
+
+        public IQueryable<TModel> CreateQuery<TModel>()
         {
+            return new TypeQueryable<TModel>(this, new RemoteQueryProvider(this));
+        }
+
+		public async Task<IEnumerable<TModel>> Query<TModel>(IQueryContext query)
+		{
+		    if (query?.PageLimit != null && query.PageLimit <= 0) return Enumerable.Empty<TModel>();
+		    if (query?.PageSize != null && query.PageSize <= 0) return Enumerable.Empty<TModel>();
+
             var resourceType = ModelRegistry.GetResourceType<TModel>();
             var include = ModelRegistry.GetInclude<TModel>();
             var request = HttpRequestBuilder.GetResources(resourceType, query, include);
             var response = await HttpClient.SendAsync(request);
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
-                return null;
+	            return Enumerable.Empty<TModel>();
             }
             response.EnsureSuccessStatusCode();
 
@@ -321,7 +310,6 @@ namespace RedArrow.Argo.Client.Session
         }
         
         public TAttr GetAttribute<TModel, TAttr>(TModel model, string attrName)
-            where TModel : class
         {
             ThrowIfDisposed();
 			
@@ -339,7 +327,6 @@ namespace RedArrow.Argo.Client.Session
         }
 
 		public void SetAttribute<TModel, TAttr>(TModel model, string attrName, TAttr value)
-            where TModel : class
         {
 			ThrowIfDisposed();
 
@@ -347,8 +334,6 @@ namespace RedArrow.Argo.Client.Session
         }
 
         public TRltn GetReference<TModel, TRltn>(TModel model, string rltnName)
-            where TModel : class
-            where TRltn : class
         {
             ThrowIfDisposed();
 			
@@ -397,8 +382,6 @@ namespace RedArrow.Argo.Client.Session
         }
 
         public void SetReference<TModel, TRltn>(TModel model, string rltnName, TRltn rltn)
-            where TModel : class
-            where TRltn : class
         {
             ThrowIfDisposed();
 
@@ -423,38 +406,26 @@ namespace RedArrow.Argo.Client.Session
         }
 
         public IEnumerable<TElmnt> GetGenericEnumerable<TModel, TElmnt>(TModel model, string rltnName)
-            where TModel : class
-            where TElmnt : class
         {
             return GetRemoteCollection<TModel, TElmnt>(model, rltnName);
         }
 
-        public IEnumerable<TElmnt> SetGenericEnumerable<TModel, TElmnt>(TModel model, string attrName,
-            IEnumerable<TElmnt> value)
-            where TModel : class
-            where TElmnt : class
+        public IEnumerable<TElmnt> SetGenericEnumerable<TModel, TElmnt>(TModel model, string attrName, IEnumerable<TElmnt> value)
         {
             return SetRemoteCollection(model, attrName, value);
         }
 
         public ICollection<TElmnt> GetGenericCollection<TModel, TElmnt>(TModel model, string rltnName)
-            where TModel : class
-            where TElmnt : class
         {
             return GetRemoteCollection<TModel, TElmnt>(model, rltnName);
         }
 
-        public ICollection<TElmnt> SetGenericCollection<TModel, TElmnt>(TModel model, string attrName,
-            IEnumerable<TElmnt> value)
-            where TModel : class
-            where TElmnt : class
+        public ICollection<TElmnt> SetGenericCollection<TModel, TElmnt>(TModel model, string attrName, IEnumerable<TElmnt> value)
         {
             return SetRemoteCollection(model, attrName, value);
         }
 
         private RemoteGenericBag<TElmnt> GetRemoteCollection<TModel, TElmnt>(TModel model, string rltnName)
-            where TModel : class
-            where TElmnt : class
         {
             var rltnConfig = ModelRegistry.GetHasManyConfig<TModel>(rltnName);
 
@@ -464,8 +435,6 @@ namespace RedArrow.Argo.Client.Session
         }
 
         private RemoteGenericBag<TElmnt> SetRemoteCollection<TModel, TElmnt>(TModel model, string rltnName, IEnumerable<TElmnt> value)
-            where TModel : class
-            where TElmnt : class
         {
             var rltnConfig = ModelRegistry.GetHasManyConfig<TModel>(rltnName);
 
@@ -518,27 +487,18 @@ namespace RedArrow.Argo.Client.Session
 
         #endregion
 
-        public TModel CreateResourceModel<TModel>(IResourceIdentifier resourceIdentifier)
-		    where TModel : class
+        public TModel CreateResourceModel<TModel>(IResourceIdentifier resource)
 	    {
-			return (TModel)CreateResourceModel(resourceIdentifier);
+			return (TModel)CreateResourceModel(resource);
 	    }
 
-        public object CreateResourceModel(IResourceIdentifier resourceIdentifier)
+        public object CreateResourceModel(IResourceIdentifier resource)
         {
-            if (resourceIdentifier == null) return null;
+            if (resource == null) return null;
 
-	        var type = ModelRegistry.GetModelType(resourceIdentifier.Type);
-            Log.Debug(() => $"activating session-managed instance of {type.FullName}:{{{resourceIdentifier.Id}}}");
-            var model = Activator.CreateInstance(type, resourceIdentifier, this);
-
-            var resource = resourceIdentifier as Resource;
-            if (resource != null)
-            {
-                ModelRegistry.SetUnmappedAttributes(model, resource.Attributes);
-            }
-
-            return model;
+	        var type = ModelRegistry.GetModelType(resource.Type);
+            Log.Debug(() => $"activating session-managed instance of {type.FullName}:{{{resource.Id}}}");
+            return Activator.CreateInstance(type, resource, this);
         }
 
 	    public Resource CreateModelResource(object model)
@@ -548,31 +508,12 @@ namespace RedArrow.Argo.Client.Session
 
 			JObject attrs = null;
 			IDictionary<string, Relationship> rltns = null;
-            
-            // unmapped attributes
-            var unmappedAttributes = ModelRegistry.GetUnmappedAttributes(model);
-            if (unmappedAttributes != null)
-            {
-                attrs = unmappedAttributes;
-            }
-
-            // attributes
-            var mappedAttributes = ModelRegistry.GetAttributeValues(model);
-			if (mappedAttributes != null)
+			
+			// attributes
+			var modelAttributes = ModelRegistry.GetAttributeValues(model);
+			if (modelAttributes != null)
 			{
-			    if (attrs == null)
-			    {
-			        attrs = mappedAttributes;
-			    }
-			    else
-			    {
-			        attrs.Merge(mappedAttributes,
-			            new JsonMergeSettings
-			            {
-			                MergeArrayHandling = MergeArrayHandling.Replace,
-			                MergeNullValueHandling = MergeNullValueHandling.Merge
-			            });
-			    }
+				attrs = modelAttributes;
 			}
 
 			// relationships

@@ -10,7 +10,6 @@ using RedArrow.Argo.Client.Cache;
 using RedArrow.Argo.Client.Http;
 using RedArrow.Argo.Client.Model;
 using RedArrow.Argo.Client.Query;
-using RedArrow.Argo.Client.Tests.Session.Models;
 using WovenByFody;
 using Xunit;
 
@@ -19,7 +18,7 @@ namespace RedArrow.Argo.Client.Tests.Session
     public class IQuerySessionTests : SessionTestsBase
     {
         [Fact]
-        public async Task Query__Given_ResourceTypeAndQueryCtx__When_NotFound__Then_ReturnNull()
+        public async Task Query__Given_ResourceTypeAndQueryCtx__When_NotFound__Then_ReturnEmpty()
         {
             var uri = "http://www.test.com/";
 
@@ -33,7 +32,7 @@ namespace RedArrow.Argo.Client.Tests.Session
             var mockRequestBuilder = new Mock<IHttpRequestBuilder>();
             mockRequestBuilder
                 .Setup(x => x.GetResources(resourceType, null, include))
-                .Callback<string, QueryContext, string>((r, c, i) =>
+                .Callback<string, IQueryContext, string>((r, c, i) =>
                 {
                     Assert.Equal(resourceType, r);
                     Assert.Null(c);
@@ -60,7 +59,8 @@ namespace RedArrow.Argo.Client.Tests.Session
 
             var result = await subject.Query<BasicModel>(null);
 
-            Assert.Null(result);
+            Assert.NotNull(result);
+			Assert.Empty(result);
             
             mockCacheProvider.Verify(x => x.Update(It.IsAny<Guid>(), It.IsAny<object>()), Times.Never);
         }
@@ -81,7 +81,7 @@ namespace RedArrow.Argo.Client.Tests.Session
             var mockRequestBuilder = new Mock<IHttpRequestBuilder>();
             mockRequestBuilder
                 .Setup(x => x.GetResources(resourceType, null, include))
-                .Callback<string, QueryContext, string>((r, c, i) =>
+                .Callback<string, IQueryContext, string>((r, c, i) =>
                 {
                     Assert.Equal(resourceType, r);
                     Assert.Null(c);

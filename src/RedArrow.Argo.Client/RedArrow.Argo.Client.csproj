@@ -82,6 +82,15 @@
     <Compile Include="Exceptions\ArgoException.cs" />
     <Compile Include="Exceptions\ModelNotRegisteredException.cs" />
     <Compile Include="Exceptions\ModelTypeMismatchException.cs" />
+    <Compile Include="Linq\Executors\SingularExecutor.cs" />
+    <Compile Include="Linq\Queryables\OrderByQueryable.cs" />
+    <Compile Include="Linq\Queryables\SkipQueryable.cs" />
+    <Compile Include="Linq\Queryables\TakeQueryable.cs" />
+    <Compile Include="Linq\Queryables\TypeQueryable.cs" />
+    <Compile Include="Linq\Queryables\WhereQueryable.cs" />
+    <Compile Include="Linq\RemoteExecutor.cs" />
+    <Compile Include="Linq\RemoteQueryable.cs" />
+    <Compile Include="Linq\RemoteQueryProvider.cs" />
     <Compile Include="Model\BaseResourceRoot.cs" />
     <Compile Include="Model\Error.cs" />
     <Compile Include="Model\ErrorLink.cs" />
@@ -97,6 +106,7 @@
     <Compile Include="Model\ResourceRootSingle.cs" />
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Query\IQueryContext.cs" />
     <Compile Include="Query\QueryContext.cs" />
     <Compile Include="Session\ICollectionSession.cs" />
     <Compile Include="Session\IQuerySession.cs" />

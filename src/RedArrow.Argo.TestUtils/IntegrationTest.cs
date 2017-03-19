@@ -1,26 +1,26 @@
-﻿using System;
+﻿using System.Linq;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
-using Ploeh.AutoFixture.Xunit2;
 using RedArrow.Argo.Client.Config;
 using RedArrow.Argo.Client.Session;
 using WovenByFody;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace RedArrow.Argo.Integration
+namespace RedArrow.Argo.TestUtils
 {
-    public class PropertyBagTests : IClassFixture<IntegrationTestFixture>
+    public abstract class IntegrationTest : IClassFixture<IntegrationTestFixture>
     {
-        private IntegrationTestFixture Fixture { get; }
+        protected IntegrationTestFixture Fixture { get; }
+		protected ISessionFactory SessionFactory { get; }
 
-        public PropertyBagTests(IntegrationTestFixture fixture, ITestOutputHelper outputHelper)
+        protected IntegrationTest(IntegrationTestFixture fixture, ITestOutputHelper outputHelper)
         {
             Fixture = fixture;
             Fixture.ConfigureLogging(outputHelper);
+	        SessionFactory = CreateSessionFactory();
         }
-		
+
         private ISessionFactory CreateSessionFactory()
         {
             return Fluently.Configure($"{Fixture.Host}/data/")
@@ -37,6 +37,16 @@ namespace RedArrow.Argo.Integration
                 .Models()
                     .Configure(scan => scan.AssemblyOf<Patient>())
                 .BuildSessionFactory();
-        }
-    }
+		}
+
+		protected async Task DeleteAll<TModel>()
+		{
+			using (var session = SessionFactory.CreateSession())
+			{
+				var models = session.CreateQuery<TModel>().ToArray();
+
+				await Task.WhenAll(models.Select(x => session.Delete(x)).ToArray());
+			}
+		}
+	}
 }

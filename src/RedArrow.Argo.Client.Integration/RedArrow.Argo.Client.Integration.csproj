@@ -7,8 +7,8 @@
     <ProjectGuid>{C30CF711-FA9E-4117-9759-12FE27D6F05B}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RedArrow.Argo.Integration</RootNamespace>
-    <AssemblyName>RedArrow.Argo.Integration</AssemblyName>
+    <RootNamespace>RedArrow.Argo.Client.Integration</RootNamespace>
+    <AssemblyName>RedArrow.Argo.Client.Integration</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -160,13 +160,17 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
-    <Compile Include="LazyCollectionTests.cs" />
-    <Compile Include="EagerCollectionTests.cs" />
-    <Compile Include="IntegrationTestFixture.cs" />
+    <Compile Include="Linq\Queryables\QueryOrderByTests.cs" />
+    <Compile Include="Linq\Queryables\QuerySingleTests.cs" />
+    <Compile Include="Linq\Queryables\QueryTakeTests.cs" />
+    <Compile Include="Linq\Queryables\QuerySkipTests.cs" />
+    <Compile Include="Linq\Queryables\QueryTypeTests.cs" />
+    <Compile Include="Linq\Queryables\QueryWhereTests.cs" />
+    <Compile Include="Session\LazyCollectionTests.cs" />
+    <Compile Include="Session\EagerCollectionTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="CrudTests.cs" />
-    <Compile Include="PropertyBagTests.cs" />
-    <Compile Include="SingularRelationshipTests.cs" />
+    <Compile Include="Session\CrudTests.cs" />
+    <Compile Include="Session\SingularRelationshipTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -185,9 +189,9 @@
       <Project>{f540b5ca-b7c2-4799-9eb2-b5401bd1f28c}</Project>
       <Name>RedArrow.Argo</Name>
     </ProjectReference>
-    <ProjectReference Include="..\WovenByFody.NETStandard14\WovenByFody.NETStandard14.csproj">
-      <Project>{14153e37-e5bf-46bc-8635-1b473148a8bf}</Project>
-      <Name>WovenByFody.NETStandard14</Name>
+    <ProjectReference Include="..\WovenByFody.Net461\WovenByFody.Net461.csproj">
+      <Project>{d7da07d0-aab7-44d5-b69b-46a7555c64f1}</Project>
+      <Name>WovenByFody.Net461</Name>
     </ProjectReference>
   </ItemGroup>
   <Choose>

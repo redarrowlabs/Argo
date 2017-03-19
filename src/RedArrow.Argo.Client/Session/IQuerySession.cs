@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using RedArrow.Argo.Client.Query;
 
@@ -6,7 +7,7 @@ namespace RedArrow.Argo.Client.Session
 {
     public interface IQuerySession
     {
-        Task<IEnumerable<TModel>> Query<TModel>(QueryContext query = null)
-            where TModel : class;
+        IQueryable<TModel> CreateQuery<TModel>();
+        Task<IEnumerable<TModel>> Query<TModel>(IQueryContext query = null);
     }
 }

@@ -17,6 +17,7 @@ using RedArrow.Argo.Client.Model;
 using RedArrow.Argo.Client.Session.Registry;
 using RedArrow.Argo.Client.Tests.Extensions;
 using RedArrow.Argo.Client.Tests.Session.Models;
+using WovenByFody;
 using Xunit;
 
 namespace RedArrow.Argo.Client.Tests.Collections.Generic
