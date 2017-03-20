@@ -230,7 +230,8 @@ public class Person
 	public IResourceIdentifier __argo__generated_Patch { get; set; }
 	public IResourceIdentifier __argo__generated_Resource { get; set; }
 
-	public bool __argo__generated_SessionManaged => this.__argo__generated_session != null && !this.__argo__generated_session.Disposed;
+	public bool __argo__generated_SessionManaged => this.__argo__generated_session != null
+		&& !this.__argo__generated_session.Disposed;
 
 	private Guid id;
 	[Id]
