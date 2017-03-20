@@ -4,7 +4,7 @@ namespace RedArrow.Argo.Client.Config
 {
     public interface IFluentConfigurator
     {
-        IRemoteCreator Remote();
+        IRemoteConfigurator Remote();
 
         IModelConfigurator Models();
 

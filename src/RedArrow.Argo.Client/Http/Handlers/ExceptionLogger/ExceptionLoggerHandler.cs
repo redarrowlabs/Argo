@@ -4,17 +4,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using RedArrow.Argo.Client.Logging;
 
-namespace RedArrow.Argo.Client.Http
+namespace RedArrow.Argo.Client.Http.Handlers.ExceptionLogger
 {
-    public class DefaultHttpMessageHandler : DelegatingHandler
+    public class ExceptionLoggerHandler : DelegatingHandler
     {
-        private static readonly ILog Log = LogProvider.For<DefaultHttpMessageHandler>();
-
-        internal DefaultHttpMessageHandler(HttpMessageHandler innerHandler) :
-            base(innerHandler ?? new HttpClientHandler())
-        {
-        }
-
+        private static readonly ILog Log = LogProvider.For<ExceptionLoggerHandler>();
+		
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var hash = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
