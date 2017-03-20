@@ -364,7 +364,7 @@ We're still evaluating the long-term roadmap for this project, but initial tenta
 - Linq provider
   - ~~sorting via OrderBy~~
   - ~~paging via Skip/Take~~
-  - filtering via Where
+  - ~~filtering via Where~~
 - ~~Configurable eager loading~~
 - Cache provider plugins with initial support for [Akavache](https://github.com/akavache/Akavache)
 - server to client eventing/sync push via [Rx.NET](https://github.com/Reactive-Extensions/Rx.NET)
