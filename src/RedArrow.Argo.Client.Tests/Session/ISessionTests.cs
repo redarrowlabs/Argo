@@ -49,9 +49,14 @@ namespace RedArrow.Argo.Client.Tests.Session
 
             var sessionFactory = Fluently.Configure(basePath)
                 .Remote()
-                    .Create(() => new HttpClient(fakeHandler))
                     .Configure(x => x.BaseAddress = new Uri(basePath))
-                .Models()
+					.Configure(builder => builder
+						.UseFinal<MockRequestHandler>()
+						.ConfigureFinal(x => ((MockRequestHandler)x)
+							.Setup(
+								new Uri($"{basePath}/{resourceType}"),
+								request => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted)))))
+				.Models()
                     .Configure(x => x.AssemblyOf<ObjectWithCollectionsAndComplexTypesAsProperties>())
                 .BuildSessionFactory();
 
@@ -91,17 +96,17 @@ namespace RedArrow.Argo.Client.Tests.Session
             var basePath = "http://www.test.com";
 
             var resourceType = "integration-test-patient";
-
-            var fakeHandler = new MockRequestHandler();
-			fakeHandler.Setup(
-				new Uri($"{basePath}/{resourceType}"),
-				x => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted)));
-
+			
 			var sessionFactory = Fluently.Configure(basePath)
                 .Remote()
-                    .Create(() => new HttpClient(fakeHandler))
                     .Configure(x => x.BaseAddress = new Uri(basePath))
-                .Models()
+					.Configure(builder => builder
+						.UseFinal<MockRequestHandler>()
+						.ConfigureFinal(x => ((MockRequestHandler)x)
+							.Setup(
+								new Uri($"{basePath}/{resourceType}"),
+								request => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted)))))
+				.Models()
                     .Configure(x => x.AssemblyOf<Patient>())
                 .BuildSessionFactory();
 
@@ -507,18 +512,21 @@ namespace RedArrow.Argo.Client.Tests.Session
         [Fact]
         public void Dispose__Given_ConfiguredHttpClient__When_Disposed__Then_DisposeClient()
         {
-            var fakeHandler = new MockRequestHandler();
+			MockRequestHandler capturedHandler = null;
 
             var sessionFactory = Fluently.Configure("http://mock.test.com")
                 .Remote()
-                    .Create(() => new HttpClient(fakeHandler, true))
-                .BuildSessionFactory();
+					.Configure(builder => builder
+						.UseFinal<MockRequestHandler>()
+						.ConfigureFinal(handler => capturedHandler = (MockRequestHandler)handler))
+				.BuildSessionFactory();
 
             var session = sessionFactory.CreateSession();
             session.Dispose();
 
             Assert.True(((Client.Session.Session) session).Disposed);
-            Assert.True(fakeHandler.Disposed);
+			Assert.NotNull(capturedHandler);
+			Assert.True(capturedHandler.Disposed);
         }
     }
 }

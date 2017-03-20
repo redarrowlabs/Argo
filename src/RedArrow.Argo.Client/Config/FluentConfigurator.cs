@@ -4,8 +4,11 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using RedArrow.Argo.Client.Config.Pipeline;
 using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Http;
+using RedArrow.Argo.Client.Http.Handlers.ExceptionLogger;
+using RedArrow.Argo.Client.Http.Handlers.Response;
 using RedArrow.Argo.Client.Session;
 
 namespace RedArrow.Argo.Client.Config
@@ -13,32 +16,18 @@ namespace RedArrow.Argo.Client.Config
     public class FluentConfigurator :
         IFluentConfigurator,
         IModelConfigurator,
-        IRemoteCreator,
-        IRemoteConfigure
+        IRemoteConfigurator
     {
         private IList<Action<ModelScanner>> ModelScans { get; }
-
-        private Func<HttpClient> ClientCreator { get; set; }
+		
         private IList<Action<HttpClient>> ClientConfigurators { get; }
         private IList<Func<HttpClient, Task>> AsyncClientConfigurators { get; }
-
-	    private bool HasDevDefinedCallbacks =>
-		    HttpResponseMessageCallbacks.Any() ||
-		    ResourceCreatedCallbacks.Any() ||
-		    ResourceUpdatedCallbacks.Any() ||
-		    ResourceRetrievedCallbacks.Any() ||
-		    ResourceDeletedCallbacks.Any();
-
-		private IList<Func<HttpResponseMessage, Task>> HttpResponseMessageCallbacks { get; }
-		private IList<Func<HttpResponseMessage, Task>> ResourceCreatedCallbacks { get; }
-		private IList<Func<HttpResponseMessage, Task>> ResourceUpdatedCallbacks { get; }
-		private IList<Func<HttpResponseMessage, Task>> ResourceRetrievedCallbacks { get; }
-		private IList<Func<HttpResponseMessage, Task>> ResourceDeletedCallbacks { get; }
-
+		
+		private Action<IHttpClientBuilder> HttpClientBuilder { get; set; }
+		
 		private SessionFactoryConfiguration SessionFactoryConfiguration { get; }
 
         private Uri ApiHost { get; }
-        private Func<HttpMessageHandler> CreateHttpMessageHandler { get; set; }
 
         internal FluentConfigurator(string apiHost)
             : this(apiHost, new SessionFactoryConfiguration()) { }
@@ -48,13 +37,7 @@ namespace RedArrow.Argo.Client.Config
             ModelScans = new List<Action<ModelScanner>>();
             ClientConfigurators = new List<Action<HttpClient>>();
             AsyncClientConfigurators = new List<Func<HttpClient, Task>>();
-
-			HttpResponseMessageCallbacks = new List<Func<HttpResponseMessage, Task>>();
-			ResourceCreatedCallbacks = new List<Func<HttpResponseMessage, Task>>();
-			ResourceUpdatedCallbacks = new List<Func<HttpResponseMessage, Task>>();
-			ResourceRetrievedCallbacks = new List<Func<HttpResponseMessage, Task>>();
-			ResourceDeletedCallbacks = new List<Func<HttpResponseMessage, Task>>();
-
+			
 			ApiHost = new Uri(apiHost);
 
             SessionFactoryConfiguration = config;
@@ -71,62 +54,26 @@ namespace RedArrow.Argo.Client.Config
             return this;
         }
 
-        public IRemoteCreator Remote()
+        public IRemoteConfigurator Remote()
         {
             return this;
         }
 
-        public IRemoteConfigure Create(Func<HttpClient> createClient)
-        {
-            ClientCreator = createClient;
-            return this;
-        }
-
-        public IRemoteConfigure Configure(Action<HttpClient> configureClient)
+        public IRemoteConfigurator Configure(Action<HttpClient> configureClient)
         {
             ClientConfigurators.Add(configureClient);
             return this;
         }
 
-        public IRemoteConfigure ConfigureAsync(Func<HttpClient, Task> configureClient)
+        public IRemoteConfigurator ConfigureAsync(Func<HttpClient, Task> configureClient)
         {
             AsyncClientConfigurators.Add(configureClient);
             return this;
         }
 
-        public IRemoteConfigure UseMessageHandler(Func<HttpMessageHandler> createHandler)
-        {
-            CreateHttpMessageHandler = createHandler;
-            return this;
-        }
-
-	    public IRemoteConfigure OnHttpResponse(Func<HttpResponseMessage, Task> responseReceived)
+	    public IRemoteConfigurator Configure(Action<IHttpClientBuilder> builder)
 	    {
-		    HttpResponseMessageCallbacks.Add(responseReceived);
-		    return this;
-	    }
-
-	    public IRemoteConfigure OnResourceCreated(Func<HttpResponseMessage, Task> resourceCreated)
-	    {
-		    ResourceCreatedCallbacks.Add(resourceCreated);
-		    return this;
-	    }
-
-	    public IRemoteConfigure OnResourceUpdated(Func<HttpResponseMessage, Task> resourceUpdated)
-	    {
-		    ResourceUpdatedCallbacks.Add(resourceUpdated);
-		    return this;
-	    }
-
-	    public IRemoteConfigure OnResourceRetreived(Func<HttpResponseMessage, Task> resourceRetrieved)
-	    {
-		    ResourceRetrievedCallbacks.Add(resourceRetrieved);
-		    return this;
-	    }
-
-	    public IRemoteConfigure OnResourceDeleted(Func<HttpResponseMessage, Task> resourceDeleted)
-	    {
-		    ResourceDeletedCallbacks.Add(resourceDeleted);
+		    HttpClientBuilder = builder;
 		    return this;
 	    }
 
@@ -144,20 +91,13 @@ namespace RedArrow.Argo.Client.Config
 
             ClientConfigurators.Add(client => client.BaseAddress = ApiHost);
 
-            // build HttpClient factory
-            SessionFactoryConfiguration.HttpClientFactory = () =>
+	        var builder = new HttpClientBuilder();
+	        (HttpClientBuilder ?? (_ => { }))(builder);
+	        
+			// build HttpClient factory
+			SessionFactoryConfiguration.HttpClientFactory = () =>
             {
-	            var innerHandler = HasDevDefinedCallbacks
-		            ? new DefaultHttpMessageHandler(new HttpMessageCallbackHandler(
-			            HttpResponseMessageCallbacks.ToArray(),
-			            ResourceCreatedCallbacks.ToArray(),
-			            ResourceUpdatedCallbacks.ToArray(),
-			            ResourceRetrievedCallbacks.ToArray(),
-			            ResourceDeletedCallbacks.ToArray(),
-			            CreateHttpMessageHandler?.Invoke()))
-		            : new DefaultHttpMessageHandler(CreateHttpMessageHandler?.Invoke());
-
-				var client = (ClientCreator ?? (() => new HttpClient(innerHandler)))();
+				var client = new HttpClient(builder.Build());
 
                 client
                     .DefaultRequestHeaders

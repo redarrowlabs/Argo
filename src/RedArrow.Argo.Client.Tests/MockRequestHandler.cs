@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace RedArrow.Argo.Client.Tests
 {
-    public class MockRequestHandler : DelegatingHandler
+    public class MockRequestHandler : HttpMessageHandler
     {
 	    private readonly IDictionary<Uri, Func<HttpRequestMessage, Task<HttpResponseMessage>>> _mockRequests;
 

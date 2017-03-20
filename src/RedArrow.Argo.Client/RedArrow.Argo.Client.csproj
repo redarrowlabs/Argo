@@ -58,6 +58,8 @@
     <Compile Include="Config\Model\RelationshipConfiguration.cs" />
     <Compile Include="Config\Model\ModelConfiguration.cs" />
     <Compile Include="Config\Model\HasManyConfiguration.cs" />
+    <Compile Include="Config\Pipeline\IHttpClientBuilder.cs" />
+    <Compile Include="Config\Pipeline\HttpClientBuilder.cs" />
     <Compile Include="Config\SessionFactoryConfiguration.cs" />
     <Compile Include="Exceptions\AttributeNotRegisteredException.cs" />
     <Compile Include="Exceptions\ManagedModelCreationException.cs" />
@@ -75,8 +77,12 @@
     <Compile Include="Flurl\Shared\QueryParameter.cs" />
     <Compile Include="Flurl\Shared\StringExtensions.cs" />
     <Compile Include="Flurl\Shared\Url.cs" />
-    <Compile Include="Http\DefaultHttpMessageHandler.cs" />
-    <Compile Include="Http\HttpMessageCallbackHandler.cs" />
+    <Compile Include="Http\Handlers\ExceptionLogger\ExceptionLoggerHandler.cs" />
+    <Compile Include="Http\Handlers\ExceptionLogger\HttpClientBuilderExtensions.cs" />
+    <Compile Include="Http\Handlers\GZip\HttpClientBuilderExtensions.cs" />
+    <Compile Include="Http\Handlers\Response\HttpClientBuilderExtensions.cs" />
+    <Compile Include="Http\Handlers\Response\ResponseHandler.cs" />
+    <Compile Include="Http\Handlers\Response\ResponseHandlerOptions.cs" />
     <Compile Include="Http\IHttpRequestBuilder.cs" />
     <Compile Include="Http\HttpRequestBuilder.cs" />
     <Compile Include="Exceptions\ArgoException.cs" />
