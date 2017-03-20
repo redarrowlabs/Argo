@@ -14,8 +14,8 @@ namespace RedArrow.Argo.Client.Config.Pipeline
 		/// <typeparam name="THandler">The type of <see cref="DelegatingHandler"/></typeparam>
 		/// <param name="args">Any constructor arguments required to activate the handler</param>
 		/// <returns>The current <see cref="IHttpClientBuilder"/>, for chaining purposes</returns>
-		IHttpClientBuilder Use<THandler>(params object[] args)
-			where THandler : DelegatingHandler;
+        IHttpClientBuilder Use<THandler>(params object[] args)
+	        where THandler : DelegatingHandler;
 		
 		/// <summary>
 		/// Defines the "final" or "last" <see cref="HttpMessageHandler"/> in the pipeline.
@@ -26,7 +26,7 @@ namespace RedArrow.Argo.Client.Config.Pipeline
 		/// interact with the server</typeparam>
 		/// <param name="args">Any constructor arguments required to activate the handler</param>
 		/// <returns>The current <see cref="IHttpClientBuilder"/>, for chaining purposes</returns>
-		IHttpClientBuilder UseFinal<THandler>(params object[] args)
+		IHttpClientBuilder UseRequestHandler<THandler>(params object[] args)
 			where THandler : HttpMessageHandler;
 		
 		/// <summary>
@@ -36,6 +36,6 @@ namespace RedArrow.Argo.Client.Config.Pipeline
 		/// <param name="configure">An action used to configure the final <see cref="HttpMessageHandler"/>
 		/// when the pipeline is built</param>
 		/// <returns>The current <see cref="IHttpClientBuilder"/>, for chaining purposes</returns>
-		IHttpClientBuilder ConfigureFinal(Action<HttpMessageHandler> configure);
+		IHttpClientBuilder ConfigureRequestHandler(Action<HttpMessageHandler> configure);
 	}
 }

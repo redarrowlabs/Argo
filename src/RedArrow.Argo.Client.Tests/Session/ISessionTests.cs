@@ -51,8 +51,8 @@ namespace RedArrow.Argo.Client.Tests.Session
                 .Remote()
                     .Configure(x => x.BaseAddress = new Uri(basePath))
 					.Configure(builder => builder
-						.UseFinal<MockRequestHandler>()
-						.ConfigureFinal(x => ((MockRequestHandler)x)
+						.UseRequestHandler<MockRequestHandler>()
+						.ConfigureRequestHandler(x => ((MockRequestHandler)x)
 							.Setup(
 								new Uri($"{basePath}/{resourceType}"),
 								request => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted)))))
@@ -101,8 +101,8 @@ namespace RedArrow.Argo.Client.Tests.Session
                 .Remote()
                     .Configure(x => x.BaseAddress = new Uri(basePath))
 					.Configure(builder => builder
-						.UseFinal<MockRequestHandler>()
-						.ConfigureFinal(x => ((MockRequestHandler)x)
+						.UseRequestHandler<MockRequestHandler>()
+						.ConfigureRequestHandler(x => ((MockRequestHandler)x)
 							.Setup(
 								new Uri($"{basePath}/{resourceType}"),
 								request => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted)))))
@@ -517,8 +517,8 @@ namespace RedArrow.Argo.Client.Tests.Session
             var sessionFactory = Fluently.Configure("http://mock.test.com")
                 .Remote()
 					.Configure(builder => builder
-						.UseFinal<MockRequestHandler>()
-						.ConfigureFinal(handler => capturedHandler = (MockRequestHandler)handler))
+						.UseRequestHandler<MockRequestHandler>()
+						.ConfigureRequestHandler(handler => capturedHandler = (MockRequestHandler)handler))
 				.BuildSessionFactory();
 
             var session = sessionFactory.CreateSession();

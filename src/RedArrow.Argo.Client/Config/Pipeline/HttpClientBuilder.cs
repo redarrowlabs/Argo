@@ -23,14 +23,14 @@ namespace RedArrow.Argo.Client.Config.Pipeline
 			return this;
 		}
 
-		public IHttpClientBuilder UseFinal<THandler>(params object[] args)
+		public IHttpClientBuilder UseRequestHandler<THandler>(params object[] args)
 			where THandler : HttpMessageHandler
 		{
 			FinalHandlerDef = new HandlerDefinition {HandlerType = typeof(THandler), CtorArgs = args};
 			return this;
 		}
 
-		public IHttpClientBuilder ConfigureFinal(Action<HttpMessageHandler> configure)
+		public IHttpClientBuilder ConfigureRequestHandler(Action<HttpMessageHandler> configure)
 		{
 			FinalHandlerConfigurators.Add(configure);
 			return this;
