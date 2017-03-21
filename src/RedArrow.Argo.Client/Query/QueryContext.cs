@@ -18,14 +18,10 @@ namespace RedArrow.Argo.Client.Query
             x => string.Join(",", x.Value));
         private IDictionary<string, ICollection<string>> FilterBuilders { get; } = new Dictionary<string, ICollection<string>>();
 
-        public void AppendSort(string sort, bool desc)
+        public void AppendSort(string sort)
         {
             if (string.IsNullOrWhiteSpace(sort)) return;
-
-            if (desc)
-            {
-                sort = sort.Insert(0, "-");
-            }
+            
             SortBuilder.Add(sort);
         }
 

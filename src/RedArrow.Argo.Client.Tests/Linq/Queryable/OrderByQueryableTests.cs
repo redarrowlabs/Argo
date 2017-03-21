@@ -16,8 +16,15 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
-        public void BuildQuery__Given_TypeTarget__When_IsDescending__Then_AddMemberSort(bool expectedDesc)
+        public void BuildQuery__Given_TypeTarget__When_IsDescending__Then_AddMemberSort
+            (bool expectedDesc)
         {
+            var expectedSort = "propA";
+            if (expectedDesc)
+            {
+                expectedSort = expectedSort.Insert(0, "-");
+            }
+
             var mockQueryContext = new Mock<IQueryContext>();
 
             var session = Mock.Of<IQuerySession>();
@@ -40,7 +47,7 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
             Assert.Same(mockQueryContext.Object, query);
 
-            mockQueryContext.Verify(x => x.AppendSort("propA", expectedDesc), Times.Once);
+            mockQueryContext.Verify(x => x.AppendSort(expectedSort), Times.Once);
         }
 
         [Fact]

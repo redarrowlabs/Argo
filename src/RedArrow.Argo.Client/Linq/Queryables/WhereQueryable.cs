@@ -34,40 +34,90 @@ namespace RedArrow.Argo.Client.Linq.Queryables
 
         public override IQueryContext BuildQuery()
         {
-            var bExpression = Predicate?.Body as BinaryExpression;
-            if (bExpression == null) throw new NotSupportedException();
-
             var query = Target.BuildQuery();
 
             var resourceName = GetJsonName(typeof(TModel));
 
-            query.AppendFilter(resourceName, BuildFilterClause(bExpression));
+            query.AppendFilter(resourceName, TranslateExpression(Predicate?.Body));
 
             return query;
         }
 
-        private string BuildFilterClause(Expression expression)
+        private string TranslateExpression(Expression expression)
         {
-            var bExpression = expression as BinaryExpression;
-            if (bExpression != null)
+            if (expression is MethodCallExpression) return TranslateMethodCallExpression(expression);
+            if(expression is BinaryExpression) return TranslateBinaryExpression(expression);
+            if (expression is MemberExpression) return TranslateMemberExpression(expression);
+            throw new NotSupportedException();
+        }
+
+        private string TranslateMethodCallExpression(Expression expression)
+        {
+            var mcExpression = expression as MethodCallExpression;
+            if (mcExpression == null || mcExpression.Method.ReturnType != typeof(bool))
+                throw new NotSupportedException();
+
+            switch (mcExpression.Method.Name)
             {
-                if (bExpression.NodeType == ExpressionType.AndAlso)
+                case "Equals":
                 {
-                    return $"{BuildFilterClause(bExpression.Left)},{BuildFilterClause(bExpression.Right)}";
+                    if (mcExpression.Method.GetParameters().Length == 1)
+                    {
+                        return $"{TranslateExpression(mcExpression.Object)}[eq]{TranslateExpression(mcExpression.Arguments[0])}";
+                    }
+                    break;
                 }
-
-                if (bExpression.NodeType == ExpressionType.OrElse)
+                case "Contains":
                 {
-                    return $"{BuildFilterClause(bExpression.Left)},|{BuildFilterClause(bExpression.Right)}";
+                    var paramCount = mcExpression.Method.GetParameters().Length;
+                    if (paramCount == 1)
+                    {
+                        return $"{TranslateExpression(mcExpression.Object)}[cnt]{TranslateExpression(mcExpression.Arguments[0])}";
+                    }
+
+                    if (paramCount == 2)
+                    {
+                        return $"{TranslateExpression(mcExpression.Arguments[0])}[acnt]{TranslateExpression(mcExpression.Arguments[1])}";
+                    }
+                    break;
                 }
-
-                string op;
-                if (!OpMap.TryGetValue(bExpression.NodeType, out op))
-                    throw new NotSupportedException();
-
-                return $"{BuildFilterClause(bExpression.Left)}[{op}]{BuildFilterClause(bExpression.Right)}";
+                case "StartsWith":
+                {
+                    return $"{TranslateExpression(mcExpression.Object)}[sw]{TranslateExpression(mcExpression.Arguments[0])}";
+                }
+                case "EndsWith":
+                {
+                    return $"{TranslateExpression(mcExpression.Object)}[ew]{TranslateExpression(mcExpression.Arguments[0])}";
+                }
             }
 
+            throw new NotSupportedException();
+        }
+
+        private string TranslateBinaryExpression(Expression expression)
+        {
+            var bExpression = expression as BinaryExpression;
+            if(bExpression == null) throw new NotSupportedException();
+            
+            if (bExpression.NodeType == ExpressionType.AndAlso)
+            {
+                return $"{TranslateExpression(bExpression.Left)},{TranslateExpression(bExpression.Right)}";
+            }
+
+            if (bExpression.NodeType == ExpressionType.OrElse)
+            {
+                return $"{TranslateExpression(bExpression.Left)},|{TranslateExpression(bExpression.Right)}";
+            }
+
+            string op;
+            if (!OpMap.TryGetValue(bExpression.NodeType, out op))
+                throw new NotSupportedException();
+
+            return $"{TranslateExpression(bExpression.Left)}[{op}]{TranslateExpression(bExpression.Right)}";
+        }
+
+        private string TranslateMemberExpression(Expression expression)
+        {
             ConstantExpression cExpression;
             var mExpression = expression as MemberExpression;
             if (mExpression == null)

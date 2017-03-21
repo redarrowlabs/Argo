@@ -397,6 +397,174 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
                 Times.Once);
         }
 
+        [Theory, AutoData]
+        public void BuildQuery__Given_Target__When_ExpressionHasArrayContains__Then_AddFilter
+            (string value)
+        {
+            var mockQueryContext = new Mock<IQueryContext>();
+
+            var session = Mock.Of<IQuerySession>();
+
+            var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
+            mockTarget
+                .Setup(x => x.BuildQuery())
+                .Returns(mockQueryContext.Object);
+
+            Expression<Func<AllPropertyTypes, bool>> predicate = x => x.StringArrayProperty.Contains(value);
+
+            var subject = CreateSubject(
+                session,
+                mockTarget.Object,
+                predicate);
+
+            var result = subject.BuildQuery();
+
+            Assert.Same(mockQueryContext.Object, result);
+
+            mockQueryContext.Verify(x =>
+                x.AppendFilter("allPropertyTypes", $"stringArrayProperty[acnt]'{value}'"),
+                Times.Once);
+        }
+
+        [Theory, AutoData]
+        public void BuildQuery__Given_Target__When_ExpressionHasStringContains__Then_AddFilter
+            (string value)
+        {
+            var mockQueryContext = new Mock<IQueryContext>();
+
+            var session = Mock.Of<IQuerySession>();
+
+            var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
+            mockTarget
+                .Setup(x => x.BuildQuery())
+                .Returns(mockQueryContext.Object);
+
+            Expression<Func<AllPropertyTypes, bool>> predicate = x => x.StringProperty.Contains(value);
+
+            var subject = CreateSubject(
+                session,
+                mockTarget.Object,
+                predicate);
+
+            var result = subject.BuildQuery();
+
+            Assert.Same(mockQueryContext.Object, result);
+
+            mockQueryContext.Verify(x =>
+                x.AppendFilter("allPropertyTypes", $"stringProperty[cnt]'{value}'"),
+                Times.Once);
+        }
+
+        [Theory, AutoData]
+        public void BuildQuery__Given_Target__When_ExpressionHasStringStartsWith__Then_AddFilter
+            (string value)
+        {
+            var mockQueryContext = new Mock<IQueryContext>();
+
+            var session = Mock.Of<IQuerySession>();
+
+            var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
+            mockTarget
+                .Setup(x => x.BuildQuery())
+                .Returns(mockQueryContext.Object);
+
+            Expression<Func<AllPropertyTypes, bool>> predicate = x => x.StringProperty.StartsWith(value);
+
+            var subject = CreateSubject(
+                session,
+                mockTarget.Object,
+                predicate);
+
+            var result = subject.BuildQuery();
+
+            Assert.Same(mockQueryContext.Object, result);
+
+            mockQueryContext.Verify(x =>
+                x.AppendFilter("allPropertyTypes", $"stringProperty[sw]'{value}'"),
+                Times.Once);
+        }
+
+        [Theory, AutoData]
+        public void BuildQuery__Given_Target__When_ExpressionHasStringEquals__Then_AddFilter
+            (string value)
+        {
+            var mockQueryContext = new Mock<IQueryContext>();
+
+            var session = Mock.Of<IQuerySession>();
+
+            var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
+            mockTarget
+                .Setup(x => x.BuildQuery())
+                .Returns(mockQueryContext.Object);
+
+            Expression<Func<AllPropertyTypes, bool>> predicate = x => x.StringProperty.Equals(value);
+
+            var subject = CreateSubject(
+                session,
+                mockTarget.Object,
+                predicate);
+
+            var result = subject.BuildQuery();
+
+            Assert.Same(mockQueryContext.Object, result);
+
+            mockQueryContext.Verify(x =>
+                x.AppendFilter("allPropertyTypes", $"stringProperty[eq]'{value}'"),
+                Times.Once);
+        }
+
+        [Theory, AutoData]
+        public void BuildQuery__Given_Target__When_ExpressionHasStringEqualsWithCasing__Then_ThrowException
+            (string value)
+        {
+            var mockQueryContext = new Mock<IQueryContext>();
+
+            var session = Mock.Of<IQuerySession>();
+
+            var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
+            mockTarget
+                .Setup(x => x.BuildQuery())
+                .Returns(mockQueryContext.Object);
+
+            Expression<Func<AllPropertyTypes, bool>> predicate = x => x.StringProperty.Equals(value, StringComparison.OrdinalIgnoreCase);
+
+            var subject = CreateSubject(
+                session,
+                mockTarget.Object,
+                predicate);
+
+            Assert.Throws<NotSupportedException>(() => subject.BuildQuery());
+        }
+
+        [Theory, AutoData]
+        public void BuildQuery__Given_Target__When_ExpressionHasStringEndsWith__Then_AddFilter
+            (string value)
+        {
+            var mockQueryContext = new Mock<IQueryContext>();
+
+            var session = Mock.Of<IQuerySession>();
+
+            var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
+            mockTarget
+                .Setup(x => x.BuildQuery())
+                .Returns(mockQueryContext.Object);
+
+            Expression<Func<AllPropertyTypes, bool>> predicate = x => x.StringProperty.EndsWith(value);
+
+            var subject = CreateSubject(
+                session,
+                mockTarget.Object,
+                predicate);
+
+            var result = subject.BuildQuery();
+
+            Assert.Same(mockQueryContext.Object, result);
+
+            mockQueryContext.Verify(x =>
+                x.AppendFilter("allPropertyTypes", $"stringProperty[ew]'{value}'"),
+                Times.Once);
+        }
+
         private static WhereQueryable<TModel> CreateSubject<TModel>(
             IQuerySession session,
             RemoteQueryable<TModel> target,

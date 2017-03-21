@@ -31,8 +31,13 @@ namespace RedArrow.Argo.Client.Linq.Queryables
             var query = Target.BuildQuery();
 
             var sortMember = GetJsonName(mExpression.Member);
-            
-            query.AppendSort(sortMember, IsDesc);
+
+            if (IsDesc)
+            {
+                sortMember = sortMember.Insert(0, "-");
+            }
+
+            query.AppendSort(sortMember);
 
             return query;
         }

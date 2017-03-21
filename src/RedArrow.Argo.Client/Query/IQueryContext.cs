@@ -12,7 +12,7 @@ namespace RedArrow.Argo.Client.Query
         int? PageLimit { get; set; }
 
         IDictionary<string, string> Filters { get; }
-        void AppendSort(string sort, bool desc);
+        void AppendSort(string sort);
         void AppendFilter(string resourceType, string filter);
     }
 }
