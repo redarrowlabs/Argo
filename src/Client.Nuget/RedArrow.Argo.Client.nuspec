@@ -15,6 +15,6 @@
     <tags>argo json api orm client</tags>
   </metadata>
   <dependencies>
-    <dependency Id="Newtonsoft.Json" Version="9.0.1"/>
+    <dependency Id="Newtonsoft.Json" Version="10.0.1"/>
   </dependencies>
 </package>

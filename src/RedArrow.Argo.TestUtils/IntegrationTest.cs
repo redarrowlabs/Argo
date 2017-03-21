@@ -1,7 +1,11 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using RedArrow.Argo.Client.Config;
+using RedArrow.Argo.Client.Config.Pipeline;
 using RedArrow.Argo.Client.Session;
 using WovenByFody;
 using Xunit;
@@ -34,10 +38,15 @@ namespace RedArrow.Argo.TestUtils
                         httpClient.DefaultRequestHeaders.Add("Api-Version", "2");
                         httpClient.DefaultRequestHeaders.Add("Titan-Data-Segmentation-Key", "10000000-1000-0000-0000-000000000000");
                     })
+                    .Configure(HttpClient)
+                    .Configure(HttpClientBuilder)
                 .Models()
                     .Configure(scan => scan.AssemblyOf<Patient>())
                 .BuildSessionFactory();
 		}
+
+        protected virtual Action<HttpClient> HttpClient => _ => { };
+        protected virtual Action<IHttpClientBuilder> HttpClientBuilder => _ => { };
 
 		protected async Task DeleteAll<TModel>()
 		{
