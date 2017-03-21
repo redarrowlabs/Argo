@@ -230,7 +230,8 @@ public class Person
 	public IResourceIdentifier __argo__generated_Patch { get; set; }
 	public IResourceIdentifier __argo__generated_Resource { get; set; }
 
-	public bool __argo__generated_SessionManaged => this.__argo__generated_session != null && !this.__argo__generated_session.Disposed;
+	public bool __argo__generated_SessionManaged => this.__argo__generated_session != null
+		&& !this.__argo__generated_session.Disposed;
 
 	private Guid id;
 	[Id]
@@ -363,7 +364,7 @@ We're still evaluating the long-term roadmap for this project, but initial tenta
 - Linq provider
   - ~~sorting via OrderBy~~
   - ~~paging via Skip/Take~~
-  - filtering via Where
+  - ~~filtering via Where~~
 - ~~Configurable eager loading~~
 - Cache provider plugins with initial support for [Akavache](https://github.com/akavache/Akavache)
 - server to client eventing/sync push via [Rx.NET](https://github.com/Reactive-Extensions/Rx.NET)
