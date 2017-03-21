@@ -13,5 +13,7 @@ namespace WovenByFody
         public string PropA { get; set; }
         [Property]
         public string PropB { get; set; }
+        [Property]
+        public string[] PropBs { get; set; }
     }
 }

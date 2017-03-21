@@ -7,12 +7,12 @@ namespace RedArrow.Argo.Client.Tests.Query
     public class QueryContextTests
     {
         [Theory, AutoData]
-        public void AppendSort__Given_Sort__When_Ascending__Then_BuildCsv
+        public void AppendSort__Given_Sort__Then_BuildCsv
             (string sort)
         {
             var subject = new QueryContext();
 
-            subject.AppendSort(sort, false);
+            subject.AppendSort(sort);
 
             var result = subject.Sort;
 
@@ -20,42 +20,30 @@ namespace RedArrow.Argo.Client.Tests.Query
         }
 
         [Theory, AutoData]
-        public void AppendSort__Given_Sort__When_Descending__Then_BuildCsv
-            (string sort)
-        {
-            var subject = new QueryContext();
-
-            subject.AppendSort(sort, true);
-
-            var result = subject.Sort;
-
-            Assert.Equal($"-{sort}", result);
-        }
-
-        [Theory, AutoData]
-        public void AppendSort__Given_MultiSort__When_AscendingDescendingMixed__Then_BuildCsv
+        public void AppendSort__Given_MultiSort__When_Multiple__Then_BuildCsv
             (string sortA, string sortB, string sortC)
         {
             var subject = new QueryContext();
 
-            subject.AppendSort(sortA, true);
-            subject.AppendSort(sortB, false);
-            subject.AppendSort(sortC, true);
+            subject.AppendSort(sortA);
+            subject.AppendSort(sortB);
+            subject.AppendSort(sortC);
 
             var result = subject.Sort;
 
-            Assert.Equal($"-{sortA},{sortB},-{sortC}", result);
+            Assert.Equal($"{sortA},{sortB},{sortC}", result);
         }
 
         [Theory]
         [InlineData(null)]
         [InlineData("")]
         [InlineData("\t")]
-        public void AppendSort__Given_NullOrWhitespaceSort__Then_Return(string sort)
+        public void AppendSort__Given_NullOrWhitespaceSort__Then_Return
+            (string sort)
         {
             var subject = new QueryContext();
 
-            subject.AppendSort(sort, true);
+            subject.AppendSort(sort);
 
             var result = subject.Sort;
 
