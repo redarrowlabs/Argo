@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -22,21 +23,19 @@ namespace RedArrow.Argo.Client.Http.Handlers.Response
 			var response = await base.SendAsync(request, cancellationToken);
 
 			//intentionally not awaited
-			Task.Run(() => ProcessResponse(response), cancellationToken);
+			var procs = GetProcessors(response.RequestMessage.Method);
+			if (procs.Any())
+			{
+				Task.Run(async () =>
+				{
+					var copy = CopyResponse(response);
+					await Task.WhenAll(procs.Select(x => x(copy)).ToArray());
+				});
+			}
 
 			return response;
 		}
-
-		private async Task ProcessResponse(HttpResponseMessage response)
-		{
-			var processors = GetProcessors(response.RequestMessage.Method);
-			if (processors.Any())
-			{
-				var copy = await CopyResponse(response);
-				await Task.WhenAll(processors.Select(x => x(copy)).ToArray());
-			}
-		}
-
+		
 		private IEnumerable<Func<HttpResponseMessage, Task>> GetProcessors(HttpMethod method)
 		{
 			var ret = new List<Func<HttpResponseMessage, Task>>();
@@ -83,31 +82,37 @@ namespace RedArrow.Argo.Client.Http.Handlers.Response
 			}
 
 			return ret;
-		} 
+		}
 
-		private static async Task<HttpResponseMessage> CopyResponse(HttpResponseMessage src)
+		private static HttpResponseMessage CopyResponse(HttpResponseMessage src)
 		{
 			var ret = new HttpResponseMessage(src.StatusCode)
 			{
 				Version = CopyVersion(src.Version),
-				RequestMessage = await CopyRequest(src.RequestMessage),
+				RequestMessage = CopyRequest(src.RequestMessage),
 				ReasonPhrase = src.ReasonPhrase,
-				Content = new StreamContent(await src.Content.ReadAsStreamAsync())
+				Content = CopyContent(src.Content)
 			};
 			src.Headers.Each(h => ret.Headers.Add(h.Key, h.Value));
 			return ret;
 		}
 
-		private static async Task<HttpRequestMessage> CopyRequest(HttpRequestMessage src)
+		private static HttpRequestMessage CopyRequest(HttpRequestMessage src)
 		{
 			var ret = new HttpRequestMessage(src.Method, src.RequestUri)
 			{
-				Version	= CopyVersion(src.Version),
-				Content = new StreamContent(await src.Content.ReadAsStreamAsync())
+				Version = CopyVersion(src.Version),
+				Content = CopyContent(src.Content)
 			};
 			src.Headers.Each(h => ret.Headers.Add(h.Key, h.Value));
 			src.Properties.Each(kvp => ret.Properties.Add(kvp));
 			return ret;
+		}
+
+		private static HttpContent CopyContent(HttpContent src)
+		{
+			// TODO
+			return null;
 		}
 
 		private static Version CopyVersion(Version src)

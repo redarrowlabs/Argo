@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using RedArrow.Argo.Client.Config.Pipeline;
 using RedArrow.Argo.Client.Http.Handlers.GZip;
-using RedArrow.Argo.Client.Http.Handlers.Response;
 using RedArrow.Argo.TestUtils;
 using WovenByFody;
 using Xunit;
@@ -12,18 +11,7 @@ namespace RedArrow.Argo.Client.Integration.Http.Handlers.GZip
 {
     public class GZipCompressionHandlerTests : IntegrationTest
     {
-        protected override Action<IHttpClientBuilder> HttpClientBuilder => builder => builder
-            .UseResponseHandler(new ResponseHandlerOptions
-            {
-                ResponseReceived = response =>
-                {
-                    Assert.Equal("gzip", response.RequestMessage.Content.Headers.ContentEncoding.ToString());
-                    Assert.Equal("gzip", response.Content.Headers.ContentEncoding.ToString());
-
-                    return Task.CompletedTask;
-                }
-            })
-            .UseGZipCompression();
+        protected override Action<IHttpClientBuilder> HttpClientBuilder => builder => builder.UseGZipCompression();
 
         public GZipCompressionHandlerTests(IntegrationTestFixture fixture, ITestOutputHelper outputHelper) :
             base(fixture, outputHelper)
