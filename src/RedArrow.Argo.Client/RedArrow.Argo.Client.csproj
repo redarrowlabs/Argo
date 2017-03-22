@@ -79,6 +79,8 @@
     <Compile Include="Flurl\Shared\Url.cs" />
     <Compile Include="Http\Handlers\ExceptionLogger\ExceptionLoggerHandler.cs" />
     <Compile Include="Http\Handlers\ExceptionLogger\HttpClientBuilderExtensions.cs" />
+    <Compile Include="Http\Handlers\GZip\GZipCompressionHandler.cs" />
+    <Compile Include="Http\Handlers\GZip\GZipContent.cs" />
     <Compile Include="Http\Handlers\GZip\HttpClientBuilderExtensions.cs" />
     <Compile Include="Http\Handlers\Response\HttpClientBuilderExtensions.cs" />
     <Compile Include="Http\Handlers\Response\ResponseHandler.cs" />

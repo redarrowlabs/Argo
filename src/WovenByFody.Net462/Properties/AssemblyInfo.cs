@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("WovenByFody.Net461")]
+[assembly: AssemblyTitle("WovenByFody.Net462")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("WovenByFody.Net461")]
+[assembly: AssemblyProduct("WovenByFody.Net462")]
 [assembly: AssemblyCopyright("Copyright ©  2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("d7da07d0-aab7-44d5-b69b-46a7555c64f1")]
+[assembly: Guid("615f6745-afb3-42ad-9dd1-e46837a7ef12")]
 
 // Version information for an assembly consists of the following four values:
 //

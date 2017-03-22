@@ -5,10 +5,6 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using RedArrow.Argo.Client.Config.Pipeline;
-using RedArrow.Argo.Client.Extensions;
-using RedArrow.Argo.Client.Http;
-using RedArrow.Argo.Client.Http.Handlers.ExceptionLogger;
-using RedArrow.Argo.Client.Http.Handlers.Response;
 using RedArrow.Argo.Client.Session;
 
 namespace RedArrow.Argo.Client.Config

@@ -8,6 +8,7 @@ namespace RedArrow.Argo.Client.Http.Handlers.GZip
 	{
 		public static IHttpClientBuilder UseGZipCompression(this IHttpClientBuilder builder)
 		{
+		    builder.Use<GZipCompressionHandler>();
 			builder.ConfigureRequestHandler(x =>
 			{
 				var httpClientHandler = x as HttpClientHandler;

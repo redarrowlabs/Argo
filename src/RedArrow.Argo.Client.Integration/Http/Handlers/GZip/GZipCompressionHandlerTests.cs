@@ -1,58 +1,21 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Ploeh.AutoFixture.Xunit2;
+using RedArrow.Argo.Client.Config.Pipeline;
+using RedArrow.Argo.Client.Http.Handlers.GZip;
 using RedArrow.Argo.TestUtils;
 using WovenByFody;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace RedArrow.Argo.Client.Integration.Session
+namespace RedArrow.Argo.Client.Integration.Http.Handlers.GZip
 {
-    public class CrudTests : IntegrationTest
+    public class GZipCompressionHandlerTests : IntegrationTest
     {
-        public CrudTests(IntegrationTestFixture fixture, ITestOutputHelper outputHelper) :
+        protected override Action<IHttpClientBuilder> HttpClientBuilder => builder => builder.UseGZipCompression();
+
+        public GZipCompressionHandlerTests(IntegrationTestFixture fixture, ITestOutputHelper outputHelper) :
             base(fixture, outputHelper)
         {
-        }
-
-        [Theory, AutoData, Trait("Category", "Integration")]
-        public void GetSetAttributesTransient
-            (string firstName, string lastName)
-        {
-            var patient = new Patient
-            {
-                FirstName = firstName,
-                LastName = lastName
-            };
-
-            Assert.Equal(firstName, patient.FirstName);
-            Assert.Equal(lastName, patient.LastName);
-        }
-
-        [Theory, AutoData, Trait("Category", "Integration")]
-        public async Task GetSetAttributesPersisted
-            (string firstName, string lastName)
-        {
-            Guid id;
-            using (var session = SessionFactory.CreateSession())
-            {
-                var patient = await session.Create<Patient>();
-                id = patient.Id;
-
-                patient.FirstName = firstName;
-                patient.LastName = lastName;
-
-                Assert.Equal(firstName, patient.FirstName);
-                Assert.Equal(lastName, patient.LastName);
-            }
-
-            using (var session = SessionFactory.CreateSession())
-            {
-                var patient = await session.Get<Patient>(id);
-
-                Assert.Null(patient.FirstName);
-                Assert.Null(patient.LastName);
-            }
         }
 
         [Fact, Trait("Category", "Integration")]
@@ -62,7 +25,7 @@ namespace RedArrow.Argo.Client.Integration.Session
             var initialLastName = "Achey";
 
             var updatedLastName = "Bull";
-			
+
             Guid crossSessionId;
 
             using (var session = SessionFactory.CreateSession())
@@ -121,5 +84,6 @@ namespace RedArrow.Argo.Client.Integration.Session
                 await session.Delete<Patient>(crossSessionId);
             }
         }
+
     }
 }
