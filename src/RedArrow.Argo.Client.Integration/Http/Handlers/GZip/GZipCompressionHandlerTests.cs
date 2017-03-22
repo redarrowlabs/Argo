@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using RedArrow.Argo.Client.Config.Pipeline;
 using RedArrow.Argo.Client.Http.Handlers.GZip;

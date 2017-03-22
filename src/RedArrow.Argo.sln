@@ -49,13 +49,30 @@ EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "RedArrow.Argo.Fody.Shared", "RedArrow.Argo.Fody.Shared\RedArrow.Argo.Fody.Shared.shproj", "{08771A46-2734-466E-BA0D-DDEC49301EEA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WovenByFody.Net461", "WovenByFody.Net461\WovenByFody.Net461.csproj", "{D7DA07D0-AAB7-44D5-B69B-46A7555C64F1}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E447B66C-DACE-41E3-97EE-2B4E02F3FE2F} = {E447B66C-DACE-41E3-97EE-2B4E02F3FE2F}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RedArrow.Argo.Client.Integration", "RedArrow.Argo.Client.Integration\RedArrow.Argo.Client.Integration.csproj", "{C30CF711-FA9E-4117-9759-12FE27D6F05B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WovenByFody.Net462", "WovenByFody.Net462\WovenByFody.Net462.csproj", "{615F6745-AFB3-42AD-9DD1-E46837A7EF12}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E447B66C-DACE-41E3-97EE-2B4E02F3FE2F} = {E447B66C-DACE-41E3-97EE-2B4E02F3FE2F}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WovenByFody.Net46", "WovenByFody.Net46\WovenByFody.Net46.csproj", "{59694804-E03F-42D3-A612-0EC6E68A2A47}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WovenByFody.NETStandard15", "WovenByFody.NETStandard15\WovenByFody.NETStandard15.csproj", "{4DDCD7E2-A3F5-48CC-92EC-7E93B7FD147A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E447B66C-DACE-41E3-97EE-2B4E02F3FE2F} = {E447B66C-DACE-41E3-97EE-2B4E02F3FE2F}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		RedArrow.Argo.Fody.Shared\RedArrow.Argo.Fody.Shared.projitems*{08771a46-2734-466e-ba0d-ddec49301eea}*SharedItemsImports = 13
 		WovenByFody\WovenByFody.projitems*{14153e37-e5bf-46bc-8635-1b473148a8bf}*SharedItemsImports = 4
+		WovenByFody\WovenByFody.projitems*{4ddcd7e2-a3f5-48cc-92ec-7e93b7fd147a}*SharedItemsImports = 4
+		WovenByFody\WovenByFody.projitems*{615f6745-afb3-42ad-9dd1-e46837a7ef12}*SharedItemsImports = 4
 		WovenByFody\WovenByFody.projitems*{686d9227-964c-4073-aaff-a26ccec1ca48}*SharedItemsImports = 13
 		RedArrow.Argo.Fody.Shared\RedArrow.Argo.Fody.Shared.projitems*{bd5259a0-0735-456a-9b93-c665aa0a3353}*SharedItemsImports = 4
 		WovenByFody\WovenByFody.projitems*{d7da07d0-aab7-44d5-b69b-46a7555c64f1}*SharedItemsImports = 4
@@ -118,13 +135,25 @@ Global
 		{C30CF711-FA9E-4117-9759-12FE27D6F05B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C30CF711-FA9E-4117-9759-12FE27D6F05B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C30CF711-FA9E-4117-9759-12FE27D6F05B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{615F6745-AFB3-42AD-9DD1-E46837A7EF12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{615F6745-AFB3-42AD-9DD1-E46837A7EF12}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{615F6745-AFB3-42AD-9DD1-E46837A7EF12}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{615F6745-AFB3-42AD-9DD1-E46837A7EF12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59694804-E03F-42D3-A612-0EC6E68A2A47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59694804-E03F-42D3-A612-0EC6E68A2A47}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59694804-E03F-42D3-A612-0EC6E68A2A47}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59694804-E03F-42D3-A612-0EC6E68A2A47}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4DDCD7E2-A3F5-48CC-92EC-7E93B7FD147A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4DDCD7E2-A3F5-48CC-92EC-7E93B7FD147A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4DDCD7E2-A3F5-48CC-92EC-7E93B7FD147A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4DDCD7E2-A3F5-48CC-92EC-7E93B7FD147A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{E447B66C-DACE-41E3-97EE-2B4E02F3FE2F} = {1F076D25-FB41-4D5D-BAF0-5E43403A4F6B}
-		{82852F00-7C73-4351-95A2-83E88D4C760C} = {38A57A5C-EF3C-423E-A33E-5796E03760AD}
+		{82852F00-7C73-4351-95A2-83E88D4C760C} = {AD3337CD-2C78-4F77-BB79-F34F0A91E452}
 		{63786CE5-D899-43DF-AD4E-C2CA3BAC3FC2} = {1F076D25-FB41-4D5D-BAF0-5E43403A4F6B}
 		{087265B2-671A-4D68-BFC9-1AC59FCBC8E0} = {592EB2FD-C99F-4C18-81E8-3F429032F004}
 		{BD5259A0-0735-456A-9B93-C665AA0A3353} = {1F076D25-FB41-4D5D-BAF0-5E43403A4F6B}
@@ -138,5 +167,8 @@ Global
 		{08771A46-2734-466E-BA0D-DDEC49301EEA} = {1F076D25-FB41-4D5D-BAF0-5E43403A4F6B}
 		{D7DA07D0-AAB7-44D5-B69B-46A7555C64F1} = {AD3337CD-2C78-4F77-BB79-F34F0A91E452}
 		{C30CF711-FA9E-4117-9759-12FE27D6F05B} = {38A57A5C-EF3C-423E-A33E-5796E03760AD}
+		{615F6745-AFB3-42AD-9DD1-E46837A7EF12} = {AD3337CD-2C78-4F77-BB79-F34F0A91E452}
+		{59694804-E03F-42D3-A612-0EC6E68A2A47} = {AD3337CD-2C78-4F77-BB79-F34F0A91E452}
+		{4DDCD7E2-A3F5-48CC-92EC-7E93B7FD147A} = {AD3337CD-2C78-4F77-BB79-F34F0A91E452}
 	EndGlobalSection
 EndGlobal
