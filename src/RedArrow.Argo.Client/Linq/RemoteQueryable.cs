@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using RedArrow.Argo.Attributes;
 using RedArrow.Argo.Client.Extensions;
+using RedArrow.Argo.Client.Linq.Behaviors;
 using RedArrow.Argo.Client.Query;
 using RedArrow.Argo.Client.Session;
 
@@ -26,23 +27,25 @@ namespace RedArrow.Argo.Client.Linq
         public Expression Expression { get; }
 
 	    public IQueryProvider Provider { get; }
+		public IQueryBehavior Behavior { get; set; }
 
-		protected RemoteQueryable(IQuerySession session, IQueryProvider provider)
+		protected RemoteQueryable(IQuerySession session, IQueryProvider provider, IQueryBehavior behavior)
         {
             if (session == null) throw new ArgumentNullException(nameof(session));
 
             Expression = Expression.Constant(this);
             Provider = provider;
             Session = session;
+	        Behavior = behavior;
         }
 
 		protected RemoteQueryable(IQuerySession session, IQueryProvider provider, Expression expression)
 		{
-			if(provider == null) throw new ArgumentNullException(nameof(provider));
-			if(expression == null)throw new ArgumentNullException(nameof(expression));
+			if (provider == null) throw new ArgumentNullException(nameof(provider));
+			if (expression == null) throw new ArgumentNullException(nameof(expression));
 		    if (session == null) throw new ArgumentNullException(nameof(session));
 
-			if(!typeof(IQueryable<TModel>).GetTypeInfo().IsAssignableFrom(expression.Type.GetTypeInfo()))
+			if (!typeof(IQueryable<TModel>).GetTypeInfo().IsAssignableFrom(expression.Type.GetTypeInfo()))
 				throw new ArgumentOutOfRangeException(nameof(expression));
             
 			Expression = expression;
@@ -52,10 +55,7 @@ namespace RedArrow.Argo.Client.Linq
 
 		public IEnumerator<TModel> GetEnumerator()
 		{
-		    return Session.Query<TModel>(BuildQuery())
-		        .GetAwaiter()
-		        .GetResult()
-		        .GetEnumerator();
+			return Behavior.ExecuteQuery<TModel>(BuildQuery());
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()

@@ -26,7 +26,7 @@ namespace RedArrow.Argo.Client.Linq.Queryables
             IQuerySession session,
             RemoteQueryable<TModel> target,
             Expression<Func<TModel, bool>> predicate) :
-            base(session, target.Provider)
+            base(session, target.Provider, target.Behavior)
         {
             Target = target;
             Predicate = predicate;

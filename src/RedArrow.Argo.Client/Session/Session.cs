@@ -6,6 +6,7 @@ using RedArrow.Argo.Session;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -14,6 +15,7 @@ using RedArrow.Argo.Client.Collections.Generic;
 using RedArrow.Argo.Client.Exceptions;
 using RedArrow.Argo.Client.Http;
 using RedArrow.Argo.Client.Linq;
+using RedArrow.Argo.Client.Linq.Behaviors;
 using RedArrow.Argo.Client.Linq.Queryables;
 using RedArrow.Argo.Client.Logging;
 using RedArrow.Argo.Client.Model;
@@ -261,7 +263,17 @@ namespace RedArrow.Argo.Client.Session
 
 		public IQueryable<TModel> CreateQuery<TModel>()
 		{
-			return new TypeQueryable<TModel>(this, new RemoteQueryProvider(this));
+			return new TypeQueryable<TModel>(this, new RemoteQueryProvider(this), QueryBahavior.ByType);
+		}
+
+		public IQueryable<TRltn> CreateQuery<TParent, TRltn>(TParent model, Expression<Func<TParent, TRltn>> relationships)
+		{
+			throw new NotImplementedException();
+		}
+
+		public IQueryable<TRltn> CreateQuery<TParent, TRltn>(TParent model, Expression<Func<TParent, IEnumerable<TRltn>>> relationship)
+		{
+			throw new NotImplementedException();
 		}
 
 		public async Task<IEnumerable<TModel>> Query<TModel>(IQueryContext query)
