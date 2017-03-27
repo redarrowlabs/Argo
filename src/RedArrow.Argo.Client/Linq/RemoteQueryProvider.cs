@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using RedArrow.Argo.Client.Linq.Behaviors;
 using RedArrow.Argo.Client.Linq.Executors;
 using RedArrow.Argo.Client.Linq.Queryables;
 using RedArrow.Argo.Client.Session;
@@ -12,12 +11,10 @@ namespace RedArrow.Argo.Client.Linq
     internal class RemoteQueryProvider : IQueryProvider
     {
         private IQuerySession Session { get; }
-		internal IQueryBehavior Behavior { get; }
 
-        public RemoteQueryProvider(IQuerySession session, IQueryBehavior behavior)
+        public RemoteQueryProvider(IQuerySession session)
         {
             Session = session;
-	        Behavior = behavior;
         }
 
         public IQueryable CreateQuery(Expression expression)

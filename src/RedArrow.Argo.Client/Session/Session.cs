@@ -16,7 +16,6 @@ using RedArrow.Argo.Client.Collections.Generic;
 using RedArrow.Argo.Client.Exceptions;
 using RedArrow.Argo.Client.Http;
 using RedArrow.Argo.Client.Linq;
-using RedArrow.Argo.Client.Linq.Behaviors;
 using RedArrow.Argo.Client.Linq.Queryables;
 using RedArrow.Argo.Client.Logging;
 using RedArrow.Argo.Client.Model;
@@ -267,8 +266,7 @@ namespace RedArrow.Argo.Client.Session
 			return new TypeQueryable<TModel>(
 				ModelRegistry.GetResourceType<TModel>(),
 				this,
-				new RemoteQueryProvider(this, QueryBahavior.ByType),
-				QueryBahavior.ByType);
+				new RemoteQueryProvider(this));
 		}
 
 		public IQueryable<TRltn> CreateQuery<TParent, TRltn>(TParent model, Expression<Func<TParent, TRltn>> relationship)
@@ -297,8 +295,7 @@ namespace RedArrow.Argo.Client.Session
 			return new TypeQueryable<TRltn>(
 				$"{resourceType}/{resourceId}/{rltnName}",
 				this,
-				new RemoteQueryProvider(this, QueryBahavior.ByRelationship),
-				QueryBahavior.ByRelationship);
+				new RemoteQueryProvider(this));
 		}
 
 		public async Task<IEnumerable<TModel>> Query<TModel>(IQueryContext query)

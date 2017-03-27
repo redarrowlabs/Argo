@@ -16,7 +16,7 @@ namespace RedArrow.Argo.Client.Linq.Queryables
             RemoteQueryable<TModel> target,
             Expression<Func<TModel, TComparable>> comparable,
             bool isDesc) :
-            base(session, target.Provider, target.Behavior)
+            base(session, target.Provider)
         {
             Target = target;
             Comparable = comparable;

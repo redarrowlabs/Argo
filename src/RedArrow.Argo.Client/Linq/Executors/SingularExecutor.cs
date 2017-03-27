@@ -41,7 +41,9 @@ namespace RedArrow.Argo.Client.Linq.Executors
 
 			var query = targetQueryable.BuildQuery();
 
-			var results = targetQueryable.Behavior.ExecuteQuery<TResult>(session, query);
+			var results = session.Query<TResult>(query)
+				.GetAwaiter()
+				.GetResult();
 
 			switch (Type)
 			{

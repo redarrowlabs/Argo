@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using RedArrow.Argo.Client.Linq.Behaviors;
 using RedArrow.Argo.Client.Query;
 using RedArrow.Argo.Client.Session;
 
@@ -12,9 +11,8 @@ namespace RedArrow.Argo.Client.Linq.Queryables
         public TypeQueryable(
 			string basePath,
 			IQuerySession session, 
-			IQueryProvider provider,
-			IQueryBehavior behavior) :
-            base(session, provider, behavior)
+			IQueryProvider provider) :
+            base(session, provider)
         {
 	        BasePath = basePath;
         }

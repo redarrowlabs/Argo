@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using Moq;
 using Ploeh.AutoFixture.Xunit2;
-using RedArrow.Argo.Client.Linq.Behaviors;
 using RedArrow.Argo.Client.Linq.Queryables;
 using RedArrow.Argo.Client.Session;
 using WovenByFody;
@@ -30,8 +29,7 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
             return new TypeQueryable<TModel>(
 				basePath,
 				Mock.Of<IQuerySession>(),
-				Mock.Of<IQueryProvider>(),
-				Mock.Of<IQueryBehavior>());
+				Mock.Of<IQueryProvider>());
         }
     }
 }

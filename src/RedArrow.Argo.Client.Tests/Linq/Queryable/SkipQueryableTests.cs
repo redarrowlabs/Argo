@@ -1,10 +1,8 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Linq.Expressions;
 using Moq;
 using Ploeh.AutoFixture.Xunit2;
 using RedArrow.Argo.Client.Linq;
-using RedArrow.Argo.Client.Linq.Behaviors;
 using RedArrow.Argo.Client.Linq.Queryables;
 using RedArrow.Argo.Client.Query;
 using RedArrow.Argo.Client.Session;
@@ -24,7 +22,7 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
         {
             var mockQueryContext = new Mock<IQueryContext>();
 
-            var mockTarget = new Mock<RemoteQueryable<BasicModel>>(Mock.Of<IQuerySession>(), Mock.Of<IQueryProvider>(), Mock.Of<IQueryBehavior>());
+            var mockTarget = new Mock<RemoteQueryable<BasicModel>>(Mock.Of<IQuerySession>(), Mock.Of<IQueryProvider>());
             mockTarget
                 .Setup(x => x.BuildQuery())
                 .Returns(mockQueryContext.Object);
@@ -48,20 +46,17 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 	    {
 		    var expectedResults = Enumerable.Empty<BasicModel>();
 
-		    var session = Mock.Of<ISession>();
-
-		    IQueryContext capturedQuery = null;
-		    var mockQueryBehavior = new Mock<IQueryBehavior>();
-		    mockQueryBehavior
-			    .Setup(x => x.ExecuteQuery<BasicModel>(session, It.IsAny<IQueryContext>()))
-			    .Callback<IQuerySession, IQueryContext>((s, q) => capturedQuery = q)
-			    .Returns(expectedResults);
+			IQueryContext capturedQuery = null;
+			var session = new Mock<IQuerySession>();
+			session
+				.Setup(x => x.Query<BasicModel>(It.IsAny<IQueryContext>()))
+				.Callback<IQuerySession, IQueryContext>((s, q) => capturedQuery = q)
+				.ReturnsAsync(expectedResults);
 
 		    var results = new TypeQueryable<BasicModel>(
 					resourceType,
-					session,
-				    new RemoteQueryProvider(session, mockQueryBehavior.Object),
-				    mockQueryBehavior.Object)
+					session.Object,
+				    new RemoteQueryProvider(session.Object))
 			    .OrderBy(x => x.PropA)
 			    .Take(take)
 			    .Skip(skip)

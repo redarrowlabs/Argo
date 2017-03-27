@@ -14,7 +14,7 @@ namespace RedArrow.Argo.Client.Linq.Queryables
             IQuerySession session,
             RemoteQueryable<TModel> target,
             Expression skip) :
-            base(session, target.Provider, target.Behavior)
+            base(session, target.Provider)
         {
             Target = target;
             Skip = skip;

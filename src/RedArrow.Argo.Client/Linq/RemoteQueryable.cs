@@ -6,7 +6,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using RedArrow.Argo.Attributes;
 using RedArrow.Argo.Client.Extensions;
-using RedArrow.Argo.Client.Linq.Behaviors;
 using RedArrow.Argo.Client.Query;
 using RedArrow.Argo.Client.Session;
 
@@ -27,25 +26,21 @@ namespace RedArrow.Argo.Client.Linq
         public Expression Expression { get; }
 
 	    public IQueryProvider Provider { get; }
-		internal IQueryBehavior Behavior { get; set; }
 
-		protected RemoteQueryable(IQuerySession session, IQueryProvider provider, IQueryBehavior behavior)
+		protected RemoteQueryable(IQuerySession session, IQueryProvider provider)
         {
             if (session == null) throw new ArgumentNullException(nameof(session));
 			if (provider == null) throw new ArgumentNullException(nameof(provider));
-			if (behavior == null) throw new ArgumentNullException(nameof(behavior));
 
 			Expression = Expression.Constant(this);
 			Session = session;
 			Provider = provider;
-	        Behavior = behavior;
         }
 
-		protected RemoteQueryable(IQuerySession session, IQueryProvider provider, IQueryBehavior behavior, Expression expression)
+		protected RemoteQueryable(IQuerySession session, IQueryProvider provider, Expression expression)
 		{
 			if (session == null) throw new ArgumentNullException(nameof(session));
 			if (provider == null) throw new ArgumentNullException(nameof(provider));
-			if (behavior == null) throw new ArgumentNullException(nameof(behavior));
 			if (expression == null) throw new ArgumentNullException(nameof(expression));
 
 			if (!typeof(IQueryable<TModel>).GetTypeInfo().IsAssignableFrom(expression.Type.GetTypeInfo()))
@@ -54,13 +49,13 @@ namespace RedArrow.Argo.Client.Linq
 			Expression = expression;
 			Session = session;
 			Provider = provider;
-			Behavior = behavior;
 		}
 
 		public IEnumerator<TModel> GetEnumerator()
 		{
-			return Behavior
-				.ExecuteQuery<TModel>(Session, BuildQuery())
+			return Session.Query<TModel>(BuildQuery())
+				.GetAwaiter()
+				.GetResult()
 				.GetEnumerator();
 		}
 
