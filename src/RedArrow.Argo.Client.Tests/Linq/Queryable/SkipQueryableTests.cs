@@ -50,7 +50,7 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 			var session = new Mock<IQuerySession>();
 			session
 				.Setup(x => x.Query<BasicModel>(It.IsAny<IQueryContext>()))
-				.Callback<IQuerySession, IQueryContext>((s, q) => capturedQuery = q)
+				.Callback<IQueryContext>(q => capturedQuery = q)
 				.ReturnsAsync(expectedResults);
 
 		    var results = new TypeQueryable<BasicModel>(
