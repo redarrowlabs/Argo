@@ -8,12 +8,12 @@ using Moq;
 using Ploeh.AutoFixture.Xunit2;
 using RedArrow.Argo.Attributes;
 using RedArrow.Argo.Client.Cache;
+using RedArrow.Argo.Client.Exceptions;
 using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Http;
 using RedArrow.Argo.Client.Linq.Queryables;
 using RedArrow.Argo.Client.Model;
 using RedArrow.Argo.Client.Query;
-using RedArrow.Argo.Client.Tests.Linq.Queryable;
 using WovenByFody;
 using Xunit;
 
@@ -144,6 +144,36 @@ namespace RedArrow.Argo.Client.Tests.Session
 		    var result = subject.CreateQuery(parentModel, expression) as TypeQueryable<BasicModel>;
 			Assert.NotNull(result);
 			Assert.Equal($"{resourceType}/{modelId}/{rltnName}", result.BuildQuery().BasePath);
-	    }
+		}
+
+		[Fact]
+		public void CreateQuery__Given_ParentModelAndExpression__When_ModelNull__Then_ThrowArgNull()
+		{
+			var subject = CreateSubject();
+
+			Expression<Func<ComplexModel, BasicModel>> expression = x => x.PrimaryBasicModel;
+
+			Assert.Throws<ArgumentNullException>(() => subject.CreateQuery(null, expression));
+		}
+
+		[Fact]
+	    public void CreateQuery__Given_ParentModelAndExpression__When_PropertyNotHasOne__Then_ThrowNotSupported()
+	    {
+		    var subject = CreateSubject();
+
+			var model = new ComplexModel();
+
+		    Assert.Throws<RelationshipNotRegisteredExecption>(() => subject.CreateQuery(model, x => x.PropertyB));
+		}
+
+		[Fact]
+		public void CreateQuery__Given_ParentModelAndExpression__When_ExpressionNotLambda__Then_ThrowNotSupported()
+		{
+			var subject = CreateSubject();
+
+			var model = new ComplexModel();
+
+			Assert.Throws<NotSupportedException>(() => subject.CreateQuery(model, x => x.BasicModels.Contains(null)));
+		}
 	}
 }
