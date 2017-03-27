@@ -149,7 +149,7 @@ namespace RedArrow.Argo.Client.Tests.Session
 		[Fact]
 		public void CreateQuery__Given_ParentModelAndExpression__When_ModelNull__Then_ThrowArgNull()
 		{
-			var subject = CreateSubject();
+			var subject = CreateSubject(modelRegistry: CreateModelRegistry(typeof(ComplexModel), typeof(BasicModel)));
 
 			Expression<Func<ComplexModel, BasicModel>> expression = x => x.PrimaryBasicModel;
 

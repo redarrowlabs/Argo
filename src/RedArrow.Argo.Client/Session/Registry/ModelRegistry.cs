@@ -117,6 +117,7 @@ namespace RedArrow.Argo.Client.Session.Registry
 
 		public Guid GetId(object model)
         {
+			if(model == null) throw new ArgumentNullException(nameof(model));
             var modelType = model.GetType();
             return (Guid)GetModelConfig(modelType).IdProperty.GetValue(model);
         }
