@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Query;
 using RedArrow.Argo.Client.Session;
 
@@ -36,9 +37,9 @@ namespace RedArrow.Argo.Client.Linq.Queryables
         {
             var query = Target.BuildQuery();
 
-            var resourceName = GetJsonName(typeof(TModel));
+	        var resourceType = typeof(TModel).GetModelResourceType();
 
-            query.AppendFilter(resourceName, TranslateExpression(Predicate?.Body));
+            query.AppendFilter(resourceType, TranslateExpression(Predicate?.Body));
 
             return query;
         }

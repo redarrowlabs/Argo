@@ -56,7 +56,9 @@ namespace RedArrow.Argo.Client.Linq
 	        var cExpression = expression as ConstantExpression;
 	        if (cExpression != null)
 	        {
-		        return cExpression.Value as RemoteQueryable<TModel> ?? new TypeQueryable<TModel>(Session, this);
+		        var queryable = cExpression.Value as RemoteQueryable<TModel>;
+				if(queryable == null) throw new NotSupportedException();
+				return queryable;
 	        }
 
 			var mcExpression = expression as MethodCallExpression;

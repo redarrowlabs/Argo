@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Text;
-using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Flurl.Shared;
 using RedArrow.Argo.Client.Model;
 using RedArrow.Argo.Client.Query;
@@ -57,46 +55,18 @@ namespace RedArrow.Argo.Client.Http
             };
         }
 
-        public HttpRequestMessage GetResources(string resourceType, IQueryContext query, string include)
-        {
-            var path = resourceType;
-            if (!string.IsNullOrEmpty(include))
-            {
-                path = path.SetQueryParam("include", include);
-            }
+        public HttpRequestMessage QueryResources(IQueryContext query, string include)
+		{
+			var path = query.BuildPath();
+			if (!string.IsNullOrEmpty(include))
+			{
+				path = path.SetQueryParam("include", include);
+			}
 
-            if (query?.Filters != null)
-            {
-                foreach (var kvp in query.Filters)
-                {
-                    path = path.SetQueryParam($"filter[{kvp.Key}]", kvp.Value);
-                }
-            }
+			return new HttpRequestMessage(HttpMethod.Get, path);
+		}
 
-            if (!string.IsNullOrEmpty(query?.Sort))
-            {
-                path = path.SetQueryParam("sort", query.Sort);
-            }
-            if (query?.PageSize != null)
-            {
-                path = path.SetQueryParam("page[size]", query.PageSize);
-            }
-            if (query?.PageNumber != null)
-            {
-                path = path.SetQueryParam("page[number]", query.PageNumber);
-            }
-            if (query?.PageOffset != null)
-            {
-                path = path.SetQueryParam("page[offset]", query.PageOffset);
-            }
-            if (query?.PageLimit != null)
-            {
-                path = path.SetQueryParam("page[limit]", query.PageLimit);
-            }
-            return new HttpRequestMessage(HttpMethod.Get, path);
-        }
-
-        private static HttpContent BuildHttpContent(string content)
+		private static HttpContent BuildHttpContent(string content)
         {
 			// TODO: investigate StreamContent as it could offer performance and memory footprint benefits for large objects
             return new StringContent(content, Encoding.UTF8, JsonApiHeader);

@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 using Moq;
 using Ploeh.AutoFixture.Xunit2;
 using RedArrow.Argo.Client.Linq;
@@ -44,29 +40,32 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
             mockQueryContext.VerifySet(x => x.PageNumber = It.IsAny<int>(), Times.Never());
         }
 
-	    [Theory]
-		[InlineData(5, 5)]
+	    [Theory, AutoData]
 	    public void ToArray__When_Chained__Then_BuildQuery
-			(int skip, int take)
+			(string resourceType, int skip, int take)
 	    {
 		    var expectedResults = Enumerable.Empty<BasicModel>();
 
-		    IQueryContext capturedQuery = null;
+			IQueryContext capturedQuery = null;
+			var session = new Mock<IQuerySession>();
+			session
+				.Setup(x => x.Query<BasicModel>(It.IsAny<IQueryContext>()))
+				.Callback<IQueryContext>(q => capturedQuery = q)
+				.ReturnsAsync(expectedResults);
 
-		    var mockSession = new Mock<IQuerySession>();
-		    mockSession
-			    .Setup(x => x.Query<BasicModel>(It.IsAny<IQueryContext>()))
-			    .Callback<IQueryContext>(q => capturedQuery = q)
-			    .ReturnsAsync(expectedResults);
-
-			var results = new TypeQueryable<BasicModel>(mockSession.Object, new RemoteQueryProvider(mockSession.Object))
-				.OrderBy(x => x.PropA)
-				.Take(take)
-				.Skip(skip)
-				.ToArray();
+		    var results = new TypeQueryable<BasicModel>(
+					resourceType,
+					session.Object,
+				    new RemoteQueryProvider(session.Object))
+			    .OrderBy(x => x.PropA)
+			    .Take(take)
+			    .Skip(skip)
+			    .ToArray();
 			
 			Assert.NotNull(results);
 			Assert.Empty(results);
+
+			Assert.Same(capturedQuery, capturedQuery);
 
 			Assert.NotNull(capturedQuery);
 			Assert.NotEmpty(capturedQuery.Sort);

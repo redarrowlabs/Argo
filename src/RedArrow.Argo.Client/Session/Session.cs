@@ -6,9 +6,11 @@ using RedArrow.Argo.Session;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using RedArrow.Argo.Attributes;
 using RedArrow.Argo.Client.Collections;
 using RedArrow.Argo.Client.Collections.Generic;
 using RedArrow.Argo.Client.Exceptions;
@@ -261,17 +263,52 @@ namespace RedArrow.Argo.Client.Session
 
 		public IQueryable<TModel> CreateQuery<TModel>()
 		{
-			return new TypeQueryable<TModel>(this, new RemoteQueryProvider(this));
+			return new TypeQueryable<TModel>(
+				ModelRegistry.GetResourceType<TModel>(),
+				this,
+				new RemoteQueryProvider(this));
+		}
+
+		public IQueryable<TRltn> CreateQuery<TParent, TRltn>(TParent model, Expression<Func<TParent, TRltn>> relationship)
+		{
+			return CreateQuery<TParent, TRltn, HasOneAttribute>(model, relationship);
+		}
+
+		public IQueryable<TRltn> CreateQuery<TParent, TRltn>(TParent model, Expression<Func<TParent, IEnumerable<TRltn>>> relationship)
+		{
+			return CreateQuery<TParent, TRltn, HasManyAttribute>(model, relationship);
+		}
+
+		private IQueryable<TRltn> CreateQuery<TParent, TRltn, TAttr>(TParent model, LambdaExpression expression)
+		{
+			if(model == null) throw new ArgumentNullException(nameof(model));
+
+			var mExpression = expression.Body as MemberExpression;
+			if (mExpression == null) throw new NotSupportedException();
+			var attr = mExpression.Member.CustomAttributes
+				.SingleOrDefault(a => a.AttributeType == typeof(TAttr));
+			if(attr == null) throw new RelationshipNotRegisteredExecption(mExpression.Member.Name, model.GetType());
+			
+			var resourceType = ModelRegistry.GetResourceType(model.GetType());
+			var resourceId = ModelRegistry.GetId(model);
+			var rltnName = mExpression.Member.GetJsonName(typeof(TAttr));
+			return new TypeQueryable<TRltn>(
+				$"{resourceType}/{resourceId}/{rltnName}",
+				this,
+				new RemoteQueryProvider(this));
 		}
 
 		public async Task<IEnumerable<TModel>> Query<TModel>(IQueryContext query)
 		{
-			if (query?.PageLimit != null && query.PageLimit <= 0) return Enumerable.Empty<TModel>();
-			if (query?.PageSize != null && query.PageSize <= 0) return Enumerable.Empty<TModel>();
+			query = query ?? new QueryContext(ModelRegistry.GetResourceType<TModel>());
 
-			var resourceType = ModelRegistry.GetResourceType<TModel>();
+			if (query.PageLimit != null && query.PageLimit <= 0) return Enumerable.Empty<TModel>();
+			if (query.PageSize != null && query.PageSize <= 0) return Enumerable.Empty<TModel>();
+			
 			var include = ModelRegistry.GetInclude<TModel>();
-			var request = HttpRequestBuilder.GetResources(resourceType, query, include);
+
+			var request = HttpRequestBuilder.QueryResources(query, include);
+			
 			var response = await HttpClient.SendAsync(request);
 			if (response.StatusCode == HttpStatusCode.NotFound)
 			{

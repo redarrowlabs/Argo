@@ -67,9 +67,9 @@
     <Compile Include="Exceptions\RelationshipNotRegisteredExecption.cs" />
     <Compile Include="Exceptions\UnmanagedModelException.cs" />
     <Compile Include="Extensions\EnumerableExtensions.cs" />
-    <Compile Include="Extensions\ExpressionExtensions.cs" />
     <Compile Include="Extensions\HttpClientExtensions.cs" />
     <Compile Include="Extensions\HttpResponseMessageExtensions.cs" />
+    <Compile Include="Extensions\MemberInfoExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="Flurl\Shared\Util\CommonExtensions.cs" />
@@ -96,7 +96,7 @@
     <Compile Include="Linq\Queryables\TakeQueryable.cs" />
     <Compile Include="Linq\Queryables\TypeQueryable.cs" />
     <Compile Include="Linq\Queryables\WhereQueryable.cs" />
-    <Compile Include="Linq\RemoteExecutor.cs" />
+    <Compile Include="Linq\Executors\RemoteExecutor.cs" />
     <Compile Include="Linq\RemoteQueryable.cs" />
     <Compile Include="Linq\RemoteQueryProvider.cs" />
     <Compile Include="Model\BaseResourceRoot.cs" />
