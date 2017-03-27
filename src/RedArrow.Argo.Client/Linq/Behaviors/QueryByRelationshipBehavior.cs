@@ -1,14 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using RedArrow.Argo.Client.Query;
+using RedArrow.Argo.Client.Session;
 
 namespace RedArrow.Argo.Client.Linq.Behaviors
 {
 	internal class QueryByRelationshipBehavior : IQueryBehavior
 	{
-		public IEnumerator<TModel> ExecuteQuery<TModel>(IQueryContext query)
+		public IEnumerable<TModel> ExecuteQuery<TModel>(IQuerySession session, IQueryContext query)
 		{
-			throw new NotImplementedException();
+			return session.Query<TModel>(query)
+				.GetAwaiter()
+				.GetResult();
 		}
 	}
 }

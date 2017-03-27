@@ -395,7 +395,7 @@ namespace RedArrow.Argo.Client.Tests.Session
             mockCacheProvider.Verify(x => x.Update(model.PrimaryBasicModel.Id, model.PrimaryBasicModel), Times.Once);
             mockCacheProvider.Verify(x => x.Update(model.Id, model), Times.Never);
         }
-
+		
         [Theory, AutoData]
         public async Task Get__Given_ModelId__When_CacheContainsModel__Then_ReturnCachedModel
             (Guid modelId)

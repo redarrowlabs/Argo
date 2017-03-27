@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 using Moq;
 using Ploeh.AutoFixture.Xunit2;
 using RedArrow.Argo.Client.Linq;
+using RedArrow.Argo.Client.Linq.Behaviors;
 using RedArrow.Argo.Client.Linq.Queryables;
 using RedArrow.Argo.Client.Query;
 using RedArrow.Argo.Client.Session;
@@ -26,7 +24,7 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
         {
             var mockQueryContext = new Mock<IQueryContext>();
 
-            var mockTarget = new Mock<RemoteQueryable<BasicModel>>(Mock.Of<IQuerySession>(), Mock.Of<IQueryProvider>());
+            var mockTarget = new Mock<RemoteQueryable<BasicModel>>(Mock.Of<IQuerySession>(), Mock.Of<IQueryProvider>(), Mock.Of<IQueryBehavior>());
             mockTarget
                 .Setup(x => x.BuildQuery())
                 .Returns(mockQueryContext.Object);
@@ -44,29 +42,35 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
             mockQueryContext.VerifySet(x => x.PageNumber = It.IsAny<int>(), Times.Never());
         }
 
-	    [Theory]
-		[InlineData(5, 5)]
+	    [Theory, AutoData]
 	    public void ToArray__When_Chained__Then_BuildQuery
-			(int skip, int take)
+			(string resourceType, int skip, int take)
 	    {
 		    var expectedResults = Enumerable.Empty<BasicModel>();
 
+		    var session = Mock.Of<ISession>();
+
 		    IQueryContext capturedQuery = null;
+		    var mockQueryBehavior = new Mock<IQueryBehavior>();
+		    mockQueryBehavior
+			    .Setup(x => x.ExecuteQuery<BasicModel>(session, It.IsAny<IQueryContext>()))
+			    .Callback<IQuerySession, IQueryContext>((s, q) => capturedQuery = q)
+			    .Returns(expectedResults);
 
-		    var mockSession = new Mock<IQuerySession>();
-		    mockSession
-			    .Setup(x => x.Query<BasicModel>(It.IsAny<IQueryContext>()))
-			    .Callback<IQueryContext>(q => capturedQuery = q)
-			    .ReturnsAsync(expectedResults);
-
-			var results = new TypeQueryable<BasicModel>(mockSession.Object, new RemoteQueryProvider(mockSession.Object))
-				.OrderBy(x => x.PropA)
-				.Take(take)
-				.Skip(skip)
-				.ToArray();
+		    var results = new TypeQueryable<BasicModel>(
+					resourceType,
+					session,
+				    new RemoteQueryProvider(session, mockQueryBehavior.Object),
+				    mockQueryBehavior.Object)
+			    .OrderBy(x => x.PropA)
+			    .Take(take)
+			    .Skip(skip)
+			    .ToArray();
 			
 			Assert.NotNull(results);
 			Assert.Empty(results);
+
+			Assert.Same(capturedQuery, capturedQuery);
 
 			Assert.NotNull(capturedQuery);
 			Assert.NotEmpty(capturedQuery.Sort);

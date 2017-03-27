@@ -10,9 +10,8 @@ namespace RedArrow.Argo.TestUtils
 {
     public class IntegrationTestFixture : IDisposable
     {
-        //public string Host = "https://test.redarrow.io/api";
-	    public string Host = "http://localhost/api";
-        public string AccessToken { get; }
+        public string Host = "https://test.redarrow.io/api";
+	    public string AccessToken { get; }
 
         public IntegrationTestFixture()
         {

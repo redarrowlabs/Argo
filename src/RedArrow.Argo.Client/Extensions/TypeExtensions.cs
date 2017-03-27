@@ -9,7 +9,7 @@ namespace RedArrow.Argo.Client.Extensions
 {
     internal static class TypeExtensions
     {
-        internal static string GetModelResourceType(this Type type)
+        public static string GetModelResourceType(this Type type)
         {
             return type.GetTypeInfo()
                 .CustomAttributes
@@ -19,49 +19,49 @@ namespace RedArrow.Argo.Client.Extensions
                 .FirstOrDefault() ?? type.Name.Camelize();
         }
 
-	    internal static FieldInfo GetSessionField(this Type type)
+		public static FieldInfo GetSessionField(this Type type)
 	    {
 		    return type.GetTypeInfo()
 			    .DeclaredFields
 			    .Single(field => field.Name == "__argo__generated_session");
 	    }
 
-	    internal static FieldInfo GetIncludeField(this Type type)
+		public static FieldInfo GetIncludeField(this Type type)
 	    {
 		    return type.GetTypeInfo()
 			    .DeclaredFields
 			    .Single(field => field.Name == "__argo__generated_include");
 	    }
 
-        internal static PropertyInfo GetSessionManagedProperty(this Type type)
+		public static PropertyInfo GetSessionManagedProperty(this Type type)
         {
             return type.GetTypeInfo()
                 .DeclaredProperties
                 .Single(prop => prop.Name == "__argo__generated_SessionManaged");
         }
 
-        internal static PropertyInfo GetModelResourceProperty(this Type type)
+		public static PropertyInfo GetModelResourceProperty(this Type type)
         {
             return type.GetTypeInfo()
                 .DeclaredProperties
                 .Single(prop => prop.Name == "__argo__generated_Resource");
         }
 
-        internal static PropertyInfo GetModelPatchProperty(this Type type)
+		public static PropertyInfo GetModelPatchProperty(this Type type)
         {
             return type.GetTypeInfo()
                 .DeclaredProperties
                 .Single(prop => prop.Name == "__argo__generated_Patch");
         }
 
-        internal static PropertyInfo GetModelIdProperty(this Type type)
+		public static PropertyInfo GetModelIdProperty(this Type type)
         {
             return type.GetTypeInfo()
                 .DeclaredProperties
                 .Single(prop => prop.IsDefined(typeof(IdAttribute)));
         }
 
-        internal static IDictionary<string, AttributeConfiguration> GetModelAttributeConfigurations(this Type type)
+		public static IDictionary<string, AttributeConfiguration> GetModelAttributeConfigurations(this Type type)
         {
             return type.GetTypeInfo()
                 .DeclaredProperties
@@ -72,7 +72,7 @@ namespace RedArrow.Argo.Client.Extensions
                     attrConfig => attrConfig);
         }
 
-        internal static IDictionary<string, RelationshipConfiguration> GetModelHasOneConfigurations(this Type type)
+		public static IDictionary<string, RelationshipConfiguration> GetModelHasOneConfigurations(this Type type)
         {
             return type.GetTypeInfo()
                 .DeclaredProperties
@@ -84,7 +84,7 @@ namespace RedArrow.Argo.Client.Extensions
                     has1Cfg => has1Cfg);
         }
 
-        internal static IDictionary<string, RelationshipConfiguration> GetModelHasManyConfigurations(this Type type)
+		public static IDictionary<string, RelationshipConfiguration> GetModelHasManyConfigurations(this Type type)
         {
             return type.GetTypeInfo()
                 .DeclaredProperties
@@ -96,7 +96,7 @@ namespace RedArrow.Argo.Client.Extensions
                     hasMCfg => hasMCfg);
         }
 
-        internal static PropertyInfo GetUnmappedAttributesProperty(this Type type)
+		public static PropertyInfo GetUnmappedAttributesProperty(this Type type)
         {
             return type.GetTypeInfo()
                 .DeclaredProperties

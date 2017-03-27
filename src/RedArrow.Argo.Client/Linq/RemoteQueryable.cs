@@ -12,7 +12,7 @@ using RedArrow.Argo.Client.Session;
 
 namespace RedArrow.Argo.Client.Linq
 {
-	internal abstract class RemoteQueryable<TModel> : IOrderedQueryable<TModel>
+	public abstract class RemoteQueryable<TModel> : IOrderedQueryable<TModel>
 	{
         private static readonly ISet<Type> PropAttrTypes = new HashSet<Type>
         {
@@ -27,35 +27,41 @@ namespace RedArrow.Argo.Client.Linq
         public Expression Expression { get; }
 
 	    public IQueryProvider Provider { get; }
-		public IQueryBehavior Behavior { get; set; }
+		internal IQueryBehavior Behavior { get; set; }
 
 		protected RemoteQueryable(IQuerySession session, IQueryProvider provider, IQueryBehavior behavior)
         {
             if (session == null) throw new ArgumentNullException(nameof(session));
+			if (provider == null) throw new ArgumentNullException(nameof(provider));
+			if (behavior == null) throw new ArgumentNullException(nameof(behavior));
 
-            Expression = Expression.Constant(this);
-            Provider = provider;
-            Session = session;
+			Expression = Expression.Constant(this);
+			Session = session;
+			Provider = provider;
 	        Behavior = behavior;
         }
 
-		protected RemoteQueryable(IQuerySession session, IQueryProvider provider, Expression expression)
+		protected RemoteQueryable(IQuerySession session, IQueryProvider provider, IQueryBehavior behavior, Expression expression)
 		{
+			if (session == null) throw new ArgumentNullException(nameof(session));
 			if (provider == null) throw new ArgumentNullException(nameof(provider));
+			if (behavior == null) throw new ArgumentNullException(nameof(behavior));
 			if (expression == null) throw new ArgumentNullException(nameof(expression));
-		    if (session == null) throw new ArgumentNullException(nameof(session));
 
 			if (!typeof(IQueryable<TModel>).GetTypeInfo().IsAssignableFrom(expression.Type.GetTypeInfo()))
 				throw new ArgumentOutOfRangeException(nameof(expression));
             
 			Expression = expression;
-            Provider = provider;
-            Session = session;
+			Session = session;
+			Provider = provider;
+			Behavior = behavior;
 		}
 
 		public IEnumerator<TModel> GetEnumerator()
 		{
-			return Behavior.ExecuteQuery<TModel>(BuildQuery());
+			return Behavior
+				.ExecuteQuery<TModel>(Session, BuildQuery())
+				.GetEnumerator();
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
@@ -64,24 +70,13 @@ namespace RedArrow.Argo.Client.Linq
 		}
 
 	    public abstract IQueryContext BuildQuery();
-
-	    protected string GetJsonName(Type type)
-        {
-            return type.GetTypeInfo()
-                .CustomAttributes
-                .Single(a => a.AttributeType == typeof(ModelAttribute))
-                .ConstructorArguments
-                .Select(arg => arg.Value as string)
-                .FirstOrDefault() ?? type.Name.Camelize();
-        }
-
-	    protected string GetJsonName(MemberInfo member)
-	    {
-	        return member.CustomAttributes
-	            .Single(a => PropAttrTypes.Contains(a.AttributeType))
-	            .ConstructorArguments
-	            .Select(arg => arg.Value as string)
-	            .FirstOrDefault() ?? member.Name.Camelize();
-	    }
+		
+		protected string GetJsonName(MemberInfo member)
+		{
+			return member.GetJsonName(member
+				.CustomAttributes
+				.Single(a => PropAttrTypes.Contains(a.AttributeType))
+				.AttributeType);
+		}
 	}
 }

@@ -8,9 +8,9 @@ namespace RedArrow.Argo.Client.Tests.Query
     {
         [Theory, AutoData]
         public void AppendSort__Given_Sort__Then_BuildCsv
-            (string sort)
+            (string resourceType, string sort)
         {
-            var subject = new QueryContext();
+            var subject = new QueryContext(resourceType);
 
             subject.AppendSort(sort);
 
@@ -21,9 +21,9 @@ namespace RedArrow.Argo.Client.Tests.Query
 
         [Theory, AutoData]
         public void AppendSort__Given_MultiSort__When_Multiple__Then_BuildCsv
-            (string sortA, string sortB, string sortC)
+            (string resourceType, string sortA, string sortB, string sortC)
         {
-            var subject = new QueryContext();
+            var subject = new QueryContext(resourceType);
 
             subject.AppendSort(sortA);
             subject.AppendSort(sortB);
@@ -35,13 +35,13 @@ namespace RedArrow.Argo.Client.Tests.Query
         }
 
         [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        [InlineData("\t")]
+        [InlineData("resourceType", null)]
+        [InlineData("resourceType", "")]
+        [InlineData("resourceType", "\t")]
         public void AppendSort__Given_NullOrWhitespaceSort__Then_Return
-            (string sort)
+            (string resourceType, string sort)
         {
-            var subject = new QueryContext();
+            var subject = new QueryContext(resourceType);
 
             subject.AppendSort(sort);
 
@@ -55,7 +55,7 @@ namespace RedArrow.Argo.Client.Tests.Query
         public void AppendFilter__Given_SingleType__Then_AppendFilter
             (string resourceType, string filterA, string filterB)
         {
-            var subject = new QueryContext();
+            var subject = new QueryContext(resourceType);
 
             subject.AppendFilter(resourceType, filterA);
             subject.AppendFilter(resourceType, filterB);
@@ -71,9 +71,9 @@ namespace RedArrow.Argo.Client.Tests.Query
 
         [Theory, AutoData]
         public void AppendFilter__Given_MultiType__Then_AppendFilter
-            (string resourceTypeA, string resourceTypeB, string filterA, string filterB)
+            (string resourceType, string resourceTypeA, string resourceTypeB, string filterA, string filterB)
         {
-            var subject = new QueryContext();
+            var subject = new QueryContext(resourceType);
 
             subject.AppendFilter(resourceTypeA, filterA);
             subject.AppendFilter(resourceTypeA, filterB);
@@ -95,12 +95,13 @@ namespace RedArrow.Argo.Client.Tests.Query
         }
 
         [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        [InlineData("\t")]
-        public void AppendFitler__Given_NullOrWhitespaceFilter__Then_Return(string filter)
+        [InlineData("resourceType", null)]
+        [InlineData("resourceType", "")]
+        [InlineData("resourceType", "\t")]
+        public void AppendFitler__Given_NullOrWhitespaceFilter__Then_Return
+			(string resourceType, string filter)
         {
-            var subject = new QueryContext();
+            var subject = new QueryContext(resourceType);
 
             subject.AppendFilter("test", filter);
 
@@ -114,9 +115,10 @@ namespace RedArrow.Argo.Client.Tests.Query
         [InlineData(null)]
         [InlineData("")]
         [InlineData("\t")]
-        public void AppendFitler__Given_NullOrWhitespaceResourceType__Then_Return(string resourceType)
+        public void AppendFitler__Given_NullOrWhitespaceResourceType__Then_Return
+			(string resourceType)
         {
-            var subject = new QueryContext();
+            var subject = new QueryContext(resourceType);
 
             subject.AppendFilter(resourceType, "filter");
 

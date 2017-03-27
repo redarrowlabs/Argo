@@ -3,6 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using Moq;
 using RedArrow.Argo.Client.Linq;
+using RedArrow.Argo.Client.Linq.Behaviors;
 using RedArrow.Argo.Client.Linq.Queryables;
 using RedArrow.Argo.Client.Query;
 using RedArrow.Argo.Client.Session;
@@ -29,7 +30,7 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
             var session = Mock.Of<IQuerySession>();
 
-            var mockTarget = new Mock<RemoteQueryable<BasicModel>>(session, Mock.Of<IQueryProvider>());
+            var mockTarget = new Mock<RemoteQueryable<BasicModel>>(session, Mock.Of<IQueryProvider>(), Mock.Of<IQueryBehavior>());
             mockTarget
                 .Setup(x => x.BuildQuery())
                 .Returns(mockQueryContext.Object);
@@ -57,7 +58,7 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
             var session = Mock.Of<IQuerySession>();
 
-            var mockTarget = new Mock<RemoteQueryable<BasicModel>>(session, Mock.Of<IQueryProvider>());
+            var mockTarget = new Mock<RemoteQueryable<BasicModel>>(session, Mock.Of<IQueryProvider>(), Mock.Of<IQueryBehavior>());
             mockTarget
                 .Setup(x => x.BuildQuery())
                 .Returns(mockQueryContext.Object);

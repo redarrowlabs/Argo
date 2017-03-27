@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
-using System.Threading.Tasks;
 using RedArrow.Argo.Client.Query;
+using RedArrow.Argo.Client.Session;
 
 namespace RedArrow.Argo.Client.Linq.Behaviors
 {
-	internal interface IQueryBehavior
+	public interface IQueryBehavior
 	{
-		IEnumerator<TModel> ExecuteQuery<TModel>(IQueryContext query);
+		IEnumerable<TModel> ExecuteQuery<TModel>(IQuerySession session, IQueryContext query);
 	}
 }

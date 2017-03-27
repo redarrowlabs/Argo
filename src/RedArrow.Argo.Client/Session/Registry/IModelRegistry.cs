@@ -38,7 +38,8 @@ namespace RedArrow.Argo.Client.Session.Registry
         JObject GetAttributeValues(object model);
 	    IDictionary<string, Relationship> GetRelationshipValues(object model);
 
-	    IEnumerable<RelationshipConfiguration> GetHasOneConfigs(Type modelType);
+		IEnumerable<RelationshipConfiguration> GetHasOneConfigs<TModel>();
+		IEnumerable<RelationshipConfiguration> GetHasOneConfigs(Type modelType);
         IEnumerable<RelationshipConfiguration> GetHasManyConfigs<TModel>();
         IEnumerable<RelationshipConfiguration> GetHasManyConfigs(Type modelType);
         RelationshipConfiguration GetHasManyConfig<TModel>(string rltnName);

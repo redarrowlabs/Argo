@@ -1,5 +1,7 @@
 ﻿using System.Linq;
 using Moq;
+using Ploeh.AutoFixture.Xunit2;
+using RedArrow.Argo.Client.Linq.Behaviors;
 using RedArrow.Argo.Client.Linq.Queryables;
 using RedArrow.Argo.Client.Session;
 using WovenByFody;
@@ -9,10 +11,10 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 {
     public class TypeQueryableTests
     {
-        [Fact]
-        public void BuildQuery__Then_ReturnNewQueryContext()
+        [Theory, AutoData]
+        public void BuildQuery__Then_ReturnNewQueryContext(string basePath)
         {
-            var subject = CreateSubject<BasicModel>();
+            var subject = CreateSubject<BasicModel>(basePath);
 
             var qc = subject.BuildQuery();
 
@@ -23,9 +25,13 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
             Assert.Empty(qc.Filters);
         }
 
-        private static TypeQueryable<TModel> CreateSubject<TModel>()
+        private static TypeQueryable<TModel> CreateSubject<TModel>(string basePath)
         {
-            return new TypeQueryable<TModel>(Mock.Of<IQuerySession>(), Mock.Of<IQueryProvider>());
+            return new TypeQueryable<TModel>(
+				basePath,
+				Mock.Of<IQuerySession>(),
+				Mock.Of<IQueryProvider>(),
+				Mock.Of<IQueryBehavior>());
         }
     }
 }
