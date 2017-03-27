@@ -92,6 +92,6 @@ namespace RedArrow.Argo.Client.Integration.Linq.Queryables
 
             // cleanup
             await DeleteAll<BasicModel>();
-        }
+		}
 	}
 }

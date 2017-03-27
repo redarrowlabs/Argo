@@ -271,29 +271,37 @@ namespace RedArrow.Argo.Client.Session
 
 		public IQueryable<TRltn> CreateQuery<TParent, TRltn>(TParent model, Expression<Func<TParent, TRltn>> relationship)
 		{
-			return CreateQuery<TParent, TRltn, HasOneAttribute>(model, relationship);
+			return CreateQuery(ModelRegistry.GetId(model), relationship);
 		}
 
 		public IQueryable<TRltn> CreateQuery<TParent, TRltn>(TParent model, Expression<Func<TParent, IEnumerable<TRltn>>> relationship)
 		{
-			return CreateQuery<TParent, TRltn, HasManyAttribute>(model, relationship);
+			return CreateQuery(ModelRegistry.GetId(model), relationship);
 		}
 
-		private IQueryable<TRltn> CreateQuery<TParent, TRltn, TAttr>(TParent model, LambdaExpression expression)
+		public IQueryable<TRltn> CreateQuery<TParent, TRltn>(Guid id, Expression<Func<TParent, TRltn>> relationship)
 		{
-			if(model == null) throw new ArgumentNullException(nameof(model));
+			return CreateQuery<TParent, TRltn, HasOneAttribute>(id, relationship);
+		}
 
+		public IQueryable<TRltn> CreateQuery<TParent, TRltn>(Guid id, Expression<Func<TParent, IEnumerable<TRltn>>> relationship)
+		{
+			return CreateQuery<TParent, TRltn, HasManyAttribute>(id, relationship);
+		}
+
+		private IQueryable<TRltn> CreateQuery<TParent, TRltn, TAttr>(Guid id, LambdaExpression expression)
+		{
+			var modelType = typeof(TParent);
 			var mExpression = expression.Body as MemberExpression;
 			if (mExpression == null) throw new NotSupportedException();
 			var attr = mExpression.Member.CustomAttributes
 				.SingleOrDefault(a => a.AttributeType == typeof(TAttr));
-			if(attr == null) throw new RelationshipNotRegisteredExecption(mExpression.Member.Name, model.GetType());
+			if(attr == null) throw new RelationshipNotRegisteredExecption(mExpression.Member.Name, modelType);
 			
-			var resourceType = ModelRegistry.GetResourceType(model.GetType());
-			var resourceId = ModelRegistry.GetId(model);
+			var resourceType = ModelRegistry.GetResourceType(modelType);
 			var rltnName = mExpression.Member.GetJsonName(typeof(TAttr));
 			return new TypeQueryable<TRltn>(
-				$"{resourceType}/{resourceId}/{rltnName}",
+				$"{resourceType}/{id}/{rltnName}",
 				this,
 				new RemoteQueryProvider(this));
 		}
