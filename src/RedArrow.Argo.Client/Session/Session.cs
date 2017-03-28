@@ -268,38 +268,23 @@ namespace RedArrow.Argo.Client.Session
 				this,
 				new RemoteQueryProvider(this));
 		}
-
-		public IQueryable<TRltn> CreateQuery<TParent, TRltn>(TParent model, Expression<Func<TParent, TRltn>> relationship)
-		{
-			return CreateQuery(ModelRegistry.GetId(model), relationship);
-		}
-
+		
 		public IQueryable<TRltn> CreateQuery<TParent, TRltn>(TParent model, Expression<Func<TParent, IEnumerable<TRltn>>> relationship)
 		{
 			return CreateQuery(ModelRegistry.GetId(model), relationship);
 		}
-
-		public IQueryable<TRltn> CreateQuery<TParent, TRltn>(Guid id, Expression<Func<TParent, TRltn>> relationship)
-		{
-			return CreateQuery<TParent, TRltn, HasOneAttribute>(id, relationship);
-		}
-
+		
 		public IQueryable<TRltn> CreateQuery<TParent, TRltn>(Guid id, Expression<Func<TParent, IEnumerable<TRltn>>> relationship)
 		{
-			return CreateQuery<TParent, TRltn, HasManyAttribute>(id, relationship);
-		}
-
-		private IQueryable<TRltn> CreateQuery<TParent, TRltn, TAttr>(Guid id, LambdaExpression expression)
-		{
 			var modelType = typeof(TParent);
-			var mExpression = expression.Body as MemberExpression;
+			var mExpression = relationship.Body as MemberExpression;
 			if (mExpression == null) throw new NotSupportedException();
 			var attr = mExpression.Member.CustomAttributes
-				.SingleOrDefault(a => a.AttributeType == typeof(TAttr));
-			if(attr == null) throw new RelationshipNotRegisteredExecption(mExpression.Member.Name, modelType);
-			
+				.SingleOrDefault(a => a.AttributeType == typeof(HasManyAttribute));
+			if (attr == null) throw new RelationshipNotRegisteredExecption(mExpression.Member.Name, modelType);
+
 			var resourceType = ModelRegistry.GetResourceType(modelType);
-			var rltnName = mExpression.Member.GetJsonName(typeof(TAttr));
+			var rltnName = mExpression.Member.GetJsonName(typeof(HasManyAttribute));
 			return new TypeQueryable<TRltn>(
 				$"{resourceType}/{id}/{rltnName}",
 				this,

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
@@ -138,8 +140,8 @@ namespace RedArrow.Argo.Client.Tests.Session
 			var subject = CreateSubject(modelRegistry: modelRegistry);
 
 		    var resourceType = modelRegistry.GetResourceType<ComplexModel>();
-		    Expression<Func<ComplexModel, BasicModel>> expression = x => x.PrimaryBasicModel;
-		    var rltnName = (expression.Body as MemberExpression).Member.GetJsonName(typeof(HasOneAttribute));
+		    Expression<Func<ComplexModel, IEnumerable<BasicModel>>> expression = x => x.BasicModels;
+		    var rltnName = (expression.Body as MemberExpression).Member.GetJsonName(typeof(HasManyAttribute));
 			
 		    var result = subject.CreateQuery(parentModel, expression) as TypeQueryable<BasicModel>;
 			Assert.NotNull(result);
@@ -151,7 +153,7 @@ namespace RedArrow.Argo.Client.Tests.Session
 		{
 			var subject = CreateSubject(modelRegistry: CreateModelRegistry(typeof(ComplexModel), typeof(BasicModel)));
 
-			Expression<Func<ComplexModel, BasicModel>> expression = x => x.PrimaryBasicModel;
+			Expression<Func<ComplexModel, IEnumerable<BasicModel>>> expression = x => x.BasicModels;
 
 			Assert.Throws<ArgumentNullException>(() => subject.CreateQuery(null, expression));
 		}
@@ -173,7 +175,7 @@ namespace RedArrow.Argo.Client.Tests.Session
 
 			var model = new ComplexModel();
 
-			Assert.Throws<NotSupportedException>(() => subject.CreateQuery(model, x => x.BasicModels.Contains(null)));
+			Assert.Throws<NotSupportedException>(() => subject.CreateQuery(model, x => x.BasicModels.Where(y => y.PropA == "")));
 		}
 	}
 }

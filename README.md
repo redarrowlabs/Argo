@@ -30,37 +30,37 @@ Before going any further, it's important to establish some common language to de
 Here is an example of a JSON API resource:
 ```javascript
 {
-	"type": "person",
-	"id": "02e8ae9d-b9b5-40e9-9746-906f1fb26b64",
-	"attributes": {
-		"firstName": "Nick",
-		"lastname": "O'Tyme",
-		"age": 42
-	},
-	"relationships": {
-		"bestFriend": {
-			"data": { "type": "person", "id": "2dba2b39-a419-41c1-8d3c-46eb1250dfe8" }
-		},
-		"friends": {
-			"data": [
-				{ "type": "person", "id": "d893ef57-7939-4b4e-9dfa-be4d1af27c5e" },
-				{ "type": "person", "id": "2dba2b39-a419-41c1-8d3c-46eb1250dfe8" },
-				{ "type": "person", "id": "c2ac33ab-e9fa-4fb4-9a63-24b168854023" }
-			]
-		}
-	}
+  "type": "person",
+  "id": "02e8ae9d-b9b5-40e9-9746-906f1fb26b64",
+  "attributes": {
+    "firstName": "Nick",
+    "lastname": "O'Tyme",
+    "age": 42
+  },
+  "relationships": {
+    "bestFriend": {
+      "data": { "type": "person", "id": "2dba2b39-a419-41c1-8d3c-46eb1250dfe8" }
+    },
+    "friends": {
+      "data": [
+        { "type": "person", "id": "d893ef57-7939-4b4e-9dfa-be4d1af27c5e" },
+        { "type": "person", "id": "2dba2b39-a419-41c1-8d3c-46eb1250dfe8" },
+        { "type": "person", "id": "c2ac33ab-e9fa-4fb4-9a63-24b168854023" }
+      ]
+    }
+  }
 }
 ```
 This could be the Model of the above Resource:
 ```csharp
 public class Person
 {
-	public Guid Id { get; set; }                        // $.id
-	public string FirstName { get; set; }               // $.attributes.firstName
-	public string LastName { get; set; }                // $.attributes.lastName
-	public int Age { get; set; }                        // $.attributes.age
-	public Person BestFriend { get; set; }              // $.relationships.bestFriend.data.???
-	public ICollection<Person> Friends { get; set; }    // $.relationships.friends.data.???
+  public Guid Id { get; set; }                        // $.id
+  public string FirstName { get; set; }               // $.attributes.firstName
+  public string LastName { get; set; }                // $.attributes.lastName
+  public int Age { get; set; }                        // $.attributes.age
+  public Person BestFriend { get; set; }              // $.relationships.bestFriend.data.???
+  public ICollection<Person> Friends { get; set; }    // $.relationships.friends.data.???
 }
 ```
 Let's imagine we fetched the above Resource from our Json.API compatible web API and wanted to map it to our Model.  First, notice `bestFriend` and `friends` in the Resource do not have the information we need to fully hydrate these properties, but just `id` and `type` - the minimum information needed to fetch (read: lazy load) thier respective Resources from the web API.  We would need to make additional requests to the server to fetch the necessary Resources for our `BestFriend` and `Friends` properties.  As object models grow and become more complex, this becomes increasingly difficult and expensive to manage.  Also, notice the same Resource with id `2dba2b39-a419-41c1-8d3c-46eb1250dfe8` is not only our `bestFriend`, but is also included in our `friends` collection, of course.  We don't want to fetch this Resource from the server twice!  Ideally, we fetch it once and cache it somewhere to be referenced from either property as needed.
@@ -70,38 +70,38 @@ Argo gives you a pleasent, easy-to-understand configuration API.  If you've work
 ```csharp
 // the ISessionFactory is the long-lived object you would (ideally) register in your IoC container
 var sessionFactory = Fluently.Configure("http://api.host.com")
-	.Remote()
-		.Configure(httpClient => httpClient
-			.DefaultRequestHeaders
-			.Authorization = new AuthenticationHeaderValue("Bearer", token))
-		.ConfigureAsync(() => YourTokenManagerInstance.GetAccessTokenAsync())
-		.Configure(builder => builder
-			.UseExceptionLogger()
-			.Use<YourCustomDelegatingHandler>(ctorArg1, ctorArg2)
-			.UseResponseHandler(new ResponseHandlerOptions{
-				ResponseReceived = response => YourAsyncMethod(response),
-				ResourceCreated = response => YourAsyncMethod(response),
-				ResourceUpdated = response => YourAsyncMethod(response),
-				ResourceRetrieved = response => YourAsyncMethod(response),
-				ResourceDeleted = response => YourAsyncMethod(response),
-			})
-			.UseGZipCompression()
-			.UseRequestHandler<Xamarin.Android.Net.AndroidClientHandler>())
-	.Models()
-		.Configure(scan => scan.AssemblyOf<Person>())
-		.Configure(scan => scan.Assembly(Assembly.GetExecutingAssembly()))
-	.BuildSessionFactory();
+  .Remote()
+    .Configure(httpClient => httpClient
+      .DefaultRequestHeaders
+      .Authorization = new AuthenticationHeaderValue("Bearer", token))
+    .ConfigureAsync(() => YourTokenManagerInstance.GetAccessTokenAsync())
+    .Configure(builder => builder
+      .UseExceptionLogger()
+      .Use<YourCustomDelegatingHandler>(ctorArg1, ctorArg2)
+      .UseResponseHandler(new ResponseHandlerOptions{
+        ResponseReceived = response => YourAsyncMethod(response),
+        ResourceCreated = response => YourAsyncMethod(response),
+        ResourceUpdated = response => YourAsyncMethod(response),
+        ResourceRetrieved = response => YourAsyncMethod(response),
+        ResourceDeleted = response => YourAsyncMethod(response),
+      })
+      .UseGZipCompression()
+      .UseRequestHandler<Xamarin.Android.Net.AndroidClientHandler>())
+  .Models()
+    .Configure(scan => scan.AssemblyOf<Person>())
+    .Configure(scan => scan.Assembly(Assembly.GetExecutingAssembly()))
+  .BuildSessionFactory();
 ```
 If that's not enough configurability, you have full access to the HttpClient when a new Session is created to do any last-minute configuration.
 ```csharp
 using (var session = sessionFactory.CreateSession(client => YourHttpClientConfigureFunction(client))
 {
-	// do some stuff
+  // do some stuff
 }
 
 private void YourHttpClientConfigureFunction(HttpClient client)
 {
-	client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "access token value")
+  client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "access token value")
 }
 ```
 
@@ -111,42 +111,42 @@ Guid crossSessionPersonId;
 // ISession is a short-lived state/cache of request/responses
 using (var session = sessionFactory.CreateSession())
 {
-	var person = new Person
-	{
-		FirstName = "Justin",
-		LastName = "Case"
-	};
-	
-	// sends a POST to the server and returns a session-managed Person
-	person = await session.Create(person);
-	// Id was created by the server and populated by the session
-	crossSessionPersonId = person.Id;
-	Assert.NotEqual(Guid.Empty, crossSessionPersonId);
+  var person = new Person
+  {
+    FirstName = "Justin",
+    LastName = "Case"
+  };
+  
+  // sends a POST to the server and returns a session-managed Person
+  person = await session.Create(person);
+  // Id was created by the server and populated by the session
+  crossSessionPersonId = person.Id;
+  Assert.NotEqual(Guid.Empty, crossSessionPersonId);
 }
 // later that day...
 using (var session = sessionFactory.CreateSession())
 {
-	// fetch our person from the server
-	var person = await session.Get<Person>(crossSessionPersonId);
-	Assert.Equal("Justin", person.FirstName);
-	Assert.Equal("Case", person.LastName);
+  // fetch our person from the server
+  var person = await session.Get<Person>(crossSessionPersonId);
+  Assert.Equal("Justin", person.FirstName);
+  Assert.Equal("Case", person.LastName);
 
-	// session receives this setter value and creates a patch for this model
-	person.FirstName = "Charity";
-	person.BestFriend = new Friend
-	{
-		FirstName = "Keri",
-		LastName = "Oki"
-	};
-	
-	// the new BestFriend will be created and related in the person all in one request
-	await session.Update(person);
+  // session receives this setter value and creates a patch for this model
+  person.FirstName = "Charity";
+  person.BestFriend = new Friend
+  {
+    FirstName = "Keri",
+    LastName = "Oki"
+  };
+  
+  // the new BestFriend will be created and related in the person all in one request
+  await session.Update(person);
 }
 // cleaning up...
 using (var session = sessionFactory.CreateSession())
 {
-	// sends a DELETE to the server (no cascade options yet)
-	await session.Delete<Person>(crossSessionPersonId);
+  // sends a DELETE to the server (no cascade options yet)
+  await session.Delete<Person>(crossSessionPersonId);
 }
 ```
 
@@ -169,17 +169,28 @@ A full LINQ provider is currently under development.  The following list of LINQ
 ```csharp
 using (var session = sessionFactory.CreateSession())
 {
-	var pageNumber = 5;
-	var pageSize = 25;
-	var pageOffset = pageNumber * pageSize;
+  var pageNumber = 5;
+  var pageSize = 25;
+  var pageOffset = pageNumber * pageSize;
 
-	var results = session.Get<Person>()
-		.Where(x => x.Age < 65)
-		.OrderBy(x => x.LastName)
-		.ThenBy(x => x.FirstName)
-		.Skip(pageOffset)
-		.Take(pageSize)
-		.ToArray();
+  var people = session.CreateQuery<Person>()
+    .Where(x => x.Age < 65)
+    .OrderBy(x => x.LastName)
+    .ThenBy(x => x.FirstName)
+    .Skip(pageOffset)
+    .Take(pageSize)
+    .ToArray();
+  
+  var firstPerson = people.First();
+  
+  // this would lazy-load all friends (potentially expensive)
+  var allFriends = firstPerson.Friends.ToArray();
+  
+  // linq for relationships - first person's top 10 friends
+  var bestFriends = session.CreateQuery(firstPerson, p => p.Friends)
+    .OrderByDescending(x => x.FriendshipFactor)
+    .Take(10)
+    .ToArray();
 }
 ```
 
@@ -204,18 +215,18 @@ Take a look at this example Model.  Models must be marked with a `[Model]` attri
 [Model]
 public class Person
 {
-	[Id]
-	public Guid Id { get; set; }
-	[Property]
-	public string FirstName { get; set; }
-	[Property]
-	public string LastName { get; set; }
-	[Property]
-	public int Age { get; set; }
-	[HasOne]
-	public Friend BestFriend { get; set; }
-	[HasMany]
-	public ICollection<Person> Friends { get; set; }
+  [Id]
+  public Guid Id { get; set; }
+  [Property]
+  public string FirstName { get; set; }
+  [Property]
+  public string LastName { get; set; }
+  [Property]
+  public int Age { get; set; }
+  [HasOne]
+  public Friend BestFriend { get; set; }
+  [HasMany]
+  public ICollection<Person> Friends { get; set; }
 }
 ```
 Argo will weave some magic into your Model:
@@ -223,44 +234,44 @@ Argo will weave some magic into your Model:
 [Model]
 public class Person
 {
-	private static readonly string __argo__generated_include = "";
+  private static readonly string __argo__generated_include = "";
 
-	private IModelSession __argo__generated_session;
+  private IModelSession __argo__generated_session;
 
-	public IResourceIdentifier __argo__generated_Patch { get; set; }
-	public IResourceIdentifier __argo__generated_Resource { get; set; }
+  public IResourceIdentifier __argo__generated_Patch { get; set; }
+  public IResourceIdentifier __argo__generated_Resource { get; set; }
 
-	public bool __argo__generated_SessionManaged => this.__argo__generated_session != null
-		&& !this.__argo__generated_session.Disposed;
+  public bool __argo__generated_SessionManaged => this.__argo__generated_session != null
+    && !this.__argo__generated_session.Disposed;
 
-	private Guid id;
-	[Id]
-	public Guid Id
-	{
-		get
-		{
-			return this.id;
-		}
-		private set
-		{
-			if(!this.__argo__generated_SessionManaged)
-			{
-				this.id = value;
-			}
-		}
-	}
+  private Guid id;
+  [Id]
+  public Guid Id
+  {
+    get
+    {
+      return this.id;
+    }
+    private set
+    {
+      if(!this.__argo__generated_SessionManaged)
+      {
+        this.id = value;
+      }
+    }
+  }
 
-	public Person(IResourceIdentifier resource, IModelSession session)
-	{
-		this.__argo__generated_Resource = resource;
-		this.__argo__generated_session = session;
-		this.id = this.__argo__generated_session.GetId<Person>(this);
+  public Person(IResourceIdentifier resource, IModelSession session)
+  {
+    this.__argo__generated_Resource = resource;
+    this.__argo__generated_session = session;
+    this.id = this.__argo__generated_session.GetId<Person>(this);
 
-		this.firstName = __argo__generated_session.GetAttribute<Person, string>(this, "firstName");
-		this.lastName = __argo__generated_session.GetAttribute<Person, string>(this, "lastName");
-	}
+    this.firstName = __argo__generated_session.GetAttribute<Person, string>(this, "firstName");
+    this.lastName = __argo__generated_session.GetAttribute<Person, string>(this, "lastName");
+  }
 
-	// property weaving explained below
+  // property weaving explained below
 }
 ```
 That may be a lot for you to process.  Let's break it down:
@@ -286,18 +297,19 @@ private string firstName;
 [Property]
 public string FirstName
 {
-	get
-	{
-		return this.firstName;
-	}
-	set
-	{
-		if (this.__argo__generated_session != null && !string.Equals(this.firstName, value, StringComparison.Ordinal))
-		{
-			this.__argo__generated_session.SetAttribute<Person, string>(this, "firstName", this.firstName);
-		}
-		this.firstName = value;
-	}
+  get
+  {
+    return this.firstName;
+  }
+  set
+  {
+    if (this.__argo__generated_session != null
+      && !string.Equals(this.firstName, value, StringComparison.Ordinal))
+    {
+      this.__argo__generated_session.SetAttribute<Person, string>(this, "firstName", this.firstName);
+    }
+    this.firstName = value;
+  }
 }
 ```
 Notice the string equality check.  Most property setters have type-specific equality checks to verify the value is actually being changed before delegating that change to the Session.
@@ -307,8 +319,8 @@ The default naming convention from Model property to Resource attribute names is
 [Model("person")]
 public class Actor
 {
-	[Property("first-name")]
-	public string FirstName { get; set; }
+  [Property("first-name")]
+  public string FirstName { get; set; }
 }
 ```
 ### Relationship Weaving
@@ -323,22 +335,28 @@ private Person bestFriend;
 [HasOne]
 public Person BestFriend
 {
-	get
-	{
-		if(this.__argo__generated_session != null)
-		{
-			this.bestFriend = this.__argo__generated_session.GetReference<Person, Person>(this, "bestFriend");
-		}
-		return this.bestFriend;
-	}
-	set
-	{
-		this.bestFriend = value;
-		if(this.__argo__generated_session != null && this.bestFriend != value)
-		{
-			this.__argo__generated_session.SetReference<Person, Person>(this, "bestFriend", this.bestFriend);
-		}
-	}
+  get
+  {
+    if(this.__argo__generated_session != null)
+    {
+      this.bestFriend = this.__argo__generated_session.GetReference<Person, Person>(
+      this,
+        "bestFriend");
+    }
+    return this.bestFriend;
+  }
+  set
+  {
+    this.bestFriend = value;
+    if(this.__argo__generated_session != null
+    && this.bestFriend != value)
+    {
+      this.__argo__generated_session.SetReference<Person, Person>(
+      this,
+        "bestFriend",
+        this.bestFriend);
+    }
+  }
 }
 ```
 With the Model delegating to the Session, the Session can do a lot of great stuff for us.
@@ -361,11 +379,12 @@ The Session will use the value `"bestFriend"` when retrieving the a Resource of 
 
 ## The Future
 We're still evaluating the long-term roadmap for this project, but initial tentative ideas:
-- Linq provider
-  - ~~sorting via OrderBy~~
-  - ~~paging via Skip/Take~~
-  - ~~filtering via Where~~
-- ~~Configurable eager loading~~
+- ~~Linq provider~~ :white_check_mark:
+  - ~~sorting via OrderBy~~ :white_check_mark:
+  - ~~paging via Skip/Take~~ :white_check_mark:
+  - ~~filtering via Where~~ :white_check_mark:
+- ~~Configurable eager loading~~ :white_check_mark:
+- ~~GZip Compression~~ :white_check_mark:
 - Cache provider plugins with initial support for [Akavache](https://github.com/akavache/Akavache)
 - server to client eventing/sync push via [Rx.NET](https://github.com/Reactive-Extensions/Rx.NET)
 - your idea could go here...
