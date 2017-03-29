@@ -32,7 +32,7 @@ namespace RedArrow.Argo
 
             var getter = new MethodDefinition(
                 $"get_{propertyName}",
-                MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig,
+                MethodAttributes.Private | MethodAttributes.SpecialName | MethodAttributes.HideBySig,
                 context.ImportReference(_resourceIdentifierTypeDef))
             {
                 SemanticsAttributes = MethodSemanticsAttributes.Getter
@@ -45,7 +45,7 @@ namespace RedArrow.Argo
 
             var setter = new MethodDefinition(
                 $"set_{propertyName}",
-                MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig,
+                MethodAttributes.Private | MethodAttributes.SpecialName | MethodAttributes.HideBySig,
                 context.ImportReference(TypeSystem.Void))
             {
                 SemanticsAttributes = MethodSemanticsAttributes.Setter,
@@ -81,7 +81,7 @@ namespace RedArrow.Argo
 
             var getter = new MethodDefinition(
                 $"get_{propertyName}",
-                MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig,
+                MethodAttributes.Private | MethodAttributes.SpecialName | MethodAttributes.HideBySig,
                 context.ImportReference(typeof(bool)))
             {
                 SemanticsAttributes = MethodSemanticsAttributes.Getter
