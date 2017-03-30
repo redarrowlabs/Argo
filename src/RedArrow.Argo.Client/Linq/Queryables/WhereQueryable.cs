@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Query;
 using RedArrow.Argo.Client.Session;
@@ -44,15 +46,15 @@ namespace RedArrow.Argo.Client.Linq.Queryables
             return query;
         }
 
-        private string TranslateExpression(Expression expression)
-        {
-            if (expression is MethodCallExpression) return TranslateMethodCallExpression(expression);
-            if(expression is BinaryExpression) return TranslateBinaryExpression(expression);
-            if (expression is MemberExpression) return TranslateMemberExpression(expression);
-            throw new NotSupportedException();
-        }
+	    private string TranslateExpression(Expression expression)
+	    {
+		    if (expression is MethodCallExpression) return TranslateMethodCallExpression(expression);
+		    if (expression is BinaryExpression) return TranslateBinaryExpression(expression);
+		    if (expression is MemberExpression) return TranslateMemberExpression(expression);
+		    throw new NotSupportedException();
+	    }
 
-        private string TranslateMethodCallExpression(Expression expression)
+	    private string TranslateMethodCallExpression(Expression expression)
         {
             var mcExpression = expression as MethodCallExpression;
             if (mcExpression == null || mcExpression.Method.ReturnType != typeof(bool))
@@ -129,11 +131,16 @@ namespace RedArrow.Argo.Client.Linq.Queryables
 
                 return GetValueLiteral(cExpression.Value);
             }
-
-            if (mExpression.Expression is ParameterExpression)
-            {
-                return GetJsonName(mExpression.Member);
-            }
+			
+			if (mExpression.Expression.NodeType == ExpressionType.Parameter)
+			{
+				return GetJsonName(mExpression.Member);
+			}
+			if (mExpression.Expression.NodeType == ExpressionType.MemberAccess)
+			{
+				var expressionValue = GetValueOfExpression(null, mExpression);
+				return GetValueLiteral(expressionValue);
+			}
 
             var propertyInfo = mExpression.Member as PropertyInfo;
             var fieldInfo = mExpression.Member as FieldInfo;
@@ -156,7 +163,83 @@ namespace RedArrow.Argo.Client.Linq.Queryables
             return GetValueLiteral(value);
         }
 
-        private static string GetValueLiteral(object value)
+		private static object GetValueOfExpression(object target, Expression exp)
+		{
+			if (exp == null)
+			{
+				return null;
+			}
+			else if (exp.NodeType == ExpressionType.Parameter)
+			{
+				return target;
+			}
+			else if (exp.NodeType == ExpressionType.Constant)
+			{
+				return ((ConstantExpression)exp).Value;
+			}
+			else if (exp.NodeType == ExpressionType.Lambda)
+			{
+				return exp;
+			}
+			else if (exp.NodeType == ExpressionType.MemberAccess)
+			{
+				var memberExpression = (MemberExpression)exp;
+				var parentValue = GetValueOfExpression(target, memberExpression.Expression);
+
+				if (parentValue == null)
+				{
+					return null;
+				}
+				else
+				{
+					if (memberExpression.Member is PropertyInfo)
+						return ((PropertyInfo)memberExpression.Member).GetValue(parentValue, null);
+					else
+						return ((FieldInfo)memberExpression.Member).GetValue(parentValue);
+				}
+			}
+			else if (exp.NodeType == ExpressionType.Call)
+			{
+				var methodCallExpression = (MethodCallExpression)exp;
+				var parentValue = GetValueOfExpression(target, methodCallExpression.Object);
+
+				if (parentValue == null && !methodCallExpression.Method.IsStatic)
+				{
+					return null;
+				}
+				else
+				{
+					var arguments = methodCallExpression.Arguments.Select(a => GetValueOfExpression(target, a)).ToArray();
+
+					// Required for comverting expression parameters to delegate calls
+					var parameters = methodCallExpression.Method.GetParameters();
+					for (int i = 0; i < parameters.Length; i++)
+					{
+						if (typeof(Delegate).GetTypeInfo().IsAssignableFrom(parameters[i].ParameterType.GetTypeInfo()))
+						{
+							arguments[i] = ((LambdaExpression)arguments[i]).Compile();
+						}
+					}
+
+					if (arguments.Length > 0 && arguments[0] == null && methodCallExpression.Method.IsStatic &&
+						methodCallExpression.Method.IsDefined(typeof(ExtensionAttribute), false)) // extension method
+					{
+						return null;
+					}
+					else
+					{
+						return methodCallExpression.Method.Invoke(parentValue, arguments);
+					}
+				}
+			}
+			else
+			{
+				throw new ArgumentException(
+					string.Format("Expression type '{0}' is invalid for member invoking.", exp.NodeType));
+			}
+		}
+
+		private static string GetValueLiteral(object value)
         {
             if (value == null) return "NULL";
             if (value is DateTime) return $"'{value:O}'";

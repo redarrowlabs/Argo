@@ -13,8 +13,32 @@ using Xunit;
 namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 {
     public class WhereQueryableTests
-    {
-        [Theory, AutoData]
+	{
+	    [Theory, AutoData]
+	    public void BuildQuery__Given_Target__When_ExpressionIsMethodCall__Then_InvokeMethodAndAddFilter
+		    (BasicModel basicModel)
+	    {
+		    var mockQueryContext = new Mock<IQueryContext>();
+
+		    var session = Mock.Of<IQuerySession>();
+
+		    var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
+		    mockTarget
+			    .Setup(x => x.BuildQuery())
+			    .Returns(mockQueryContext.Object);
+
+		    Expression<Func<AllPropertyTypes, bool>> predicate = x => x.StringProperty == basicModel.PropA;
+
+		    var subject = CreateSubject(
+			    session,
+			    mockTarget.Object,
+			    predicate);
+
+		    var result = subject.BuildQuery();
+
+	    }
+
+	    [Theory, AutoData]
         public void BuildQuery__Given_Target__When_ExpressionSimpleStringEquals__Then_AddFilter
             (string expectedValue)
         {
