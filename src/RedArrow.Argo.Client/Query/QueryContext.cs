@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
+using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Flurl.Shared;
 
 namespace RedArrow.Argo.Client.Query
 {
-    public class QueryContext : IQueryContext
+    public class QueryContext<TModel> : IQueryContext
     {
-	    public string BasePath { get; }
+	    public string BasePath { get; protected set; }
 
         public string Sort => string.Join(",", SortBuilder);
         private ICollection<string> SortBuilder { get; } = new List<string>();
@@ -23,9 +22,9 @@ namespace RedArrow.Argo.Client.Query
             x => string.Join(",", x.Value));
         private IDictionary<string, ICollection<string>> FilterBuilders { get; } = new Dictionary<string, ICollection<string>>();
 
-	    public QueryContext(string basePath)
+	    public QueryContext()
 	    {
-		    BasePath = basePath;
+		    BasePath = typeof(TModel).GetModelResourceType();
 	    }
 
         public void AppendSort(string sort)

@@ -264,7 +264,6 @@ namespace RedArrow.Argo.Client.Session
 		public IQueryable<TModel> CreateQuery<TModel>()
 		{
 			return new TypeQueryable<TModel>(
-				ModelRegistry.GetResourceType<TModel>(),
 				this,
 				new RemoteQueryProvider(this));
 		}
@@ -282,18 +281,18 @@ namespace RedArrow.Argo.Client.Session
 			var attr = mExpression.Member.CustomAttributes
 				.SingleOrDefault(a => a.AttributeType == typeof(HasManyAttribute));
 			if (attr == null) throw new RelationshipNotRegisteredExecption(mExpression.Member.Name, modelType);
-
-			var resourceType = ModelRegistry.GetResourceType(modelType);
+			
 			var rltnName = mExpression.Member.GetJsonName(typeof(HasManyAttribute));
-			return new TypeQueryable<TRltn>(
-				$"{resourceType}/{id}/{rltnName}",
+			return new RelationshipQueryable<TParent, TRltn>(
+				id,
+				rltnName,
 				this,
 				new RemoteQueryProvider(this));
 		}
 
 		public async Task<IEnumerable<TModel>> Query<TModel>(IQueryContext query)
 		{
-			query = query ?? new QueryContext(ModelRegistry.GetResourceType<TModel>());
+			query = query ?? new QueryContext<TModel>();
 
 			if (query.PageLimit != null && query.PageLimit <= 0) return Enumerable.Empty<TModel>();
 			if (query.PageSize != null && query.PageSize <= 0) return Enumerable.Empty<TModel>();

@@ -142,11 +142,12 @@ namespace RedArrow.Argo.Client.Tests.Session
 		    var resourceType = modelRegistry.GetResourceType<ComplexModel>();
 		    Expression<Func<ComplexModel, IEnumerable<BasicModel>>> expression = x => x.BasicModels;
 		    var rltnName = (expression.Body as MemberExpression).Member.GetJsonName(typeof(HasManyAttribute));
-			
-		    var result = subject.CreateQuery(parentModel, expression) as TypeQueryable<BasicModel>;
+
+		    var result = subject.CreateQuery(parentModel, expression);
 			Assert.NotNull(result);
-			Assert.Equal($"{resourceType}/{modelId}/{rltnName}", result.BuildQuery().BasePath);
-		}
+			Assert.IsType<RelationshipQueryable<ComplexModel, BasicModel>>(result);
+		    Assert.Equal($"{resourceType}/{modelId}/{rltnName}", ((RelationshipQueryable<ComplexModel, BasicModel>) result).BuildQuery().BasePath);
+	    }
 
 		[Fact]
 		public void CreateQuery__Given_ParentModelAndExpression__When_ModelNull__Then_ThrowArgNull()

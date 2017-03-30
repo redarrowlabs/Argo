@@ -10,10 +10,10 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 {
     public class TypeQueryableTests
     {
-        [Theory, AutoData]
-        public void BuildQuery__Then_ReturnNewQueryContext(string basePath)
+        [Fact]
+        public void BuildQuery__Then_ReturnNewQueryContext()
         {
-            var subject = CreateSubject<BasicModel>(basePath);
+            var subject = CreateSubject<BasicModel>();
 
             var qc = subject.BuildQuery();
 
@@ -24,10 +24,9 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
             Assert.Empty(qc.Filters);
         }
 
-        private static TypeQueryable<TModel> CreateSubject<TModel>(string basePath)
+        private static TypeQueryable<TModel> CreateSubject<TModel>()
         {
             return new TypeQueryable<TModel>(
-				basePath,
 				Mock.Of<IQuerySession>(),
 				Mock.Of<IQueryProvider>());
         }

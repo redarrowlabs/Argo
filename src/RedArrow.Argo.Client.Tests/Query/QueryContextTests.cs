@@ -1,16 +1,25 @@
 ﻿using Ploeh.AutoFixture.Xunit2;
 using RedArrow.Argo.Client.Query;
+using WovenByFody;
 using Xunit;
 
 namespace RedArrow.Argo.Client.Tests.Query
 {
     public class QueryContextTests
     {
+	    [Fact]
+	    public void Ctor__Given_ModelType__Then_BasPathEqualsResourceType()
+	    {
+		    var subject = new QueryContext<BasicModel>();
+
+			Assert.Equal("basicModel", subject.BasePath);
+	    }
+
         [Theory, AutoData]
         public void AppendSort__Given_Sort__Then_BuildCsv
-            (string resourceType, string sort)
+            (string sort)
         {
-            var subject = new QueryContext(resourceType);
+            var subject = new QueryContext<BasicModel>();
 
             subject.AppendSort(sort);
 
@@ -21,9 +30,9 @@ namespace RedArrow.Argo.Client.Tests.Query
 
         [Theory, AutoData]
         public void AppendSort__Given_MultiSort__When_Multiple__Then_BuildCsv
-            (string resourceType, string sortA, string sortB, string sortC)
+            (string sortA, string sortB, string sortC)
         {
-            var subject = new QueryContext(resourceType);
+            var subject = new QueryContext<BasicModel>();
 
             subject.AppendSort(sortA);
             subject.AppendSort(sortB);
@@ -35,13 +44,13 @@ namespace RedArrow.Argo.Client.Tests.Query
         }
 
         [Theory]
-        [InlineData("resourceType", null)]
-        [InlineData("resourceType", "")]
-        [InlineData("resourceType", "\t")]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("\t")]
         public void AppendSort__Given_NullOrWhitespaceSort__Then_Return
-            (string resourceType, string sort)
+            (string sort)
         {
-            var subject = new QueryContext(resourceType);
+            var subject = new QueryContext<BasicModel>();
 
             subject.AppendSort(sort);
 
@@ -55,7 +64,7 @@ namespace RedArrow.Argo.Client.Tests.Query
         public void AppendFilter__Given_SingleType__Then_AppendFilter
             (string resourceType, string filterA, string filterB)
         {
-            var subject = new QueryContext(resourceType);
+            var subject = new QueryContext<BasicModel>();
 
             subject.AppendFilter(resourceType, filterA);
             subject.AppendFilter(resourceType, filterB);
@@ -73,7 +82,7 @@ namespace RedArrow.Argo.Client.Tests.Query
         public void AppendFilter__Given_MultiType__Then_AppendFilter
             (string resourceType, string resourceTypeA, string resourceTypeB, string filterA, string filterB)
         {
-            var subject = new QueryContext(resourceType);
+            var subject = new QueryContext<BasicModel>();
 
             subject.AppendFilter(resourceTypeA, filterA);
             subject.AppendFilter(resourceTypeA, filterB);
@@ -101,7 +110,7 @@ namespace RedArrow.Argo.Client.Tests.Query
         public void AppendFitler__Given_NullOrWhitespaceFilter__Then_Return
 			(string resourceType, string filter)
         {
-            var subject = new QueryContext(resourceType);
+            var subject = new QueryContext<BasicModel>();
 
             subject.AppendFilter("test", filter);
 
@@ -118,7 +127,7 @@ namespace RedArrow.Argo.Client.Tests.Query
         public void AppendFitler__Given_NullOrWhitespaceResourceType__Then_Return
 			(string resourceType)
         {
-            var subject = new QueryContext(resourceType);
+            var subject = new QueryContext<BasicModel>();
 
             subject.AppendFilter(resourceType, "filter");
 

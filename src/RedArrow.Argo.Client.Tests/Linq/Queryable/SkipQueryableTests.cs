@@ -54,7 +54,6 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 				.ReturnsAsync(expectedResults);
 
 		    var results = new TypeQueryable<BasicModel>(
-					resourceType,
 					session.Object,
 				    new RemoteQueryProvider(session.Object))
 			    .OrderBy(x => x.PropA)
