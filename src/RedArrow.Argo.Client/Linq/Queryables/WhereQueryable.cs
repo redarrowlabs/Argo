@@ -228,6 +228,11 @@ namespace RedArrow.Argo.Client.Linq.Queryables
 
 					return methodCallExpression.Method.Invoke(parentValue, arguments);
 				}
+				case ExpressionType.Convert:
+				{
+					var unaryExpression = (UnaryExpression) exp;
+					return GetExpressionValue(target, unaryExpression.Operand);
+				}
 			}
 
 			throw new NotSupportedException();

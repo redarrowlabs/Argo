@@ -79,6 +79,80 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 		}
 
 		[Theory, AutoData]
+		public void BuildQuery__Given_Target__When_ExpressionHasExtension__Then_InvokeMethodsAndAddFilter
+			(Guid[] ids)
+		{
+			var a = new CircularReferenceA();
+			var b = new CircularReferenceB();
+			var c = new CircularReferenceC();
+			var ds = ids.Select(x => new CircularReferenceD()).ToArray();
+
+			a.B = b;
+			b.C = c;
+			c.A = a;
+			c.AllDs = ds;
+
+			var expectedId = ds.First().Id;
+
+			var mockQueryContext = new Mock<IQueryContext>();
+
+			var session = Mock.Of<IQuerySession>();
+
+			var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
+			mockTarget
+				.Setup(x => x.BuildQuery())
+				.Returns(mockQueryContext.Object);
+
+			Expression<Func<AllPropertyTypes, bool>> predicate = x => x.StringProperty == a.B.C.AllDs.First().Id.ToString();
+
+			var subject = CreateSubject(
+				session,
+				mockTarget.Object,
+				predicate);
+
+			var result = subject.BuildQuery();
+
+			Assert.Same(mockQueryContext.Object, result);
+
+			mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"stringProperty[eq]'{expectedId}'"), Times.Once);
+		}
+
+		[Theory, AutoData]
+		public void BuildQuery__Given_Target__When_CircualrChain__Then_InvokeMethodsAndAddFilter
+			(Guid id)
+		{
+			var a = new CircularReferenceA {Id = id};
+			var b = new CircularReferenceB();
+			var c = new CircularReferenceC();
+
+			a.B = b;
+			b.C = c;
+			c.A = a;
+			
+			var mockQueryContext = new Mock<IQueryContext>();
+
+			var session = Mock.Of<IQuerySession>();
+
+			var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
+			mockTarget
+				.Setup(x => x.BuildQuery())
+				.Returns(mockQueryContext.Object);
+
+			Expression<Func<AllPropertyTypes, bool>> predicate = x => x.StringProperty == $"{a.B.C.A.B.C.A.B.C.A.Id}";
+
+			var subject = CreateSubject(
+				session,
+				mockTarget.Object,
+				predicate);
+
+			var result = subject.BuildQuery();
+
+			Assert.Same(mockQueryContext.Object, result);
+
+			mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"stringProperty[eq]'{id}'"), Times.Once);
+		}
+
+		[Theory, AutoData]
         public void BuildQuery__Given_Target__When_ExpressionSimpleStringEquals__Then_AddFilter
             (string expectedValue)
         {
