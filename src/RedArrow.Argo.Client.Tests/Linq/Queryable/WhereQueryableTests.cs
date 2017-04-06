@@ -14,6 +14,34 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 {
     public class WhereQueryableTests
 	{
+		[Theory, AutoData]
+		public void BuildQuery__Given_Target__When_ExpressionGroupedBooleans__Then_GroupExpressionsAndAddFilter
+			(bool boolA, string stringA, bool boolB, string stringB)
+		{
+			var mockQueryContext = new Mock<IQueryContext>();
+
+			var session = Mock.Of<IQuerySession>();
+
+			var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
+			mockTarget
+				.Setup(x => x.BuildQuery())
+				.Returns(mockQueryContext.Object);
+
+			Expression<Func<AllPropertyTypes, bool>> predicate =
+				x => (x.BoolProperty == boolA || x.StringProperty == stringA)
+				&& (x.BoolProperty == boolB || x.StringProperty == stringB);
+
+			var subject = CreateSubject(
+				session,
+				mockTarget.Object,
+				predicate);
+
+			var result = subject.BuildQuery();
+			Assert.Same(mockQueryContext.Object, result);
+
+			mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"((boolProperty[eq]{boolA},|stringProperty[eq]'{stringA}'),(boolProperty[eq]{boolB},|stringProperty[eq]'{stringB}'))"), Times.Once);
+		}
+
 	    [Theory, AutoData]
 	    public void BuildQuery__Given_Target__When_ExpressionIsPropertyChain__Then_InvokePropertyAndAddFilter
 		    (BasicModel basicModel)
@@ -531,7 +559,7 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
             Assert.Same(mockQueryContext.Object, result);
 
             mockQueryContext.Verify(x =>
-                x.AppendFilter("allPropertyTypes", $"intProperty[gt]{expectedMin},intProperty[lt]{expectedMax},|intProperty[eq]{expectedSpecific}"),
+                x.AppendFilter("allPropertyTypes", $"((intProperty[gt]{expectedMin},intProperty[lt]{expectedMax}),|intProperty[eq]{expectedSpecific})"),
                 Times.Once);
         }
 

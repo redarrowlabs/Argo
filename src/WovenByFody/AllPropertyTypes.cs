@@ -19,6 +19,12 @@ namespace WovenByFody
 		public int IntProperty { get; set; }
 
 		[Property]
+		public bool BoolProperty { get; set; }
+
+		[Property]
+		public Boolean BooleanProperty { get; set; }
+
+		[Property]
 		public uint UIntProperty { get; set; }
 
 		[Property]

@@ -48,9 +48,10 @@ namespace RedArrow.Argo.Client.Linq.Queryables
 
 	    private string TranslateExpression(Expression expression)
 		{
-			if (expression is MethodCallExpression) return TranslateMethodCallExpression(expression);
-		    if (expression is MemberExpression) return TranslateMemberExpression(expression);
 			if (expression is BinaryExpression) return TranslateBinaryExpression(expression);
+			if (expression is MethodCallExpression) return TranslateMethodCallExpression(expression);
+			if (expression is MemberExpression) return TranslateMemberExpression(expression);
+			if (expression is ConstantExpression) return TranslateMemberExpression(expression);
 			throw new NotSupportedException();
 		}
 
@@ -153,12 +154,12 @@ namespace RedArrow.Argo.Client.Linq.Queryables
 
 			if (bExpression.NodeType == ExpressionType.AndAlso)
 			{
-				return $"{TranslateExpression(bExpression.Left)},{TranslateExpression(bExpression.Right)}";
+				return $"({TranslateExpression(bExpression.Left)},{TranslateExpression(bExpression.Right)})";
 			}
 
 			if (bExpression.NodeType == ExpressionType.OrElse)
 			{
-				return $"{TranslateExpression(bExpression.Left)},|{TranslateExpression(bExpression.Right)}";
+				return $"({TranslateExpression(bExpression.Left)},|{TranslateExpression(bExpression.Right)})";
 			}
 
 			string op;
