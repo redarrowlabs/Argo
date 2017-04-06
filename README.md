@@ -65,6 +65,21 @@ public class Person
 ```
 Let's imagine we fetched the above Resource from our Json.API compatible web API and wanted to map it to our Model.  First, notice `bestFriend` and `friends` in the Resource do not have the information we need to fully hydrate these properties, but just `id` and `type` - the minimum information needed to fetch (read: lazy load) thier respective Resources from the web API.  We would need to make additional requests to the server to fetch the necessary Resources for our `BestFriend` and `Friends` properties.  As object models grow and become more complex, this becomes increasingly difficult and expensive to manage.  Also, notice the same Resource with id `2dba2b39-a419-41c1-8d3c-46eb1250dfe8` is not only our `bestFriend`, but is also included in our `friends` collection, of course.  We don't want to fetch this Resource from the server twice!  Ideally, we fetch it once and cache it somewhere to be referenced from either property as needed.
 
+## Getting Started
+There are two components to Argo: the model weaver, and the remote client.  Both are distributed as NuGet packages.  You'll want to add RedArrow.Argo.Fody to the project where your models are located.  When using .NetStandard projects, you may need to manually edit the project file to add the Fody weaver build task.
+```xml
+  <Import Project="..\packages\Fody.1.29.4\build\dotnet\Fody.targets" Condition="Exists('..\packages\Fody.1.29.4\build\dotnet\Fody.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Fody.1.29.4\build\dotnet\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.1.29.4\build\dotnet\Fody.targets'))" />
+  </Target>
+```
+Next, install RedArrow.Argo.Client as a NuGet dependency to your project that will act as the client to the Json.Api compliant web API.  That's it!  The next section will walk you through how to get Argo configured.
+
+> Note: Argo is currently distributed as an internal NuGet package, maintained by [Red Arrow Labs](http://www.redarrowlabs.com/).  If you are interested in using this package, please create an [issue](https://github.com/redarrowlabs/Argo/issues) to open a dialog.  The only reason this isn't being distrubuted on nuget.org is because the need has not arisen, yet.
+
 ## Configuring
 Argo gives you a pleasent, easy-to-understand configuration API.  If you've worked with [Fluent NHibernate](https://github.com/jagregory/fluent-nhibernate), this should look a little familiar.  This configuration step performs a potentially significant amount of reflection and caching and should only be performed once throughout your application's lifecycle, typically at startup.  Aside from telling Argo where to scan for your `[Model]`s, all of this is optional.  The idea is to offer a large amount of options and flexibility to meet your application's unique needs.
 ```csharp
@@ -151,20 +166,25 @@ using (var session = sessionFactory.CreateSession())
 ```
 
 ## LINQ
-A full LINQ provider is currently under development.  The following list of LINQ extensions are currently supported:
- * Where (limited, initial support)
- * OrderBy
- * OrderByDescending
- * ThenBy
- * ThenByDescending
- * Skip
- * Take
- * First
- * FirstOrDefault
- * Single
- * SingleOrDefault
- * Last
- * LastOrDefault
+A LINQ provider is available.  This allows "queries" to be compile-safe instead of magic strings.
+### Supported APIs
+ - [x] Where
+ - [x] OrderBy
+ - [x] OrderByDescending
+ - [x] ThenBy
+ - [x] ThenByDescending
+ - [x] Skip
+ - [x] Take
+ - [x] First
+ - [x] FirstOrDefault
+ - [x] Single
+ - [x] SingleOrDefault
+ - [x] Last
+ - [x] LastOrDefault
+
+Don't see your favorite LINQ extension?  Create an [issue](https://github.com/redarrowlabs/Argo/issues) and I can get started on adding it!
+
+You can use the LINQ provider via `CreateQuery`.
 
 ```csharp
 using (var session = sessionFactory.CreateSession())
@@ -186,9 +206,9 @@ using (var session = sessionFactory.CreateSession())
   // this would lazy-load all friends (potentially expensive)
   var allFriends = firstPerson.Friends.ToArray();
   
-  // linq for relationships - first person's top 10 friends
+  // linq for relationships - person's top 10 friends
   var bestFriends = session.CreateQuery(firstPerson, p => p.Friends)
-    .OrderByDescending(x => x.FriendshipFactor)
+    .OrderByDescending(f => f.FriendshipFactor)
     .Take(10)
     .ToArray();
 }
@@ -377,20 +397,25 @@ private static readonly string __argo__generated_include = "bestFriend";
 ```
 The Session will use the value `"bestFriend"` when retrieving the a Resource of type `person`, so the data for both the primary `Person` Model and `Person.BestFriend` Model is retrieved in a single request.  For more info on this behavior, read up on fetching included relationships in the [Json.API spec](http://jsonapi.org/format/#fetching-includes).
 
-## The Future
+## Roadmap
 We're still evaluating the long-term roadmap for this project, but initial tentative ideas:
-- ~~Linq provider~~ :white_check_mark:
-  - ~~sorting via OrderBy~~ :white_check_mark:
-  - ~~paging via Skip/Take~~ :white_check_mark:
-  - ~~filtering via Where~~ :white_check_mark:
-- ~~Configurable eager loading~~ :white_check_mark:
-- ~~GZip Compression~~ :white_check_mark:
-- Cache provider plugins with initial support for [Akavache](https://github.com/akavache/Akavache)
-- server to client eventing/sync push via [Rx.NET](https://github.com/Reactive-Extensions/Rx.NET)
-- your idea could go here...
+#### 1.0
+- [x] Linq provider
+  - [x] sorting via OrderBy
+  - [x] paging via Skip/Take
+  - [x] filtering via Where
+- [x] Configurable eager loading
+- [x] GZip Compression
+#### 2.0
+- [ ] Experimental Entity Framework Core provider
+- [ ] Cache provider plugins with initial support for [Akavache](https://github.com/akavache/Akavache)
+#### 3.0
+- [ ] server to client eventing/sync push via [Rx.NET](https://github.com/Reactive-Extensions/Rx.NET)
+#### ...
+- [ ] your idea could go here...
 
 ## Name
-In Greek mythology, [Argo](https://en.wikipedia.org/wiki/Argo) was the ship Jason and the Argonauts sailed in search of the golden fleece.
+In Greek mythology, [Argo](https://en.wikipedia.org/wiki/Argo) was the ship ~~JSON~~ Jason and the Argonauts sailed in search of the golden fleece.
 
 ## Logo
 [Sail Boat](https://thenounproject.com/term/sail-boat/17570/) designed by [Celia Jaber](https://thenounproject.com/celiajaber/) from The Noun Project
