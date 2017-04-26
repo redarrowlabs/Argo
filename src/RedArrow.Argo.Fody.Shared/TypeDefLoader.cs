@@ -35,7 +35,7 @@ namespace RedArrow.Argo
 
         private void LoadTypeDefinitions()
         {
-            var argoAssemblyDef = AssemblyResolver.Resolve("RedArrow.Argo");
+            var argoAssemblyDef = AssemblyResolver.Resolve(AssemblyNameReference.Parse("RedArrow.Argo"));
 
             _hasOneAttributeTypeDef = argoAssemblyDef.MainModule.GetType("RedArrow.Argo.Attributes.HasOneAttribute");
             _hasManyAttributeTypeDef = argoAssemblyDef.MainModule.GetType("RedArrow.Argo.Attributes.HasManyAttribute");
