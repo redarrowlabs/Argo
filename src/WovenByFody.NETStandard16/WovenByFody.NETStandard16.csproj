@@ -1,11 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard1.4</TargetFramework>
+    <TargetFramework>netstandard1.6</TargetFramework>
     <RootNamespace>WovenByFody</RootNamespace>
   </PropertyGroup>
-
-  <Import Project="..\WovenByFody\WovenByFody.projitems" Label="Shared" />
 
   <ItemGroup>
     <PackageReference Include="Fody" Version="2.0.6" />
@@ -15,5 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\RedArrow.Argo\RedArrow.Argo.csproj" />
   </ItemGroup>
+
+  <Import Project="..\WovenByFody\WovenByFody.projitems" Label="Shared" />
 
 </Project>

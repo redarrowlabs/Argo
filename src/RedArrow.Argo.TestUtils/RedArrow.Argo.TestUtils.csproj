@@ -31,8 +31,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.10.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\Newtonsoft.Json.10.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Serilog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10, processorArchitecture=MSIL">
       <HintPath>..\packages\Serilog.2.4.0\lib\net46\Serilog.dll</HintPath>
@@ -97,9 +96,9 @@
       <Project>{ccf8a55f-64f2-4305-abad-2a3df0fd3fe0}</Project>
       <Name>RedArrow.Argo.Client</Name>
     </ProjectReference>
-    <ProjectReference Include="..\WovenByFody.Net461\WovenByFody.Net461.csproj">
-      <Project>{d7da07d0-aab7-44d5-b69b-46a7555c64f1}</Project>
-      <Name>WovenByFody.Net461</Name>
+    <ProjectReference Include="..\WovenByFody.NETFramework461\WovenByFody.NETFramework461.csproj">
+      <Project>{355bb587-ce51-4c0f-8c29-99d6cbd270af}</Project>
+      <Name>WovenByFody.NETFramework461</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

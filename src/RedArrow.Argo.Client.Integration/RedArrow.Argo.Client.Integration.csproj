@@ -49,8 +49,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.10.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\Newtonsoft.Json.10.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Ploeh.AutoFixture, Version=3.50.2.0, Culture=neutral, PublicKeyToken=b24654c590009d4f, processorArchitecture=MSIL">
       <HintPath>..\packages\AutoFixture.3.50.2\lib\net40\Ploeh.AutoFixture.dll</HintPath>
@@ -190,9 +189,9 @@
       <Project>{f540b5ca-b7c2-4799-9eb2-b5401bd1f28c}</Project>
       <Name>RedArrow.Argo</Name>
     </ProjectReference>
-    <ProjectReference Include="..\WovenByFody.Net461\WovenByFody.Net461.csproj">
-      <Project>{d7da07d0-aab7-44d5-b69b-46a7555c64f1}</Project>
-      <Name>WovenByFody.Net461</Name>
+    <ProjectReference Include="..\WovenByFody.NETFramework461\WovenByFody.NETFramework461.csproj">
+      <Project>{355bb587-ce51-4c0f-8c29-99d6cbd270af}</Project>
+      <Name>WovenByFody.NETFramework461</Name>
     </ProjectReference>
   </ItemGroup>
   <Choose>

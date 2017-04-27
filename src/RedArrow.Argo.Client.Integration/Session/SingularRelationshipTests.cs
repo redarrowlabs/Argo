@@ -134,5 +134,51 @@ namespace RedArrow.Argo.Client.Integration.Session
                 await session.Delete(patient);
             }
         }
+
+        [Fact, Trait("Category", "Integration")]
+        public async Task UpdateHasOneToNull()
+        {
+            Guid? patientId;
+            Guid? providerId;
+
+            using (var session = SessionFactory.CreateSession())
+            {
+                var patient = await session.Create(new Patient
+                {
+                    Provider = new Provider()
+                });
+                
+                patientId = patient?.Id;
+                providerId = patient?.Provider?.Id;
+                
+                Assert.NotNull(patientId);
+                Assert.NotNull(providerId);
+            }
+
+            using (var session = SessionFactory.CreateSession())
+            {
+                var patient = await session.Get<Patient>(patientId.Value);
+
+                Assert.NotNull(patient);
+                Assert.NotNull(patient.Provider);
+
+                patient.Provider = null;
+
+                await session.Update(patient);
+            }
+
+            using (var session = SessionFactory.CreateSession())
+            {
+                var patient = await session.Get<Patient>(patientId.Value);
+
+                Assert.Null(patient.Provider);
+            }
+
+            using (var session = SessionFactory.CreateSession())
+            {
+                await session.Delete<Patient>(patientId.Value);
+                await session.Delete<Provider>(providerId.Value);
+            }
+        }
     }
 }
