@@ -1,4 +1,5 @@
 ﻿using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,7 +20,8 @@ namespace RedArrow.Argo.Client.Http.Handlers.GZip
 		        request.Content = gzipContent;
 	        }
 
-	        return await base.SendAsync(request, cancellationToken);
+            request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
+            return await base.SendAsync(request, cancellationToken);
         }
     }
 }

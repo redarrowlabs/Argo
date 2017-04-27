@@ -173,6 +173,12 @@ namespace RedArrow.Argo.Client.Integration.Session
 
                 Assert.Null(patient.Provider);
             }
+
+            using (var session = SessionFactory.CreateSession())
+            {
+                await session.Delete<Patient>(patientId.Value);
+                await session.Delete<Provider>(providerId.Value);
+            }
         }
     }
 }

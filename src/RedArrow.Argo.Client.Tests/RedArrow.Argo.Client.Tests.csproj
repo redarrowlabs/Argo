@@ -146,9 +146,9 @@
       <Project>{f540b5ca-b7c2-4799-9eb2-b5401bd1f28c}</Project>
       <Name>RedArrow.Argo</Name>
     </ProjectReference>
-    <ProjectReference Include="..\WovenByFody.Net461\WovenByFody.Net461.csproj">
-      <Project>{d7da07d0-aab7-44d5-b69b-46a7555c64f1}</Project>
-      <Name>WovenByFody.Net461</Name>
+    <ProjectReference Include="..\WovenByFody.NETFramework461\WovenByFody.NETFramework461.csproj">
+      <Project>{355bb587-ce51-4c0f-8c29-99d6cbd270af}</Project>
+      <Name>WovenByFody.NETFramework461</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -183,9 +183,9 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\xunit.runner.visualstudio.2.2.0\build\net20\xunit.runner.visualstudio.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\xunit.runner.visualstudio.2.2.0\build\net20\xunit.runner.visualstudio.props'))" />
-    <Error Condition="!Exists('..\packages\Fody.2.0.5\build\netstandard1.4\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.2.0.5\build\netstandard1.4\Fody.targets'))" />
+    <Error Condition="!Exists('..\packages\Fody.2.0.6\build\netstandard1.4\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.2.0.6\build\netstandard1.4\Fody.targets'))" />
   </Target>
-  <Import Project="..\packages\Fody.2.0.5\build\netstandard1.4\Fody.targets" Condition="Exists('..\packages\Fody.2.0.5\build\netstandard1.4\Fody.targets')" />
+  <Import Project="..\packages\Fody.2.0.6\build\netstandard1.4\Fody.targets" Condition="Exists('..\packages\Fody.2.0.6\build\netstandard1.4\Fody.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

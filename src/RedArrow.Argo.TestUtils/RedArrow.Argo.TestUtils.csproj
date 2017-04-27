@@ -96,9 +96,9 @@
       <Project>{ccf8a55f-64f2-4305-abad-2a3df0fd3fe0}</Project>
       <Name>RedArrow.Argo.Client</Name>
     </ProjectReference>
-    <ProjectReference Include="..\WovenByFody.Net461\WovenByFody.Net461.csproj">
-      <Project>{d7da07d0-aab7-44d5-b69b-46a7555c64f1}</Project>
-      <Name>WovenByFody.Net461</Name>
+    <ProjectReference Include="..\WovenByFody.NETFramework461\WovenByFody.NETFramework461.csproj">
+      <Project>{355bb587-ce51-4c0f-8c29-99d6cbd270af}</Project>
+      <Name>WovenByFody.NETFramework461</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
