@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using RedArrow.Argo.Client.Config.Pipeline;
 using RedArrow.Argo.Client.Session;
 
@@ -14,8 +15,9 @@ namespace RedArrow.Argo.Client.Config
         IModelConfigurator,
         IRemoteConfigurator
     {
-        private IList<Action<ModelScanner>> ModelScans { get; }
-		
+        private IList<Action<ModelScanner>> ModelScannners { get; }
+		private IList<Action<JsonSerializerSettings>> SerializerSettings { get; }
+
         private IList<Action<HttpClient>> ClientConfigurators { get; }
         private IList<Func<HttpClient, Task>> AsyncClientConfigurators { get; }
 		
@@ -30,7 +32,8 @@ namespace RedArrow.Argo.Client.Config
 
         internal FluentConfigurator(string apiHost, SessionFactoryConfiguration config)
         {
-            ModelScans = new List<Action<ModelScanner>>();
+            ModelScannners = new List<Action<ModelScanner>>();
+            SerializerSettings = new List<Action<JsonSerializerSettings>>();
             ClientConfigurators = new List<Action<HttpClient>>();
             AsyncClientConfigurators = new List<Func<HttpClient, Task>>();
 			
@@ -46,7 +49,13 @@ namespace RedArrow.Argo.Client.Config
 
         public IModelConfigurator Configure(Action<ModelScanner> scan)
         {
-            ModelScans.Add(scan);
+            ModelScannners.Add(scan);
+            return this;
+        }
+
+        public IModelConfigurator Configure(Action<JsonSerializerSettings> settings)
+        {
+            SerializerSettings.Add(settings);
             return this;
         }
 
@@ -77,14 +86,20 @@ namespace RedArrow.Argo.Client.Config
         {
             // load all the models
             var modelScanner = new ModelScanner();
-            foreach (var scan in ModelScans)
+            foreach (var scan in ModelScannners)
             {
                 scan(modelScanner);
             }
 
+            var jsonSettings = new JsonSerializerSettings();
+            foreach (var settings in SerializerSettings)
+            {
+                settings(jsonSettings);
+            }
+
             // translate model attributes to session config
             modelScanner.Configure(SessionFactoryConfiguration);
-
+            SessionFactoryConfiguration.Configure(jsonSettings);
             ClientConfigurators.Add(client => client.BaseAddress = ApiHost);
 
 	        var builder = new HttpClientBuilder();

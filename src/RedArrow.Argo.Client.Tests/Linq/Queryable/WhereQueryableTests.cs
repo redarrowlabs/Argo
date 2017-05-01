@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 using Moq;
+using Newtonsoft.Json;
 using Ploeh.AutoFixture.Xunit2;
 using RedArrow.Argo.Client.Linq;
 using RedArrow.Argo.Client.Linq.Queryables;
@@ -38,8 +39,10 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
 			var result = subject.BuildQuery();
 			Assert.Same(mockQueryContext.Object, result);
-
-			mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"((boolProperty[eq]{boolA},|stringProperty[eq]'{stringA}'),(boolProperty[eq]{boolB},|stringProperty[eq]'{stringB}'))"), Times.Once);
+            
+			mockQueryContext.Verify(x => x.AppendFilter(
+                "allPropertyTypes",
+                $"((boolProperty[eq]{JsonConvert.SerializeObject(boolA)},|stringProperty[eq]'{stringA}'),(boolProperty[eq]{JsonConvert.SerializeObject(boolB)},|stringProperty[eq]'{stringB}'))"), Times.Once);
 		}
 
 	    [Theory, AutoData]
@@ -339,7 +342,7 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
             Assert.Same(mockQueryContext.Object, result);
 
-            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"doubleProperty[eq]{expectedValue}"), Times.Once);
+            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"doubleProperty[eq]{JsonConvert.SerializeObject(expectedValue)}"), Times.Once);
         }
 
         [Theory, AutoData]
@@ -366,7 +369,7 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
             Assert.Same(mockQueryContext.Object, result);
 
-            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"decimalProperty[eq]{expectedValue}"), Times.Once);
+            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"decimalProperty[eq]{JsonConvert.SerializeObject(expectedValue)}"), Times.Once);
         }
 
         [Theory, AutoData]
@@ -393,7 +396,7 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
             Assert.Same(mockQueryContext.Object, result);
 
-            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"floatProperty[eq]{expectedValue}"), Times.Once);
+            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"floatProperty[eq]{JsonConvert.SerializeObject(expectedValue)}"), Times.Once);
         }
 
         [Theory, AutoData]
@@ -734,12 +737,14 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
         private static WhereQueryable<TModel> CreateSubject<TModel>(
             IQuerySession session,
             RemoteQueryable<TModel> target,
-            Expression<Func<TModel, bool>> predicate)
+            Expression<Func<TModel, bool>> predicate,
+            JsonSerializerSettings jsonSettings = null)
         {
             return new WhereQueryable<TModel>(
                 session,
                 target,
-                predicate);
+                predicate,
+                jsonSettings ?? new JsonSerializerSettings());
         }
     }
 }

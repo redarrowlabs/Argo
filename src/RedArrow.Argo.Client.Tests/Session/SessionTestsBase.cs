@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Net.Http;
 using Moq;
+using Newtonsoft.Json;
 using RedArrow.Argo.Client.Cache;
 using RedArrow.Argo.Client.Config.Model;
 using RedArrow.Argo.Client.Http;
@@ -15,7 +16,8 @@ namespace RedArrow.Argo.Client.Tests.Session
             HttpMessageHandler mockHandler = null,
             IHttpRequestBuilder requestBuilder = null,
             ICacheProvider cacheProvider = null,
-            IModelRegistry modelRegistry = null)
+            IModelRegistry modelRegistry = null,
+            JsonSerializerSettings jsonSettings = null)
         {
             if (mockHandler == null)
             {
@@ -26,7 +28,8 @@ namespace RedArrow.Argo.Client.Tests.Session
                 () => new HttpClient(mockHandler),
                 requestBuilder ?? Mock.Of<IHttpRequestBuilder>(),
                 cacheProvider ?? Mock.Of<ICacheProvider>(),
-                modelRegistry ?? Mock.Of<IModelRegistry>());
+                modelRegistry ?? Mock.Of<IModelRegistry>(),
+                jsonSettings ?? new JsonSerializerSettings());
         }
 
         protected static IModelRegistry CreateModelRegistry(params Type[] types)

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Newtonsoft.Json;
 using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Query;
 using RedArrow.Argo.Client.Session;
@@ -25,14 +26,18 @@ namespace RedArrow.Argo.Client.Linq.Queryables
         private RemoteQueryable<TModel> Target { get; }
         private Expression<Func<TModel, bool>> Predicate { get; }
 
+        private JsonSerializerSettings JsonSettings { get; }
+
         public WhereQueryable(
             IQuerySession session,
             RemoteQueryable<TModel> target,
-            Expression<Func<TModel, bool>> predicate) :
+            Expression<Func<TModel, bool>> predicate,
+            JsonSerializerSettings jsonSettings) :
             base(session, target.Provider)
         {
             Target = target;
             Predicate = predicate;
+            JsonSettings = jsonSettings;
         }
 
         public override IQueryContext BuildQuery()
@@ -239,12 +244,12 @@ namespace RedArrow.Argo.Client.Linq.Queryables
 			throw new NotSupportedException();
 		}
 
-		private static string GetValueLiteral(object value)
+		private string GetValueLiteral(object value)
         {
             if (value == null) return "NULL";
             if (value is DateTime) return $"'{value:O}'";
             if (value is string || value is char || value is Guid) return $"'{value}'";
-            return $"{value}";
+            return JsonConvert.SerializeObject(value, JsonSettings);
         }
     }
 }

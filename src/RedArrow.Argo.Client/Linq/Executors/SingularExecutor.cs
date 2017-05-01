@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using Newtonsoft.Json;
 using RedArrow.Argo.Client.Linq.Queryables;
 using RedArrow.Argo.Client.Session;
 
@@ -18,15 +19,19 @@ namespace RedArrow.Argo.Client.Linq.Executors
 		private SingularExecutorType Type { get; }
 		private bool IsOrDefault { get; }
 
+        private JsonSerializerSettings JsonSettings { get; }
+
 		public SingularExecutor(
 			RemoteQueryable<TModel> target,
 			Expression<Func<TModel, bool>> expression,
+            JsonSerializerSettings jsonSettings,
 			SingularExecutorType type,
 			bool isOrDefault) :
 			base(target, expression)
 		{
 			Type = type;
 			IsOrDefault = isOrDefault;
+		    JsonSettings = jsonSettings;
 		}
 
 		public override TResult Execute<TResult>(IQuerySession session)
@@ -36,7 +41,7 @@ namespace RedArrow.Argo.Client.Linq.Executors
 		    var targetQueryable = Target;
 		    if (Expression != null)
 		    {
-		        targetQueryable = new WhereQueryable<TModel>(session, Target, Expression);
+		        targetQueryable = new WhereQueryable<TModel>(session, Target, Expression, JsonSettings);
 		    }
 
 			var query = targetQueryable.BuildQuery();

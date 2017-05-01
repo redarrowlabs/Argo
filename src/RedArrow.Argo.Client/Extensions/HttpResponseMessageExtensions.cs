@@ -18,7 +18,7 @@ namespace RedArrow.Argo.Client.Extensions
 
 		// deserializing from stream is more performant than loading a huge string into memory
 		// http://www.newtonsoft.com/json/help/html/Performance.htm
-		public static async Task<TModel> GetContentModel<TModel>(this HttpResponseMessage response)
+		public static async Task<TModel> GetContentModel<TModel>(this HttpResponseMessage response, JsonSerializerSettings settings)
 		{
 			using (var s = await response.Content.ReadAsStreamAsync())
 			using (var sr = new StreamReader(s))
@@ -28,7 +28,7 @@ namespace RedArrow.Argo.Client.Extensions
 			})
 			{
 				return JsonSerializer
-					.Create()
+					.Create(settings)
 					.Deserialize<TModel>(jtr);
 			}
 		}
