@@ -101,7 +101,8 @@ namespace RedArrow.Argo.Client.Tests.Collections.Generic
 			HttpMessageHandler mockHandler = null,
 			IHttpRequestBuilder requestBuilder = null,
 			ICacheProvider cacheProvider = null,
-			IModelRegistry modelRegistry = null)
+			IModelRegistry modelRegistry = null,
+            JsonSerializerSettings jsonSettings = null)
 		{
 			if (mockHandler == null)
 			{
@@ -112,7 +113,8 @@ namespace RedArrow.Argo.Client.Tests.Collections.Generic
 				() => new HttpClient(mockHandler),
 				requestBuilder ?? Mock.Of<IHttpRequestBuilder>(),
 				cacheProvider ?? Mock.Of<ICacheProvider>(),
-				modelRegistry ?? Mock.Of<IModelRegistry>());
+				modelRegistry ?? Mock.Of<IModelRegistry>(),
+                jsonSettings ?? new JsonSerializerSettings());
 		}
 	}
 }

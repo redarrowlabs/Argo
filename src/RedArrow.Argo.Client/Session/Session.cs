@@ -10,6 +10,7 @@ using System.Linq.Expressions;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using RedArrow.Argo.Attributes;
 using RedArrow.Argo.Client.Collections;
 using RedArrow.Argo.Client.Collections.Generic;
@@ -36,19 +37,23 @@ namespace RedArrow.Argo.Client.Session
 
 		internal IModelRegistry ModelRegistry { get; }
 
+        internal JsonSerializerSettings JsonSettings { get; }
+
 		public bool Disposed { get; set; }
 
 		internal Session(
 			Func<HttpClient> httpClientFactory,
 			IHttpRequestBuilder httpRequestBuilder,
 			ICacheProvider cache,
-			IModelRegistry modelRegistry)
+			IModelRegistry modelRegistry,
+            JsonSerializerSettings jsonSettings)
 		{
 			HttpClient = httpClientFactory();
 			HttpRequestBuilder = httpRequestBuilder;
 			Cache = cache;
 
 			ModelRegistry = modelRegistry;
+		    JsonSettings = jsonSettings;
 		}
 
 		#region ISession
@@ -183,7 +188,7 @@ namespace RedArrow.Argo.Client.Session
 			}
 			response.EnsureSuccessStatusCode();
 
-			var root = await response.GetContentModel<ResourceRootSingle>();
+			var root = await response.GetContentModel<ResourceRootSingle>(JsonSettings);
 			model = CreateResourceModel<TModel>(root.Data);
 			Cache.Update(id, model);
 			if (root.Included != null)
@@ -207,7 +212,7 @@ namespace RedArrow.Argo.Client.Session
 			response.EnsureSuccessStatusCode();
 
 			// TODO: perhaps use a 3rd ResourceRoot with JToken Data to determine if array was erroneously returned
-			var root = response.GetContentModel<ResourceRootSingle>().GetAwaiter().GetResult();
+			var root = response.GetContentModel<ResourceRootSingle>(JsonSettings).GetAwaiter().GetResult();
 
 			var rltn = root.Data;
 			if (rltn == null) return null;
@@ -269,7 +274,7 @@ namespace RedArrow.Argo.Client.Session
 		{
 			return new TypeQueryable<TModel>(
 				this,
-				new RemoteQueryProvider(this));
+				new RemoteQueryProvider(this, JsonSettings));
 		}
 		
 		public IQueryable<TRltn> CreateQuery<TParent, TRltn>(TParent model, Expression<Func<TParent, IEnumerable<TRltn>>> relationship)
@@ -291,7 +296,7 @@ namespace RedArrow.Argo.Client.Session
 				id,
 				rltnName,
 				this,
-				new RemoteQueryProvider(this));
+				new RemoteQueryProvider(this, JsonSettings));
 		}
 
 		public async Task<IEnumerable<TModel>> Query<TModel>(IQueryContext query)
@@ -312,7 +317,7 @@ namespace RedArrow.Argo.Client.Session
 			}
 			response.EnsureSuccessStatusCode();
 
-			var root = await response.GetContentModel<ResourceRootCollection>();
+			var root = await response.GetContentModel<ResourceRootCollection>(JsonSettings);
 
 			var createData = Task.WhenAll(root.Data.Select(x => Task.Run(() =>
 			{
@@ -532,7 +537,7 @@ namespace RedArrow.Argo.Client.Session
 			response.EnsureSuccessStatusCode();
 
 			// TODO: perhaps use a 3rd ResourceRoot with JToken Data to determine if object was erroneously returned
-			var root = response.GetContentModel<ResourceRootCollection>().GetAwaiter().GetResult();
+			var root = response.GetContentModel<ResourceRootCollection>(JsonSettings).GetAwaiter().GetResult();
 			var related = root.Data?.Select(x =>
 			{
 				var rltnModel = CreateResourceModel(x);

@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Linq.Expressions;
 using Moq;
+using Newtonsoft.Json;
 using Ploeh.AutoFixture.Xunit2;
 using RedArrow.Argo.Client.Linq;
 using RedArrow.Argo.Client.Linq.Queryables;
@@ -55,7 +56,7 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
 		    var results = new TypeQueryable<BasicModel>(
 					session.Object,
-				    new RemoteQueryProvider(session.Object))
+				    new RemoteQueryProvider(session.Object, new JsonSerializerSettings()))
 			    .OrderBy(x => x.PropA)
 			    .Take(take)
 			    .Skip(skip)

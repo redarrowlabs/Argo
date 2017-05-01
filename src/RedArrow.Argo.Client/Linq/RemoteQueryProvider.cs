@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Newtonsoft.Json;
 using RedArrow.Argo.Client.Linq.Executors;
 using RedArrow.Argo.Client.Linq.Queryables;
 using RedArrow.Argo.Client.Session;
@@ -11,10 +12,12 @@ namespace RedArrow.Argo.Client.Linq
     internal class RemoteQueryProvider : IQueryProvider
     {
         private IQuerySession Session { get; }
+        private JsonSerializerSettings JsonSettings { get; }
 
-        public RemoteQueryProvider(IQuerySession session)
+        public RemoteQueryProvider(IQuerySession session, JsonSerializerSettings jsonSettings)
         {
             Session = session;
+            JsonSettings = jsonSettings;
         }
 
         public IQueryable CreateQuery(Expression expression)
@@ -138,32 +141,32 @@ namespace RedArrow.Argo.Client.Linq
 			    case "First":
 			    {
 				    return (RemoteExecutor) GetExecutorCtor(typeof (SingularExecutor<>), targetType)
-					    .Invoke(new[] {target, predicate, SingularExecutorType.First, false});
+					    .Invoke(new[] {target, predicate, JsonSettings, SingularExecutorType.First, false});
 			    }
 			    case "FirstOrDefault":
 			    {
 				    return (RemoteExecutor) GetExecutorCtor(typeof (SingularExecutor<>), targetType)
-					    .Invoke(new[] {target, predicate, SingularExecutorType.First, true});
+					    .Invoke(new[] {target, predicate, JsonSettings, SingularExecutorType.First, true});
 			    }
 			    case "Single":
 			    {
 				    return (RemoteExecutor) GetExecutorCtor(typeof (SingularExecutor<>), targetType)
-					    .Invoke(new[] {target, predicate, SingularExecutorType.Single, false});
+					    .Invoke(new[] {target, predicate, JsonSettings, SingularExecutorType.Single, false});
 			    }
 			    case "SingleOrDefault":
 			    {
 				    return (RemoteExecutor) GetExecutorCtor(typeof (SingularExecutor<>), targetType)
-					    .Invoke(new[] {target, predicate, SingularExecutorType.Single, true});
+					    .Invoke(new[] {target, predicate, JsonSettings, SingularExecutorType.Single, true});
 			    }
 			    case "Last":
 			    {
 				    return (RemoteExecutor) GetExecutorCtor(typeof (SingularExecutor<>), targetType)
-					    .Invoke(new[] {target, predicate, SingularExecutorType.Last, false});
+					    .Invoke(new[] {target, predicate, JsonSettings, SingularExecutorType.Last, false});
 			    }
 			    case "LastOrDefault":
 			    {
 				    return (RemoteExecutor) GetExecutorCtor(typeof (SingularExecutor<>), targetType)
-					    .Invoke(new[] {target, predicate, SingularExecutorType.Last, true});
+					    .Invoke(new[] {target, predicate, JsonSettings, SingularExecutorType.Last, true});
 			    }
 			    default:
 			    {
@@ -179,7 +182,8 @@ namespace RedArrow.Argo.Client.Linq
             return new WhereQueryable<TModel>(
                 Session,
                 targetQueryable,
-                operand as Expression<Func<TModel, bool>>);
+                operand as Expression<Func<TModel, bool>>,
+                JsonSettings);
         }
 
 	    private RemoteQueryable<TModel> CreateOrderByQuery<TModel>(Expression target, Expression operand, bool isDesc)
