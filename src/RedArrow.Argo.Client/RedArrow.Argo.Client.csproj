@@ -53,6 +53,7 @@
     <Compile Include="Config\IModelConfigurator.cs" />
     <Compile Include="Config\IRemoteConfigurator.cs" />
     <Compile Include="Config\ModelScanner.cs" />
+    <Compile Include="Config\Model\MetaConfiguration.cs" />
     <Compile Include="Config\Model\AttributeConfiguration.cs" />
     <Compile Include="Config\Model\HasOneConfiguration.cs" />
     <Compile Include="Config\Model\RelationshipConfiguration.cs" />
@@ -61,6 +62,7 @@
     <Compile Include="Config\Pipeline\IHttpClientBuilder.cs" />
     <Compile Include="Config\Pipeline\HttpClientBuilder.cs" />
     <Compile Include="Config\SessionFactoryConfiguration.cs" />
+    <Compile Include="Exceptions\MetaNotRegisteredException.cs" />
     <Compile Include="Exceptions\AttributeNotRegisteredException.cs" />
     <Compile Include="Exceptions\ManagedModelCreationException.cs" />
     <Compile Include="Exceptions\ModelMapException.cs" />

@@ -160,6 +160,27 @@ namespace RedArrow.Argo.Client.Session.Registry
             return ret;
         }
 
+        public IEnumerable<MetaConfiguration> GetMetaConfigs<TModel>()
+        {
+            return GetMetaConfigs(typeof(TModel));
+        }
+
+        public IEnumerable<MetaConfiguration> GetMetaConfigs(Type modelType)
+        {
+            return GetModelConfig(modelType).MetaConfigs.Values;
+        }
+
+        public MetaConfiguration GetMetaConfig(Type modelType, string attrName)
+        {
+            MetaConfiguration ret;
+            if (!GetModelConfig(modelType).MetaConfigs.TryGetValue(attrName, out ret))
+            {
+                throw new MetaNotRegisteredException(attrName, modelType);
+            }
+
+            return ret;
+        }
+
         public JObject GetAttributeValues(object model)
         {
             if (model == null) return null;
@@ -322,5 +343,16 @@ namespace RedArrow.Argo.Client.Session.Registry
 
 		    return ret;
 		}
+
+        public IDictionary<string, JToken> GetMetaValues(object model)
+        {
+            if (model == null) return null;
+            return GetMetaConfigs(model.GetType())
+                .Select(x => new KeyValuePair<string, object>(x.MetaName, x.Property.GetValue(model)))
+                .Where(kvp => kvp.Value != null)
+                .ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => JToken.FromObject(kvp.Value));
+        }
     }
 }

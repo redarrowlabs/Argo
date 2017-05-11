@@ -45,6 +45,7 @@
     <Compile Include="Attributes\HasManyAttribute.cs" />
     <Compile Include="Attributes\HasOneAttribute.cs" />
     <Compile Include="Attributes\LoadStrategy.cs" />
+    <Compile Include="Attributes\MetaAttribute.cs" />
     <Compile Include="Attributes\UnmappedAttribute.cs" />
     <Compile Include="Model\IResourceIdentifier.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

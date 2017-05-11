@@ -35,10 +35,15 @@ namespace RedArrow.Argo.Client.Session.Registry
         IEnumerable<AttributeConfiguration> GetAttributeConfigs(Type modelType);
         AttributeConfiguration GetAttributeConfig(Type modelType, string attrName);
 
+        IEnumerable<MetaConfiguration> GetMetaConfigs<TModel>();
+        IEnumerable<MetaConfiguration> GetMetaConfigs(Type modelType);
+        MetaConfiguration GetMetaConfig(Type modelType, string attrName);
+
         JObject GetAttributeValues(object model);
 	    IDictionary<string, Relationship> GetRelationshipValues(object model);
+        IDictionary<string, JToken> GetMetaValues(object model);
 
-		IEnumerable<RelationshipConfiguration> GetHasOneConfigs<TModel>();
+        IEnumerable<RelationshipConfiguration> GetHasOneConfigs<TModel>();
 		IEnumerable<RelationshipConfiguration> GetHasOneConfigs(Type modelType);
         IEnumerable<RelationshipConfiguration> GetHasManyConfigs<TModel>();
         IEnumerable<RelationshipConfiguration> GetHasManyConfigs(Type modelType);

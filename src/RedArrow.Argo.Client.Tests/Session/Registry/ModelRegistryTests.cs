@@ -194,7 +194,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
         }
 
         [Fact]
-        public void GetIncludedMOdels__Given_NullHasManyReference__Then_ReturnModels()
+        public void GetIncludedModels__Given_NullHasManyReference__Then_ReturnModels()
         {
             var subject = CreateSubject(
                 typeof(CircularReferenceA),
@@ -275,7 +275,56 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
             Assert.Null(result);
         }
 
-	    [Fact]
+        [Theory, AutoData]
+        public void GetMetaValues__Given_Model__Then_ReturnAllMetaValues
+            (string expectedMeta1, int expectedMeta2, long expectedMeta3)
+        {
+            var subject = CreateSubject(typeof(TestGetModelMetaValues));
+
+            var model = new TestGetModelMetaValues
+            {
+                Meta1 = expectedMeta1,
+                Meta2 = expectedMeta2,
+                Meta3 = expectedMeta3
+            };
+
+            var result = subject.GetMetaValues(model);
+
+            Assert.Equal(expectedMeta1, result["meta1"].ToObject<string>());
+            Assert.Equal(expectedMeta2, result["meta-2"].ToObject<int>());
+            Assert.Equal(expectedMeta3, result["meta3"].ToObject<long>());
+        }
+
+        [Theory, AutoData]
+        public void GetMetaValues__Given_Model__When_NullValues__Then_ReturnNonNullMetaValues
+            (string expectedMeta1, long expectedMeta3)
+        {
+            var subject = CreateSubject(typeof(TestGetModelMetaValues));
+
+            var model = new TestGetModelMetaValues
+            {
+                Meta1 = expectedMeta1,
+                Meta3 = expectedMeta3
+            };
+
+            var result = subject.GetMetaValues(model);
+
+            Assert.Equal(expectedMeta1, result["meta1"].ToObject<string>());
+            Assert.False(result.ContainsKey("meta-2"));
+            Assert.Equal(expectedMeta3, result["meta3"].ToObject<long>());
+        }
+
+        [Fact]
+        public void GetMetaValues__Given_Model__When_ModelNull__Then_ReturnNull()
+        {
+            var subject = CreateSubject(typeof(TestGetModelMetaValues));
+
+            var result = subject.GetMetaValues(null);
+
+            Assert.Null(result);
+        }
+
+        [Fact]
 	    public void GetInclude__Given_ModelType__Then_ReturnStaticIncludeValue()
 	    {
 		    var subject = CreateSubject(typeof (CircularReferenceB));
