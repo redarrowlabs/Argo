@@ -29,8 +29,8 @@ namespace RedArrow.Argo.Client.Integration.Session
             {
                 using (var client = new HttpClient())
                 {
-                    client.BaseAddress = new Uri($"{Fixture.Host}/data/");
-                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken);
+                    client.BaseAddress = new Uri($"{IntegrationTestFixture.Host}/data/");
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", IntegrationTestFixture.AccessToken.Value);
                     client.DefaultRequestHeaders.Add("api-version", "2");
                     client.DefaultRequestHeaders.Add("Titan-Data-Segmentation-Key", "10000000-1000-0000-0000-000000000000");
 
@@ -60,8 +60,8 @@ namespace RedArrow.Argo.Client.Integration.Session
             // create the provider
             using (var client = new HttpClient())
             {
-                client.BaseAddress = new Uri($"{Fixture.Host}/data/");
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken);
+                client.BaseAddress = new Uri($"{IntegrationTestFixture.Host}/data/");
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", IntegrationTestFixture.AccessToken.Value);
                 client.DefaultRequestHeaders.Add("api-version", "2");
                 client.DefaultRequestHeaders.Add("Titan-Data-Segmentation-Key", "10000000-1000-0000-0000-000000000000");
 
@@ -122,8 +122,8 @@ namespace RedArrow.Argo.Client.Integration.Session
             // create the provider
             using (var client = new HttpClient())
             {
-                client.BaseAddress = new Uri($"{Fixture.Host}/data/");
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Fixture.AccessToken);
+                client.BaseAddress = new Uri($"{IntegrationTestFixture.Host}/data/");
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", IntegrationTestFixture.AccessToken.Value);
                 client.DefaultRequestHeaders.Add("api-version", "2");
                 client.DefaultRequestHeaders.Add("Titan-Data-Segmentation-Key", "10000000-1000-0000-0000-000000000000");
 
