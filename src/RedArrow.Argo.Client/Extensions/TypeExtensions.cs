@@ -1,9 +1,9 @@
-﻿using System;
+﻿using RedArrow.Argo.Attributes;
+using RedArrow.Argo.Client.Config.Model;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using RedArrow.Argo.Attributes;
-using RedArrow.Argo.Client.Config.Model;
 
 namespace RedArrow.Argo.Client.Extensions
 {
@@ -19,49 +19,49 @@ namespace RedArrow.Argo.Client.Extensions
                 .FirstOrDefault() ?? type.Name.Camelize();
         }
 
-		public static FieldInfo GetSessionField(this Type type)
-	    {
-		    return type.GetTypeInfo()
-			    .DeclaredFields
-			    .Single(field => field.Name == "__argo__generated_session");
-	    }
+        public static FieldInfo GetSessionField(this Type type)
+        {
+            return type.GetTypeInfo()
+                .DeclaredFields
+                .Single(field => field.Name == "__argo__generated_session");
+        }
 
-		public static FieldInfo GetIncludeField(this Type type)
-	    {
-		    return type.GetTypeInfo()
-			    .DeclaredFields
-			    .Single(field => field.Name == "__argo__generated_include");
-	    }
+        public static FieldInfo GetIncludeField(this Type type)
+        {
+            return type.GetTypeInfo()
+                .DeclaredFields
+                .Single(field => field.Name == "__argo__generated_include");
+        }
 
-		public static PropertyInfo GetSessionManagedProperty(this Type type)
+        public static PropertyInfo GetSessionManagedProperty(this Type type)
         {
             return type.GetTypeInfo()
                 .DeclaredProperties
                 .Single(prop => prop.Name == "__argo__generated_SessionManaged");
         }
 
-		public static PropertyInfo GetModelResourceProperty(this Type type)
+        public static PropertyInfo GetModelResourceProperty(this Type type)
         {
             return type.GetTypeInfo()
                 .DeclaredProperties
                 .Single(prop => prop.Name == "__argo__generated_Resource");
         }
 
-		public static PropertyInfo GetModelPatchProperty(this Type type)
+        public static PropertyInfo GetModelPatchProperty(this Type type)
         {
             return type.GetTypeInfo()
                 .DeclaredProperties
                 .Single(prop => prop.Name == "__argo__generated_Patch");
         }
 
-		public static PropertyInfo GetModelIdProperty(this Type type)
+        public static PropertyInfo GetModelIdProperty(this Type type)
         {
             return type.GetTypeInfo()
                 .DeclaredProperties
                 .Single(prop => prop.IsDefined(typeof(IdAttribute)));
         }
 
-		public static IDictionary<string, AttributeConfiguration> GetModelAttributeConfigurations(this Type type)
+        public static IDictionary<string, AttributeConfiguration> GetModelAttributeConfigurations(this Type type)
         {
             return type.GetTypeInfo()
                 .DeclaredProperties
@@ -72,31 +72,42 @@ namespace RedArrow.Argo.Client.Extensions
                     attrConfig => attrConfig);
         }
 
-		public static IDictionary<string, RelationshipConfiguration> GetModelHasOneConfigurations(this Type type)
+        public static IDictionary<string, MetaConfiguration> GetModelMetaConfigurations(this Type type)
+        {
+            return type.GetTypeInfo()
+                .DeclaredProperties
+                .Where(prop => prop.IsDefined(typeof(MetaAttribute)))
+                .Select(prop => new MetaConfiguration(prop))
+                .ToDictionary(
+                    metaConfig => metaConfig.MetaName,
+                    metaConfig => metaConfig);
+        }
+
+        public static IDictionary<string, RelationshipConfiguration> GetModelHasOneConfigurations(this Type type)
         {
             return type.GetTypeInfo()
                 .DeclaredProperties
                 .Where(prop => prop.IsDefined(typeof(HasOneAttribute)))
                 .Select(prop => new HasOneConfiguration(prop))
-				.Cast<RelationshipConfiguration>()
+                .Cast<RelationshipConfiguration>()
                 .ToDictionary(
                     has1Cfg => has1Cfg.RelationshipName,
                     has1Cfg => has1Cfg);
         }
 
-		public static IDictionary<string, RelationshipConfiguration> GetModelHasManyConfigurations(this Type type)
+        public static IDictionary<string, RelationshipConfiguration> GetModelHasManyConfigurations(this Type type)
         {
             return type.GetTypeInfo()
                 .DeclaredProperties
                 .Where(prop => prop.IsDefined(typeof(HasManyAttribute)))
                 .Select(prop => new HasManyConfiguration(prop))
-				.Cast<RelationshipConfiguration>()
-				.ToDictionary(
+                .Cast<RelationshipConfiguration>()
+                .ToDictionary(
                     hasMCfg => hasMCfg.RelationshipName,
                     hasMCfg => hasMCfg);
         }
 
-		public static PropertyInfo GetUnmappedAttributesProperty(this Type type)
+        public static PropertyInfo GetUnmappedAttributesProperty(this Type type)
         {
             return type.GetTypeInfo()
                 .DeclaredProperties

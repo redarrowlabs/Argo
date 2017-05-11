@@ -127,6 +127,7 @@
     <Compile Include="Session\IModelSessionTests.cs" />
     <Compile Include="Session\IQuerySessionTests.cs" />
     <Compile Include="Session\Models\TestCustomWovenModel.cs" />
+    <Compile Include="Session\Models\TestGetModelMetaValues.cs" />
     <Compile Include="Session\Models\TestGetModelAttributeValues.cs" />
     <Compile Include="Session\Models\TestWovenModel.cs" />
     <Compile Include="Session\Registry\ModelRegistryTests.cs" />

@@ -13,6 +13,7 @@
             public static readonly string Property = $"{Package}.PropertyAttribute";
 			public static readonly string HasOne = $"{Package}.HasOneAttribute";
 			public static readonly string HasMany = $"{Package}.HasManyAttribute";
-		}
+            public static readonly string Meta = $"{Package}.MetaAttribute";
+        }
     }
 }

@@ -56,7 +56,7 @@ namespace RedArrow.Argo.Client.Integration.Linq.Queryables
         }
 
 		[Theory, AutoData, Trait("Category", "Integration")]
-		public async Task OrderByDsecendingSimple(Guid[] ids, string[] props)
+		public async Task OrderByDescendingSimple(Guid[] ids, string[] props)
 		{
 			// delete any pre-existing garbage
 			await DeleteAll<BasicModel>();

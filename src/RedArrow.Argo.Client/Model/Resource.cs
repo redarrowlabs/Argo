@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RedArrow.Argo.Client.Extensions;
+using System.Collections.Generic;
 
 namespace RedArrow.Argo.Client.Model
 {
@@ -16,18 +16,21 @@ namespace RedArrow.Argo.Client.Model
         [JsonProperty("links", NullValueHandling = NullValueHandling.Ignore)]
         public IDictionary<string, JToken> Links { get; set; }
 
-        internal Resource(){ }
+        internal Resource()
+        {
+        }
 
         internal static Resource FromJson(string json)
         {
             return JsonConvert.DeserializeObject<Resource>(json);
         }
 
-	    public void Patch(Resource patch)
-	    {
-		    GetAttributes().Merge(patch.Attributes);
-		    patch.Relationships?.Each(kvp => GetRelationships()[kvp.Key] = kvp.Value);
-	    }
+        public void Patch(Resource patch)
+        {
+            GetAttributes().Merge(patch.Attributes);
+            patch.Relationships?.Each(kvp => GetRelationships()[kvp.Key] = kvp.Value);
+            patch.Meta?.Each(kvp => GetMeta()[kvp.Key] = kvp.Value);
+        }
 
         public JObject GetAttributes()
         {
@@ -48,6 +51,17 @@ namespace RedArrow.Argo.Client.Model
         {
             return Links ?? (Links = new Dictionary<string, JToken>());
         }
+
+        public IDictionary<string, JToken> GetMeta()
+        {
+            return Meta ?? (Meta = new Dictionary<string, JToken>());
+        }
+
+        public void SetMeta(string metaName, object value)
+        {
+            GetMeta()[metaName] = JToken.FromObject(value);
+        }
+
     }
 
     public static class ResourceExtensions

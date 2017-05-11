@@ -1,6 +1,5 @@
-﻿using System;
-using Newtonsoft.Json.Linq;
-using RedArrow.Argo.Attributes;
+﻿using RedArrow.Argo.Attributes;
+using System;
 
 namespace WovenByFody
 {
@@ -27,5 +26,11 @@ namespace WovenByFody
 
         [HasOne(LoadStrategy.Eager)]
         public Company Insurance { get; set; }
+
+        [Meta]
+        public DateTime Created { get; set; }
+
+        [Meta]
+        public string Version { get; set; }
     }
 }

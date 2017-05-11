@@ -1,21 +1,34 @@
-﻿using System;
-using System.Net.Http;
-using System.Text;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using RedArrow.Argo.TestUtils.XUnitSink;
 using Serilog;
+using System;
+using System.Net.Http;
+using System.Text;
 using Xunit.Abstractions;
 
 namespace RedArrow.Argo.TestUtils
 {
     public class IntegrationTestFixture : IDisposable
     {
-        public string Host = "https://test.redarrow.io/api";
-        public string AccessToken { get; }
+        public static Lazy<string> AccessToken { get; } = new Lazy<string>(GetAccessToken);
 
-        public IntegrationTestFixture()
+        public static string Host { get; } = "https://test.redarrow.io/api";
+
+        public void ConfigureLogging(ITestOutputHelper outputHelper)
         {
-            using (var authClient = new HttpClient { BaseAddress = new Uri($"{Host}/security/")})
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.XunitTestOutput(outputHelper)
+                .CreateLogger();
+        }
+
+        public void Dispose()
+        {
+        }
+
+        private static string GetAccessToken()
+        {
+            using (var authClient = new HttpClient { BaseAddress = new Uri($"{Host}/security/") })
             {
                 var reqBody = new StringContent(JsonConvert.SerializeObject(new
                 {
@@ -30,20 +43,8 @@ namespace RedArrow.Argo.TestUtils
 
                 var responseContentStr = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                 dynamic resContent = JsonConvert.DeserializeObject(responseContentStr);
-                AccessToken = resContent.accessToken;
+                return resContent.accessToken;
             }
-        }
-
-        public void ConfigureLogging(ITestOutputHelper outputHelper)
-        {
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .WriteTo.XunitTestOutput(outputHelper)
-                .CreateLogger();
-        }
-
-        public void Dispose()
-        {
         }
     }
 }

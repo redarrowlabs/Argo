@@ -9,6 +9,8 @@ namespace RedArrow.Argo.Session
         Guid GetId<TModel>(TModel model);
         TAttr GetAttribute<TModel, TAttr>(TModel model, string attrName);
         void SetAttribute<TModel, TAttr>(TModel model, string attrName, TAttr value);
+        TAttr GetMeta<TModel, TAttr>(TModel model, string metaName);
+        void SetMeta<TModel, TAttr>(TModel model, string metaName, TAttr value);
         TRltn GetReference<TModel, TRltn>(TModel model, string attrName);
         void SetReference<TModel, TRltn>(TModel model, string attrName, TRltn value);
         IEnumerable<TElmnt> GetGenericEnumerable<TModel, TElmnt>(TModel model, string rltnName);

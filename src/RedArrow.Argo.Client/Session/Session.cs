@@ -362,7 +362,31 @@ namespace RedArrow.Argo.Client.Session
 			ModelRegistry.GetOrCreatePatch(model).SetAttribute(attrName, value);
 		}
 
-		public TRltn GetReference<TModel, TRltn>(TModel model, string rltnName)
+        public TAttr GetMeta<TModel, TAttr>(TModel model, string metaName)
+        {
+            ThrowIfDisposed();
+
+            // NOTE: GetMeta is only used by model ctor. we can safely check the resource and ignore the patch
+            JToken attr;
+            var attributes = ModelRegistry.GetResource(model).Meta;
+            if (attributes == null || !attributes.TryGetValue(metaName, out attr))
+            {
+                // the attrName was not found in the resource
+                return default(TAttr);
+            }
+
+            // if we make it here, 'attr' has been set
+            return attr.ToObject<TAttr>();
+        }
+
+        public void SetMeta<TModel, TAttr>(TModel model, string metaName, TAttr value)
+        {
+            ThrowIfDisposed();
+
+            ModelRegistry.GetOrCreatePatch(model).SetMeta(metaName, value);
+        }
+
+        public TRltn GetReference<TModel, TRltn>(TModel model, string rltnName)
 		{
 			ThrowIfDisposed();
 
@@ -537,9 +561,10 @@ namespace RedArrow.Argo.Client.Session
 
 			JObject attrs = null;
 			IDictionary<string, Relationship> rltns = null;
+            IDictionary<string, JToken> meta = null;
 
-			// attributes
-			var modelAttributes = ModelRegistry.GetAttributeValues(model);
+            // attributes
+            var modelAttributes = ModelRegistry.GetAttributeValues(model);
 			if (modelAttributes != null)
 			{
 				attrs = modelAttributes;
@@ -553,12 +578,19 @@ namespace RedArrow.Argo.Client.Session
 				rltns = relationships;
 			}
 
+            var modelMeta = ModelRegistry.GetMetaValues(model);
+            if (!modelMeta.IsNullOrEmpty())
+            {
+                meta = modelMeta;
+            }
+
 			return new Resource
 			{
 				Id = ModelRegistry.GetId(model),
 				Type = resourceType,
 				Attributes = attrs,
-				Relationships = rltns
+				Relationships = rltns,
+                Meta = meta
 			};
 		}
 
