@@ -15,6 +15,7 @@ namespace RedArrow.Argo.Client.Session.Registry
         Type GetModelType(string resourceType);
 
 	    Resource GetResource(object model);
+        void SetResource(object model, Resource resource);
         Resource GetPatch(object model);
         void SetPatch(object model, Resource patch);
 	    Resource GetOrCreatePatch(object model);

@@ -18,5 +18,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)ObjectWithCollectionsAndComplexTypesAsProperties.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Patient.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Provider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SystemMetadata.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Widget.cs" />
   </ItemGroup>
 </Project>
