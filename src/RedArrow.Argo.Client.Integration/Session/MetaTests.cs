@@ -62,7 +62,7 @@ namespace RedArrow.Argo.Client.Integration.Session
                 patient = await session.Create(patient);
 
                 Assert.NotEqual(Guid.Empty, patient.Id);
-                Assert.Equal(initialCreated, patient.Created);
+                Assert.Equal(initialCreated, patient.Created.ToUniversalTime());
                 Assert.Equal(initialVersion, patient.Version);
 
                 crossSessionId = patient.Id;
@@ -77,7 +77,7 @@ namespace RedArrow.Argo.Client.Integration.Session
                 var patient = await session.Get<Patient>(crossSessionId);
 
                 Assert.Equal(crossSessionId, patient.Id);
-                Assert.Equal(initialCreated.ToLocalTime(), patient.Created);
+                Assert.Equal(initialCreated, patient.Created.ToUniversalTime());
                 Assert.Equal(initialVersion, patient.Version);
 
                 patient.Version = updatedVersion;
@@ -85,7 +85,7 @@ namespace RedArrow.Argo.Client.Integration.Session
                 Assert.Equal(updatedVersion, patient.Version);
 
                 await session.Update(patient);
-                Assert.Equal(initialCreated.ToLocalTime(), patient.Created);
+                Assert.Equal(initialCreated, patient.Created.ToUniversalTime());
                 Assert.Equal(updatedVersion, patient.Version);
 
                 var patient2 = await session.Get<Patient>(crossSessionId);
@@ -98,13 +98,41 @@ namespace RedArrow.Argo.Client.Integration.Session
                 var patient = await session.Get<Patient>(crossSessionId);
 
                 Assert.Equal(crossSessionId, patient.Id);
-                Assert.Equal(initialCreated.ToLocalTime(), patient.Created);
+                Assert.Equal(initialCreated, patient.Created.ToUniversalTime());
                 Assert.Equal(updatedVersion, patient.Version);
             }
             // cleanup
             using (var session = SessionFactory.CreateSession())
             {
                 await session.Delete<Patient>(crossSessionId);
+            }
+        }
+
+        [Fact, Trait("Category", "Integration")]
+        public async Task EnsureUpdateOfExistingWidgetOnCreate()
+        {
+            Guid id;
+            using (var session = SessionFactory.CreateSession())
+            {
+                var widget = new Widget
+                {
+                    Sku = "abc123"
+                };
+
+                widget = await session.Create(widget);
+
+                Assert.NotEqual(Guid.Empty, widget.Id);
+
+                id = widget.Id;
+
+                Assert.NotNull(widget.Metadata);
+                Assert.NotEqual(Guid.Empty, widget.Metadata.ETag);
+            }
+
+            // cleanup
+            using (var session = SessionFactory.CreateSession())
+            {
+                await session.Delete<Widget>(id);
             }
         }
     }

@@ -107,9 +107,6 @@ namespace RedArrow.Argo.Client.Session
 
 			var rootResource = resourceIndex[modelId];
 			var includes = resourceIndex.Values.Where(x => x.Id != modelId).ToArray();
-
-			var request = HttpRequestBuilder.CreateResource(rootResource, includes);
-
 			if (Log.IsDebugEnabled())
 			{
 				Log.Debug(() => $"preparing to POST {rootResource.Type}:{{{rootResource.Id}}}");
@@ -119,8 +116,14 @@ namespace RedArrow.Argo.Client.Session
 				}
 			}
 
-			var response = await HttpClient.SendAsync(request);
+            var request = HttpRequestBuilder.CreateResource(rootResource, includes);
+            var response = await HttpClient.SendAsync(request);
 			response.EnsureSuccessStatusCode();
+            if (response.StatusCode == HttpStatusCode.Created)
+            {
+                var root = await response.GetContentModel<ResourceRootSingle>();
+                resourceIndex[modelId] = root.Data;
+            }
 
 			// create and cache includes
 			await Task.WhenAll(resourceIndex.Values.Select(x => Task.Run(() =>
@@ -128,6 +131,7 @@ namespace RedArrow.Argo.Client.Session
 				var m = CreateResourceModel(x);
 				Cache.Update(x.Id, m);
 			})));
+
 			return Cache.Retrieve<TModel>(modelId);
 		}
 
