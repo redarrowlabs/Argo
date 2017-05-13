@@ -12,9 +12,9 @@ namespace RedArrow.Argo
         private void WeaveHasManys(ModelWeavingContext context)
         {
             if (_session_GetGenericEnumerable == null
-             || _session_SetGenericEnumerable == null
-             || _session_GetGenericCollection == null
-             || _session_SetGenericCollection == null)
+                || _session_SetGenericEnumerable == null
+                || _session_GetGenericCollection == null
+                || _session_SetGenericCollection == null)
             {
                 throw new Exception("Argo relationship weaving failed unexpectedly");
             }
@@ -56,7 +56,7 @@ namespace RedArrow.Argo
                 var rltnName = propertyDef.JsonApiName(TypeSystem, Constants.Attributes.HasMany);
 
                 // find property generic element type
-                var elementTypeDef = ((GenericInstanceType)propertyTypeRef).GenericArguments.First().Resolve();
+                var elementTypeDef = ((GenericInstanceType) propertyTypeRef).GenericArguments.First().Resolve();
 
                 LogInfo($"\tWeaving {propertyDef} => {rltnName}");
 

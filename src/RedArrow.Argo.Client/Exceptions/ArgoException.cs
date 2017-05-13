@@ -19,7 +19,12 @@ namespace RedArrow.Argo.Client.Exceptions
             Type = type;
         }
 
-        public ArgoException(string message, Exception innerException, Type type, Guid? id = null) : base(message, innerException)
+        public ArgoException(
+            string message,
+            Exception innerException,
+            Type type,
+            Guid? id = null) :
+            base(message, innerException)
         {
             Id = id;
             Type = type;

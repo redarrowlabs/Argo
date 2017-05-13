@@ -51,7 +51,7 @@ namespace RedArrow.Argo.Client.Integration.Linq.Queryables
             using (var session = SessionFactory.CreateSession())
             {
                 await Task.WhenAll(props
-                    .Select((x, i) => session.Create(new AllPropertyTypes { StringProperty = props[i] }))
+                    .Select((x, i) => session.Create(new AllPropertyTypes {StringProperty = props[i]}))
                     .ToArray());
             }
 
@@ -78,7 +78,7 @@ namespace RedArrow.Argo.Client.Integration.Linq.Queryables
             using (var session = SessionFactory.CreateSession())
             {
                 await Task.WhenAll(props
-                    .Select((x, i) => session.Create(new AllPropertyTypes { StringProperty = props[i] }))
+                    .Select((x, i) => session.Create(new AllPropertyTypes {StringProperty = props[i]}))
                     .ToArray());
             }
 
@@ -105,7 +105,7 @@ namespace RedArrow.Argo.Client.Integration.Linq.Queryables
             using (var session = SessionFactory.CreateSession())
             {
                 await Task.WhenAll(props
-                    .Select((x, i) => session.Create(new AllPropertyTypes { StringProperty = props[i] }))
+                    .Select((x, i) => session.Create(new AllPropertyTypes {StringProperty = props[i]}))
                     .ToArray());
             }
 
@@ -132,7 +132,7 @@ namespace RedArrow.Argo.Client.Integration.Linq.Queryables
             using (var session = SessionFactory.CreateSession())
             {
                 await Task.WhenAll(props
-                    .Select((x, i) => session.Create(new AllPropertyTypes { StringProperty = props[i] }))
+                    .Select((x, i) => session.Create(new AllPropertyTypes {StringProperty = props[i]}))
                     .ToArray());
             }
 

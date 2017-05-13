@@ -16,13 +16,16 @@ namespace RedArrow.Argo.Extensions
                 ?.Operand as FieldReference;
         }
 
-        public static string JsonApiName(this PropertyDefinition propertyDef, TypeSystem typeSystem, string customAttrFullName)
+        public static string JsonApiName(
+            this PropertyDefinition propertyDef,
+            TypeSystem typeSystem,
+            string customAttrFullName)
         {
             var propAttr = propertyDef.CustomAttributes.GetAttribute(customAttrFullName);
             return propAttr.ConstructorArguments
-                .Where(x => x.Type == typeSystem.String)
-                .Select(x => x.Value as string)
-                .SingleOrDefault() ?? propertyDef.Name.Camelize();
+                       .Where(x => x.Type == typeSystem.String)
+                       .Select(x => x.Value as string)
+                       .SingleOrDefault() ?? propertyDef.Name.Camelize();
         }
     }
 }

@@ -28,7 +28,7 @@ namespace RedArrow.Argo.Client.Linq.Queryables
 
             var query = Target.BuildQuery();
 
-            query.PageLimit = (int)cExpression.Value;
+            query.PageLimit = (int) cExpression.Value;
 
             return query;
         }

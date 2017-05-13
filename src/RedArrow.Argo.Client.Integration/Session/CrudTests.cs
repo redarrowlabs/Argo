@@ -62,7 +62,7 @@ namespace RedArrow.Argo.Client.Integration.Session
             var initialLastName = "Achey";
 
             var updatedLastName = "Bull";
-			
+
             Guid crossSessionId;
 
             using (var session = SessionFactory.CreateSession())

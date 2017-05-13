@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Newtonsoft.Json;
 using RedArrow.Argo.Attributes;
 using RedArrow.Argo.Client.Config.Model;
 using RedArrow.Argo.Client.Extensions;

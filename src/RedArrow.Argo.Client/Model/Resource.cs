@@ -61,7 +61,6 @@ namespace RedArrow.Argo.Client.Model
         {
             GetMeta()[metaName] = JToken.FromObject(value);
         }
-
     }
 
     public static class ResourceExtensions

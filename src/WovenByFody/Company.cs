@@ -4,7 +4,6 @@ using RedArrow.Argo.Attributes;
 namespace WovenByFody
 {
     [Model("integration-test-company")]
-
     public class Company
     {
         [Id]

@@ -7,13 +7,13 @@ namespace RedArrow.Argo.Client.Tests.Query
 {
     public class QueryContextTests
     {
-	    [Fact]
-	    public void Ctor__Given_ModelType__Then_BasPathEqualsResourceType()
-	    {
-		    var subject = new QueryContext<BasicModel>();
+        [Fact]
+        public void Ctor__Given_ModelType__Then_BasPathEqualsResourceType()
+        {
+            var subject = new QueryContext<BasicModel>();
 
-			Assert.Equal("basicModel", subject.BasePath);
-	    }
+            Assert.Equal("basicModel", subject.BasePath);
+        }
 
         [Theory, AutoData]
         public void AppendSort__Given_Sort__Then_BuildCsv
@@ -86,7 +86,7 @@ namespace RedArrow.Argo.Client.Tests.Query
 
             subject.AppendFilter(resourceTypeA, filterA);
             subject.AppendFilter(resourceTypeA, filterB);
-            
+
             subject.AppendFilter(resourceTypeB, filterB);
             subject.AppendFilter(resourceTypeB, filterA);
 
@@ -108,7 +108,7 @@ namespace RedArrow.Argo.Client.Tests.Query
         [InlineData("resourceType", "")]
         [InlineData("resourceType", "\t")]
         public void AppendFitler__Given_NullOrWhitespaceFilter__Then_Return
-			(string resourceType, string filter)
+            (string resourceType, string filter)
         {
             var subject = new QueryContext<BasicModel>();
 
@@ -125,7 +125,7 @@ namespace RedArrow.Argo.Client.Tests.Query
         [InlineData("")]
         [InlineData("\t")]
         public void AppendFitler__Given_NullOrWhitespaceResourceType__Then_Return
-			(string resourceType)
+            (string resourceType)
         {
             var subject = new QueryContext<BasicModel>();
 

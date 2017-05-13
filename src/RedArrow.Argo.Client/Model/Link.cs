@@ -13,6 +13,8 @@ namespace RedArrow.Argo.Client.Model
         [JsonProperty("meta", NullValueHandling = NullValueHandling.Ignore)]
         public IDictionary<string, JToken> Meta { get; set; }
 
-        internal Link() { }
+        internal Link()
+        {
+        }
     }
 }

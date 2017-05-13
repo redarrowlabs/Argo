@@ -4,7 +4,7 @@ namespace RedArrow.Argo.Client.Query
 {
     public interface IQueryContext
     {
-		string BasePath { get; }
+        string BasePath { get; }
 
         string Sort { get; }
 
@@ -16,7 +16,7 @@ namespace RedArrow.Argo.Client.Query
         IDictionary<string, string> Filters { get; }
         void AppendSort(string sort);
         void AppendFilter(string resourceType, string filter);
-		
-	    string BuildPath();
+
+        string BuildPath();
     }
 }

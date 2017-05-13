@@ -14,10 +14,10 @@ namespace RedArrow.Argo.Client.Config.Model
         {
             Property = property;
             MetaName = Property.CustomAttributes
-                .Single(a => a.AttributeType == typeof(MetaAttribute))
-                .ConstructorArguments
-                .Select(arg => arg.Value as string)
-                .FirstOrDefault() ?? Property.Name.Camelize();
+                           .Single(a => a.AttributeType == typeof(MetaAttribute))
+                           .ConstructorArguments
+                           .Select(arg => arg.Value as string)
+                           .FirstOrDefault() ?? Property.Name.Camelize();
         }
     }
 }

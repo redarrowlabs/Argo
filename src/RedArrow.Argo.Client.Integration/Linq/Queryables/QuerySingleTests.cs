@@ -9,35 +9,36 @@ using Xunit.Abstractions;
 
 namespace RedArrow.Argo.Client.Integration.Linq.Queryables
 {
-	public class QuerySingleTests : IntegrationTest
-	{
-		public QuerySingleTests(IntegrationTestFixture fixture, ITestOutputHelper outputHelper) :
-			base(fixture, outputHelper)
-		{
-		}
+    public class QuerySingleTests : IntegrationTest
+    {
+        public QuerySingleTests(IntegrationTestFixture fixture, ITestOutputHelper outputHelper) :
+            base(fixture, outputHelper)
+        {
+        }
 
-		[Theory, AutoData, Trait("Category", "Integration")]
-		public async Task QueryFirst__When_Results__Then_ReturnFirst(Guid[] ids)
-		{
-			// delete any pre-existing garbage
-			await DeleteAll<BasicModel>();
+        [Theory, AutoData, Trait("Category", "Integration")]
+        public async Task QueryFirst__When_Results__Then_ReturnFirst(Guid[] ids)
+        {
+            // delete any pre-existing garbage
+            await DeleteAll<BasicModel>();
 
-			using (var session = SessionFactory.CreateSession())
-			{
-				await Task.WhenAll(ids.Select((t, i) => session.Create(new BasicModel
-				{
-					Id = t
-				})).ToArray());
-			}
+            using (var session = SessionFactory.CreateSession())
+            {
+                await Task.WhenAll(ids.Select((t, i) => session.Create(new BasicModel
+                    {
+                        Id = t
+                    }))
+                    .ToArray());
+            }
 
-			using (var session = SessionFactory.CreateSession())
-			{
-				var result = session.CreateQuery<BasicModel>().First();
+            using (var session = SessionFactory.CreateSession())
+            {
+                var result = session.CreateQuery<BasicModel>().First();
 
-				Assert.NotNull(result);
+                Assert.NotNull(result);
             }
 
             await DeleteAll<BasicModel>();
         }
-	}
+    }
 }

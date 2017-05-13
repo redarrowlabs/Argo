@@ -15,7 +15,7 @@ namespace RedArrow.Argo
         {
             context.PatchProperty = AddAutoProperty("__argo__generated_Patch", context);
         }
-        
+
         private PropertyDefinition AddAutoProperty(string propertyName, ModelWeavingContext context)
         {
             var backingField = new FieldDefinition(
@@ -25,9 +25,12 @@ namespace RedArrow.Argo
             backingField.CustomAttributes.Add(new CustomAttribute(context.ImportReference(_compilerGeneratedAttribute)));
             backingField.CustomAttributes.Add(new CustomAttribute(context.ImportReference(_debuggerBrowsableAttribute))
             {
-                ConstructorArguments = { new CustomAttributeArgument(
-                    context.ImportReference(_debuggerBrowsableStateTypeDef),
-                    DebuggerBrowsableState.Collapsed) }
+                ConstructorArguments =
+                {
+                    new CustomAttributeArgument(
+                        context.ImportReference(_debuggerBrowsableStateTypeDef),
+                        DebuggerBrowsableState.Collapsed)
+                }
             });
 
             var getter = new MethodDefinition(
@@ -49,7 +52,13 @@ namespace RedArrow.Argo
                 context.ImportReference(TypeSystem.Void))
             {
                 SemanticsAttributes = MethodSemanticsAttributes.Setter,
-                Parameters = { new ParameterDefinition("value", ParameterAttributes.None, context.ImportReference(_resourceIdentifierTypeDef)) }
+                Parameters =
+                {
+                    new ParameterDefinition(
+                        "value",
+                        ParameterAttributes.None,
+                        context.ImportReference(_resourceIdentifierTypeDef))
+                }
             };
 
             var setterProc = setter.Body.GetILProcessor();
@@ -88,7 +97,7 @@ namespace RedArrow.Argo
             };
 
             var proc = getter.Body.GetILProcessor();
-            
+
             proc.Body.Variables.Add(new VariableDefinition(context.ImportReference(typeof(bool))));
 
             var load0 = proc.Create(OpCodes.Ldc_I4_0);
@@ -126,7 +135,7 @@ namespace RedArrow.Argo
             {
                 GetMethod = getter
             };
-            
+
             context.Methods.Add(getter);
             context.Properties.Add(context.SessionManagedProperty);
         }

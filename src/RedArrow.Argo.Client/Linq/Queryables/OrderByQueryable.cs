@@ -26,7 +26,7 @@ namespace RedArrow.Argo.Client.Linq.Queryables
         public override IQueryContext BuildQuery()
         {
             var mExpression = Comparable?.Body as MemberExpression;
-            if(!(mExpression?.Expression is ParameterExpression)) throw new NotSupportedException();
+            if (!(mExpression?.Expression is ParameterExpression)) throw new NotSupportedException();
 
             var query = Target.BuildQuery();
 

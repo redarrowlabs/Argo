@@ -28,7 +28,7 @@ namespace RedArrow.Argo
         private MethodDefinition _session_SetGenericEnumerable;
         private MethodDefinition _session_GetGenericCollection;
         private MethodDefinition _session_SetGenericCollection;
-        
+
         private int _stringComparison_ordinal;
         private MethodDefinition _string_equals;
         private TypeDefinition _equalityComparerTypeDef;
@@ -49,7 +49,7 @@ namespace RedArrow.Argo
                 .ImportReference(typeof(CompilerGeneratedAttribute).GetConstructor(new Type[0]))
                 .Resolve();
             _debuggerBrowsableAttribute = argoAssemblyDef.MainModule
-                .ImportReference(typeof(DebuggerBrowsableAttribute).GetConstructor(new [] {typeof(DebuggerBrowsableState) }))
+                .ImportReference(typeof(DebuggerBrowsableAttribute).GetConstructor(new[] {typeof(DebuggerBrowsableState)}))
                 .Resolve();
             _debuggerBrowsableStateTypeDef = argoAssemblyDef.MainModule
                 .ImportReference(typeof(DebuggerBrowsableState))
@@ -80,7 +80,7 @@ namespace RedArrow.Argo
             _session_SetGenericCollection = _sessionTypeDef
                 .Methods
                 .Single(x => x.Name == "SetGenericCollection");
-            
+
             _string_equals = ModuleDefinition
                 .TypeSystem
                 .String
@@ -93,7 +93,7 @@ namespace RedArrow.Argo
                             x.Parameters[1].ParameterType.Name == "String" &&
                             x.Parameters[2].ParameterType.Name == "StringComparison");
 
-            _stringComparison_ordinal = (int)argoAssemblyDef.MainModule
+            _stringComparison_ordinal = (int) argoAssemblyDef.MainModule
                 .ImportReference(typeof(StringComparison))
                 .Resolve()
                 .Fields

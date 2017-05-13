@@ -14,11 +14,8 @@ namespace RedArrow.Argo.TestUtils.XUnitSink
 
         public XUnitTestOutputSink(ITestOutputHelper testOutputHelper, ITextFormatter textFormatter)
         {
-            if (testOutputHelper == null) throw new ArgumentNullException("testOutputHelper");
-            if (textFormatter == null) throw new ArgumentNullException("textFormatter");
-
-            _output = testOutputHelper;
-            _textFormatter = textFormatter;
+            _output = testOutputHelper ?? throw new ArgumentNullException("testOutputHelper");
+            _textFormatter = textFormatter ?? throw new ArgumentNullException("textFormatter");
         }
 
         public void Emit(LogEvent logEvent)

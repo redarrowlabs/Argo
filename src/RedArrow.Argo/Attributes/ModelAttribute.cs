@@ -2,8 +2,8 @@
 
 namespace RedArrow.Argo.Attributes
 {
-	[AttributeUsage(AttributeTargets.Class)]
-	public class ModelAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Class)]
+    public class ModelAttribute : Attribute
     {
         public ModelAttribute()
         {

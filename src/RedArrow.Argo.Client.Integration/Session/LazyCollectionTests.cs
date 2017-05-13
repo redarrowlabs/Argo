@@ -30,9 +30,11 @@ namespace RedArrow.Argo.Client.Integration.Session
                 using (var client = new HttpClient())
                 {
                     client.BaseAddress = new Uri($"{IntegrationTestFixture.Host}/data/");
-                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", IntegrationTestFixture.AccessToken.Value);
+                    client.DefaultRequestHeaders.Authorization =
+                        new AuthenticationHeaderValue("Bearer", IntegrationTestFixture.AccessToken.Value);
                     client.DefaultRequestHeaders.Add("api-version", "2");
-                    client.DefaultRequestHeaders.Add("Titan-Data-Segmentation-Key", "10000000-1000-0000-0000-000000000000");
+                    client.DefaultRequestHeaders.Add("Titan-Data-Segmentation-Key",
+                        "10000000-1000-0000-0000-000000000000");
 
                     var body = new
                     {
@@ -61,7 +63,8 @@ namespace RedArrow.Argo.Client.Integration.Session
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri($"{IntegrationTestFixture.Host}/data/");
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", IntegrationTestFixture.AccessToken.Value);
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", IntegrationTestFixture.AccessToken.Value);
                 client.DefaultRequestHeaders.Add("api-version", "2");
                 client.DefaultRequestHeaders.Add("Titan-Data-Segmentation-Key", "10000000-1000-0000-0000-000000000000");
 
@@ -96,7 +99,7 @@ namespace RedArrow.Argo.Client.Integration.Session
                 var response = await client.PostAsync("integration-test-provider", content);
                 response.EnsureSuccessStatusCode();
             }
-			
+
             using (var session = SessionFactory.CreateSession())
             {
                 // this is a "reserved" provider I have created specifically for this test
@@ -123,7 +126,8 @@ namespace RedArrow.Argo.Client.Integration.Session
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri($"{IntegrationTestFixture.Host}/data/");
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", IntegrationTestFixture.AccessToken.Value);
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", IntegrationTestFixture.AccessToken.Value);
                 client.DefaultRequestHeaders.Add("api-version", "2");
                 client.DefaultRequestHeaders.Add("Titan-Data-Segmentation-Key", "10000000-1000-0000-0000-000000000000");
 
@@ -140,7 +144,7 @@ namespace RedArrow.Argo.Client.Integration.Session
                         },
                         relationships = new Dictionary<string, dynamic>
                         {
-                            {"patients", new { data = Enumerable.Empty<Patient>()}}
+                            {"patients", new {data = Enumerable.Empty<Patient>()}}
                         }
                     }
                 };
@@ -153,7 +157,7 @@ namespace RedArrow.Argo.Client.Integration.Session
 
                 Assert.True(providerResponse.IsSuccessStatusCode);
             }
-			
+
             using (var session = SessionFactory.CreateSession())
             {
                 // this is a "reserved" provider I have created specifically for this test
@@ -197,7 +201,7 @@ namespace RedArrow.Argo.Client.Integration.Session
                 var patientB = await session.Create<Patient>();
                 var patientC = await session.Create<Patient>();
 
-                patientIds = new List<Guid> { patientA.Id, patientB.Id, patientC.Id };
+                patientIds = new List<Guid> {patientA.Id, patientB.Id, patientC.Id};
 
                 provider.Patients.Add(patientA);
                 provider.Patients.Add(patientB);

@@ -10,6 +10,8 @@ namespace RedArrow.Argo.Client.Model
         [JsonProperty("parameter", NullValueHandling = NullValueHandling.Ignore)]
         public string Parameter { get; set; }
 
-        internal ErrorSource() { }
+        internal ErrorSource()
+        {
+        }
     }
 }

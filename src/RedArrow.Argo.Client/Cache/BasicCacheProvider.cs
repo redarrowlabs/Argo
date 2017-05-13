@@ -41,10 +41,10 @@ namespace RedArrow.Argo.Client.Cache
 
         public TModel Retrieve<TModel>(Guid id)
         {
-	        if (!PoorMansCache.ContainsKey(id)) return default(TModel);
-	        Log.Debug(() => $"retrieved cached model {{{id}}}");
-	        // TODO: verify model.GetType is assignable to TModel
-	        return (TModel)PoorMansCache[id];
+            if (!PoorMansCache.ContainsKey(id)) return default(TModel);
+            Log.Debug(() => $"retrieved cached model {{{id}}}");
+            // TODO: verify model.GetType is assignable to TModel
+            return (TModel) PoorMansCache[id];
         }
 
         public void Remove(Guid id)

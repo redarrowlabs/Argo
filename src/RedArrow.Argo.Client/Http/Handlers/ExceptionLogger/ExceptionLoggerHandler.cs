@@ -9,8 +9,10 @@ namespace RedArrow.Argo.Client.Http.Handlers.ExceptionLogger
     public class ExceptionLoggerHandler : DelegatingHandler
     {
         private static readonly ILog Log = LogProvider.For<ExceptionLoggerHandler>();
-		
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+
+        protected override async Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
         {
             var hash = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
             Log.Debug(() => $"request [{hash}]: {request}");
@@ -25,7 +27,6 @@ namespace RedArrow.Argo.Client.Http.Handlers.ExceptionLogger
                 Log.FatalException("request [{0}] failed unexpectedly", ex, hash);
                 throw;
             }
-
         }
     }
 }

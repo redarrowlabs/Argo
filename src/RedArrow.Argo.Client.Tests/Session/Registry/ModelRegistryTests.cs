@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Newtonsoft.Json;
 using Ploeh.AutoFixture.Xunit2;
 using RedArrow.Argo.Client.Config.Model;
 using RedArrow.Argo.Client.Session.Registry;
@@ -17,7 +18,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
         {
             var config = new ModelConfiguration(typeof(ModelWithPrivateIdSetter));
 
-            var subject = new ModelRegistry(new[] {config});
+            var subject = new ModelRegistry(new[] {config}, new JsonSerializerSettings());
 
             var model = new ModelWithPrivateIdSetter();
 
@@ -32,7 +33,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
         {
             var config = new ModelConfiguration(typeof(ModelWithPublicIdSetter));
 
-            var subject = new ModelRegistry(new[] {config});
+            var subject = new ModelRegistry(new[] {config}, new JsonSerializerSettings());
 
             var model = new ModelWithPublicIdSetter();
 
@@ -47,7 +48,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
         {
             var config = new ModelConfiguration(typeof(ModelWithNoIdSetter));
 
-            var subject = new ModelRegistry(new[] {config});
+            var subject = new ModelRegistry(new[] {config}, new JsonSerializerSettings());
 
             var model = new ModelWithNoIdSetter();
 
@@ -62,7 +63,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
         {
             var config = new ModelConfiguration(typeof(ModelWithPublicIdSetter));
 
-            var subject = new ModelRegistry(new[] {config});
+            var subject = new ModelRegistry(new[] {config}, new JsonSerializerSettings());
 
             var model = new ModelWithPublicIdSetter
             {
@@ -79,7 +80,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
         {
             var config = new ModelConfiguration(typeof(TestWovenModel));
 
-            var subject = new ModelRegistry(new[] {config});
+            var subject = new ModelRegistry(new[] {config}, new JsonSerializerSettings());
 
             var result = subject.GetAttributeConfigs(typeof(TestWovenModel));
 
@@ -95,7 +96,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
         {
             var config = new ModelConfiguration(typeof(TestWovenModel));
 
-            var subject = new ModelRegistry(new[] {config});
+            var subject = new ModelRegistry(new[] {config}, new JsonSerializerSettings());
 
             var result1 = subject.GetResourceType(typeof(TestWovenModel));
             var result2 = subject.GetResourceType<TestWovenModel>();
@@ -109,7 +110,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
         {
             var config = new ModelConfiguration(typeof(TestCustomWovenModel));
 
-            var subject = new ModelRegistry(new[] {config});
+            var subject = new ModelRegistry(new[] {config}, new JsonSerializerSettings());
 
             var result1 = subject.GetResourceType(typeof(TestCustomWovenModel));
             var result2 = subject.GetResourceType<TestCustomWovenModel>();
@@ -204,7 +205,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
             var a = new CircularReferenceA();
             var b = new CircularReferenceB();
             var c = new CircularReferenceC();
-            
+
             a.B = b;
 
             b.A = a;
@@ -325,18 +326,18 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
         }
 
         [Fact]
-	    public void GetInclude__Given_ModelType__Then_ReturnStaticIncludeValue()
-	    {
-		    var subject = CreateSubject(typeof (CircularReferenceB));
-			
-		    var result = subject.GetInclude<CircularReferenceB>();
+        public void GetInclude__Given_ModelType__Then_ReturnStaticIncludeValue()
+        {
+            var subject = CreateSubject(typeof(CircularReferenceB));
 
-			Assert.Equal("a,c.a,c.primaryD", result);
-	    }
+            var result = subject.GetInclude<CircularReferenceB>();
+
+            Assert.Equal("a,c.a,c.primaryD", result);
+        }
 
         private static ModelRegistry CreateSubject(params Type[] modelTypes)
         {
-            return new ModelRegistry(modelTypes.Select(x => new ModelConfiguration(x)));
+            return new ModelRegistry(modelTypes.Select(x => new ModelConfiguration(x)), new JsonSerializerSettings());
         }
     }
 }

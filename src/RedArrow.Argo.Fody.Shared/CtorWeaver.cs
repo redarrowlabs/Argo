@@ -93,13 +93,13 @@ namespace RedArrow.Argo
             if (ctor == null)
             {
                 ctor = new MethodDefinition(
-                ".cctor",
-                MethodAttributes.Private |
-                MethodAttributes.HideBySig |
-                MethodAttributes.Static |
-                MethodAttributes.SpecialName |
-                MethodAttributes.RTSpecialName,
-                TypeSystem.Void);
+                    ".cctor",
+                    MethodAttributes.Private |
+                    MethodAttributes.HideBySig |
+                    MethodAttributes.Static |
+                    MethodAttributes.SpecialName |
+                    MethodAttributes.RTSpecialName,
+                    TypeSystem.Void);
 
                 context.Methods.Add(ctor);
 
@@ -121,12 +121,16 @@ namespace RedArrow.Argo
             context.ModelTypeDef.IsBeforeFieldInit = false;
         }
 
-        private void WeaveAttributeFieldInitializers(ModelWeavingContext context, ILProcessor proc, IEnumerable<PropertyDefinition> attrPropDefs)
+        private void WeaveAttributeFieldInitializers(
+            ModelWeavingContext context,
+            ILProcessor proc,
+            IEnumerable<PropertyDefinition> attrPropDefs)
         {
             foreach (var attrPropDef in attrPropDefs)
             {
                 // supply generic type arguments to template
-                var sessionGetAttr = _session_GetAttribute.MakeGenericMethod(context.ModelTypeDef, attrPropDef.PropertyType);
+                var sessionGetAttr = _session_GetAttribute
+                    .MakeGenericMethod(context.ModelTypeDef, attrPropDef.PropertyType);
 
                 var backingField = attrPropDef.BackingField();
 
@@ -137,8 +141,8 @@ namespace RedArrow.Argo
 
                 var propAttr = attrPropDef.CustomAttributes.GetAttribute(Constants.Attributes.Property);
                 var attrName = propAttr.ConstructorArguments
-                    .Select(x => x.Value as string)
-                    .SingleOrDefault() ?? attrPropDef.Name.Camelize();
+                                   .Select(x => x.Value as string)
+                                   .SingleOrDefault() ?? attrPropDef.Name.Camelize();
 
                 proc.Emit(OpCodes.Ldarg_0);
 
@@ -156,7 +160,10 @@ namespace RedArrow.Argo
             }
         }
 
-        private void WeaveMetaFieldInitializers(ModelWeavingContext context, ILProcessor proc, IEnumerable<PropertyDefinition> metaPropDefs)
+        private void WeaveMetaFieldInitializers(
+            ModelWeavingContext context,
+            ILProcessor proc,
+            IEnumerable<PropertyDefinition> metaPropDefs)
         {
             foreach (var def in metaPropDefs)
             {
@@ -172,8 +179,8 @@ namespace RedArrow.Argo
 
                 var propAttr = def.CustomAttributes.GetAttribute(Constants.Attributes.Meta);
                 var attrName = propAttr.ConstructorArguments
-                    .Select(x => x.Value as string)
-                    .SingleOrDefault() ?? def.Name.Camelize();
+                                   .Select(x => x.Value as string)
+                                   .SingleOrDefault() ?? def.Name.Camelize();
 
                 proc.Emit(OpCodes.Ldarg_0);
 

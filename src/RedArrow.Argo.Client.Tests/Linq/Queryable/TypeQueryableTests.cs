@@ -27,8 +27,8 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
         private static TypeQueryable<TModel> CreateSubject<TModel>()
         {
             return new TypeQueryable<TModel>(
-				Mock.Of<IQuerySession>(),
-				Mock.Of<IQueryProvider>());
+                Mock.Of<IQuerySession>(),
+                Mock.Of<IQueryProvider>());
         }
     }
 }

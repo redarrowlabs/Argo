@@ -77,14 +77,14 @@ namespace RedArrow.Argo
 
         public void Execute()
         {
-			PrintIntro();
-	        LoadTypeDefinitions();
-			FindModels();
+            PrintIntro();
+            LoadTypeDefinitions();
+            FindModels();
 
-	        foreach (var modelTypeDef in _modelTypeDefs)
-	        {
-		        LogInfo($"Weaving type {modelTypeDef.FullName}...");
-	            var context = new ModelWeavingContext(
+            foreach (var modelTypeDef in _modelTypeDefs)
+            {
+                LogInfo($"Weaving type {modelTypeDef.FullName}...");
+                var context = new ModelWeavingContext(
                     modelTypeDef,
                     LogDebug,
                     LogInfo,
@@ -93,22 +93,22 @@ namespace RedArrow.Argo
                     LogError,
                     LogWarningPoint);
 
-				AddSessionField(context);
-	            AddIncludePathField(context);
+                AddSessionField(context);
+                AddIncludePathField(context);
                 AddSessionManagedProperty(context);
-				WeaveId(context);
-	            if (context.IdPropDef != null)
-	            {
+                WeaveId(context);
+                if (context.IdPropDef != null)
+                {
                     AddResourceIdentifierProperty(context);
                     AddPatchProperty(context);
-	                AddCtor(context);
-		            AddStaticCtor(context);
-					WeaveAttributes(context);
+                    AddCtor(context);
+                    AddStaticCtor(context);
+                    WeaveAttributes(context);
                     WeaveMeta(context);
                     WeaveHasOnes(context);
-	                WeaveHasManys(context);
+                    WeaveHasManys(context);
                 }
-	        }
+            }
         }
 
         // Will be called when a request to cancel the build occurs. OPTIONAL
@@ -119,6 +119,6 @@ namespace RedArrow.Argo
         // Will be called after all weaving has occurred and the module has been saved. OPTIONAL
         public void AfterWeaving()
         {
-		}
-	}
+        }
+    }
 }

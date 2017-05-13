@@ -14,19 +14,19 @@ namespace RedArrow.Argo.Client.Session.Registry
 
         Type GetModelType(string resourceType);
 
-	    Resource GetResource(object model);
+        Resource GetResource(object model);
         void SetResource(object model, Resource resource);
         Resource GetPatch(object model);
         void SetPatch(object model, Resource patch);
-	    Resource GetOrCreatePatch(object model);
-	    void ApplyPatch(object model);
+        Resource GetOrCreatePatch(object model);
+        void ApplyPatch(object model);
 
-		bool IsManagedModel(object model);
-		bool IsManagedBy(IModelSession session, object model);
-		bool IsUnmanagedModel(object model);
-	    void DetachModel(object model);
+        bool IsManagedModel(object model);
+        bool IsManagedBy(IModelSession session, object model);
+        bool IsUnmanagedModel(object model);
+        void DetachModel(object model);
 
-	    string GetInclude<TModel>();
+        string GetInclude<TModel>();
 
         Guid GetId(object model);
         void SetId(object model, Guid id);
@@ -41,11 +41,11 @@ namespace RedArrow.Argo.Client.Session.Registry
         MetaConfiguration GetMetaConfig(Type modelType, string attrName);
 
         JObject GetAttributeValues(object model);
-	    IDictionary<string, Relationship> GetRelationshipValues(object model);
+        IDictionary<string, Relationship> GetRelationshipValues(object model);
         IDictionary<string, JToken> GetMetaValues(object model);
 
         IEnumerable<RelationshipConfiguration> GetHasOneConfigs<TModel>();
-		IEnumerable<RelationshipConfiguration> GetHasOneConfigs(Type modelType);
+        IEnumerable<RelationshipConfiguration> GetHasOneConfigs(Type modelType);
         IEnumerable<RelationshipConfiguration> GetHasManyConfigs<TModel>();
         IEnumerable<RelationshipConfiguration> GetHasManyConfigs(Type modelType);
         RelationshipConfiguration GetHasManyConfig<TModel>(string rltnName);

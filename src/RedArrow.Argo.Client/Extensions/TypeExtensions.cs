@@ -12,11 +12,11 @@ namespace RedArrow.Argo.Client.Extensions
         public static string GetModelResourceType(this Type type)
         {
             return type.GetTypeInfo()
-                .CustomAttributes
-                .Single(a => a.AttributeType == typeof(ModelAttribute))
-                .ConstructorArguments
-                .Select(arg => arg.Value as string)
-                .FirstOrDefault() ?? type.Name.Camelize();
+                       .CustomAttributes
+                       .Single(a => a.AttributeType == typeof(ModelAttribute))
+                       .ConstructorArguments
+                       .Select(arg => arg.Value as string)
+                       .FirstOrDefault() ?? type.Name.Camelize();
         }
 
         public static FieldInfo GetSessionField(this Type type)

@@ -4,7 +4,6 @@ using Serilog.Configuration;
 using Serilog.Events;
 using Serilog.Formatting.Display;
 using Xunit.Abstractions;
-using Xunit.Sdk;
 
 namespace RedArrow.Argo.TestUtils.XUnitSink
 {
@@ -34,7 +33,9 @@ namespace RedArrow.Argo.TestUtils.XUnitSink
             if (outputTemplate == null) throw new ArgumentNullException("outputTemplate");
 
             var formatter = new MessageTemplateTextFormatter(outputTemplate, formatProvider);
-            return loggerConfiguration.Sink(new XUnitTestOutputSink(testOutputHelper, formatter), restrictedToMinimumLevel);
+            return loggerConfiguration.Sink(
+                new XUnitTestOutputSink(testOutputHelper, formatter),
+                restrictedToMinimumLevel);
         }
     }
 }
