@@ -18,7 +18,7 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
         [InlineData(10)]
         [InlineData(25)]
         public void BuildQuery__Given_NumberToSkip__When_NumberGreaterThanZero__Then_SetQueryPaging
-               (int skip)
+            (int skip)
         {
             var mockQueryContext = new Mock<IQueryContext>();
 

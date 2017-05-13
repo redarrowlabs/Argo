@@ -1,18 +1,17 @@
-﻿using System.IO;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace RedArrow.Argo.Client.Model
 {
     public abstract class JModel
     {
-        internal JModel() { }
-
-        public virtual string ToJson()
+        internal JModel()
         {
-            return JsonConvert.SerializeObject(this, Formatting.None, new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore
-            });
+        }
+
+        public virtual string ToJson(JsonSerializerSettings jsonSettings)
+        {
+            jsonSettings.NullValueHandling = NullValueHandling.Ignore;
+            return JsonConvert.SerializeObject(this, Formatting.None, jsonSettings);
         }
     }
 }

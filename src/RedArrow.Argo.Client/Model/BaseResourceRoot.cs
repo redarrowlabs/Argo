@@ -23,7 +23,7 @@ namespace RedArrow.Argo.Client.Model
 
         [JsonProperty("included", NullValueHandling = NullValueHandling.Ignore)]
         public IEnumerable<Resource> Included { get; set; }
-        
+
         internal static ResourceRootSingle FromJson(string json)
         {
             return JsonConvert.DeserializeObject<ResourceRootSingle>(json);

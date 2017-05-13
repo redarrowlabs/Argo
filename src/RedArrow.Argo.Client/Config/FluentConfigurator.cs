@@ -16,19 +16,21 @@ namespace RedArrow.Argo.Client.Config
         IRemoteConfigurator
     {
         private IList<Action<ModelScanner>> ModelScannners { get; }
-		private IList<Action<JsonSerializerSettings>> SerializerSettings { get; }
+        private IList<Action<JsonSerializerSettings>> SerializerSettings { get; }
 
         private IList<Action<HttpClient>> ClientConfigurators { get; }
         private IList<Func<HttpClient, Task>> AsyncClientConfigurators { get; }
-		
-		private Action<IHttpClientBuilder> HttpClientBuilder { get; set; }
-		
-		private SessionFactoryConfiguration SessionFactoryConfiguration { get; }
+
+        private Action<IHttpClientBuilder> HttpClientBuilder { get; set; }
+
+        private SessionFactoryConfiguration SessionFactoryConfiguration { get; }
 
         private Uri ApiHost { get; }
 
         internal FluentConfigurator(string apiHost)
-            : this(apiHost, new SessionFactoryConfiguration()) { }
+            : this(apiHost, new SessionFactoryConfiguration())
+        {
+        }
 
         internal FluentConfigurator(string apiHost, SessionFactoryConfiguration config)
         {
@@ -36,8 +38,8 @@ namespace RedArrow.Argo.Client.Config
             SerializerSettings = new List<Action<JsonSerializerSettings>>();
             ClientConfigurators = new List<Action<HttpClient>>();
             AsyncClientConfigurators = new List<Func<HttpClient, Task>>();
-			
-			ApiHost = new Uri(apiHost);
+
+            ApiHost = new Uri(apiHost);
 
             SessionFactoryConfiguration = config;
         }
@@ -76,11 +78,11 @@ namespace RedArrow.Argo.Client.Config
             return this;
         }
 
-	    public IRemoteConfigurator Configure(Action<IHttpClientBuilder> builder)
-	    {
-		    HttpClientBuilder = builder;
-		    return this;
-	    }
+        public IRemoteConfigurator Configure(Action<IHttpClientBuilder> builder)
+        {
+            HttpClientBuilder = builder;
+            return this;
+        }
 
         public SessionFactoryConfiguration BuildFactoryConfiguration()
         {
@@ -102,13 +104,13 @@ namespace RedArrow.Argo.Client.Config
             SessionFactoryConfiguration.Configure(jsonSettings);
             ClientConfigurators.Add(client => client.BaseAddress = ApiHost);
 
-	        var builder = new HttpClientBuilder();
-	        (HttpClientBuilder ?? (_ => { }))(builder);
-	        
-			// build HttpClient factory
-			SessionFactoryConfiguration.HttpClientFactory = () =>
+            var builder = new HttpClientBuilder();
+            (HttpClientBuilder ?? (_ => { }))(builder);
+
+            // build HttpClient factory
+            SessionFactoryConfiguration.HttpClientFactory = () =>
             {
-				var client = new HttpClient(builder.Build());
+                var client = new HttpClient(builder.Build());
 
                 client
                     .DefaultRequestHeaders

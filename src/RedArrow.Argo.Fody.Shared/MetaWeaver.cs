@@ -52,7 +52,8 @@ namespace RedArrow.Argo
             string metaName)
         {
             // supply generic type arguments to template
-            var sessionSetAttr = sessionSetMetaGeneric.MakeGenericMethod(context.ModelTypeDef, metaPropDef.PropertyType);
+            var sessionSetAttr = sessionSetMetaGeneric
+                .MakeGenericMethod(context.ModelTypeDef, metaPropDef.PropertyType);
 
             metaPropDef.SetMethod.Body.Instructions.Clear();
 

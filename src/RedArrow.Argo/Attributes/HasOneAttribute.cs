@@ -12,7 +12,7 @@ namespace RedArrow.Argo.Attributes
         public HasOneAttribute(string rltnName)
         {
         }
-        
+
         public HasOneAttribute(LoadStrategy strategy)
         {
         }

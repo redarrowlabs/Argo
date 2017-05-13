@@ -14,176 +14,180 @@ using Xunit;
 namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 {
     public class WhereQueryableTests
-	{
-		[Theory, AutoData]
-		public void BuildQuery__Given_Target__When_ExpressionGroupedBooleans__Then_GroupExpressionsAndAddFilter
-			(bool boolA, string stringA, bool boolB, string stringB)
-		{
-			var mockQueryContext = new Mock<IQueryContext>();
+    {
+        [Theory, AutoData]
+        public void BuildQuery__Given_Target__When_ExpressionGroupedBooleans__Then_GroupExpressionsAndAddFilter
+            (bool boolA, string stringA, bool boolB, string stringB)
+        {
+            var mockQueryContext = new Mock<IQueryContext>();
 
-			var session = Mock.Of<IQuerySession>();
+            var session = Mock.Of<IQuerySession>();
 
-			var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
-			mockTarget
-				.Setup(x => x.BuildQuery())
-				.Returns(mockQueryContext.Object);
+            var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
+            mockTarget
+                .Setup(x => x.BuildQuery())
+                .Returns(mockQueryContext.Object);
 
-			Expression<Func<AllPropertyTypes, bool>> predicate =
-				x => (x.BoolProperty == boolA || x.StringProperty == stringA)
-				&& (x.BoolProperty == boolB || x.StringProperty == stringB);
+            Expression<Func<AllPropertyTypes, bool>> predicate =
+                x => (x.BoolProperty == boolA || x.StringProperty == stringA)
+                     && (x.BoolProperty == boolB || x.StringProperty == stringB);
 
-			var subject = CreateSubject(
-				session,
-				mockTarget.Object,
-				predicate);
+            var subject = CreateSubject(
+                session,
+                mockTarget.Object,
+                predicate);
 
-			var result = subject.BuildQuery();
-			Assert.Same(mockQueryContext.Object, result);
-            
-			mockQueryContext.Verify(x => x.AppendFilter(
-                "allPropertyTypes",
-                $"((boolProperty[eq]{JsonConvert.SerializeObject(boolA)},|stringProperty[eq]'{stringA}'),(boolProperty[eq]{JsonConvert.SerializeObject(boolB)},|stringProperty[eq]'{stringB}'))"), Times.Once);
-		}
+            var result = subject.BuildQuery();
+            Assert.Same(mockQueryContext.Object, result);
 
-	    [Theory, AutoData]
-	    public void BuildQuery__Given_Target__When_ExpressionIsPropertyChain__Then_InvokePropertyAndAddFilter
-		    (BasicModel basicModel)
-	    {
-		    var mockQueryContext = new Mock<IQueryContext>();
+            mockQueryContext.Verify(x => x.AppendFilter(
+                    "allPropertyTypes",
+                    $"((boolProperty[eq]{JsonConvert.SerializeObject(boolA)},|stringProperty[eq]'{stringA}'),(boolProperty[eq]{JsonConvert.SerializeObject(boolB)},|stringProperty[eq]'{stringB}'))"),
+                Times.Once);
+        }
 
-		    var session = Mock.Of<IQuerySession>();
+        [Theory, AutoData]
+        public void BuildQuery__Given_Target__When_ExpressionIsPropertyChain__Then_InvokePropertyAndAddFilter
+            (BasicModel basicModel)
+        {
+            var mockQueryContext = new Mock<IQueryContext>();
 
-		    var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
-		    mockTarget
-			    .Setup(x => x.BuildQuery())
-			    .Returns(mockQueryContext.Object);
+            var session = Mock.Of<IQuerySession>();
 
-		    Expression<Func<AllPropertyTypes, bool>> predicate = x => x.StringProperty == basicModel.PropA;
+            var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
+            mockTarget
+                .Setup(x => x.BuildQuery())
+                .Returns(mockQueryContext.Object);
 
-		    var subject = CreateSubject(
-			    session,
-			    mockTarget.Object,
-			    predicate);
+            Expression<Func<AllPropertyTypes, bool>> predicate = x => x.StringProperty == basicModel.PropA;
 
-		    var result = subject.BuildQuery();
+            var subject = CreateSubject(
+                session,
+                mockTarget.Object,
+                predicate);
 
-			Assert.Same(mockQueryContext.Object, result);
+            var result = subject.BuildQuery();
 
-			mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"stringProperty[eq]'{basicModel.PropA}'"), Times.Once);
-		}
+            Assert.Same(mockQueryContext.Object, result);
 
-		[Theory, AutoData]
-		public void BuildQuery__Given_Target__When_ExpressionIsCrazyChain__Then_InvokeMethodsAndAddFilter
-			(Guid id)
-		{
-			var a = new CircularReferenceA();
-			var b = new CircularReferenceB();
-			var c = new CircularReferenceC();
-			var d = new CircularReferenceD {Id = id};
+            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"stringProperty[eq]'{basicModel.PropA}'"),
+                Times.Once);
+        }
 
-			a.B = b;
-			b.C = c;
-			c.A = a;
-			c.PrimaryD = d;
+        [Theory, AutoData]
+        public void BuildQuery__Given_Target__When_ExpressionIsCrazyChain__Then_InvokeMethodsAndAddFilter
+            (Guid id)
+        {
+            var a = new CircularReferenceA();
+            var b = new CircularReferenceB();
+            var c = new CircularReferenceC();
+            var d = new CircularReferenceD {Id = id};
 
-			var mockQueryContext = new Mock<IQueryContext>();
+            a.B = b;
+            b.C = c;
+            c.A = a;
+            c.PrimaryD = d;
 
-			var session = Mock.Of<IQuerySession>();
+            var mockQueryContext = new Mock<IQueryContext>();
 
-			var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
-			mockTarget
-				.Setup(x => x.BuildQuery())
-				.Returns(mockQueryContext.Object);
+            var session = Mock.Of<IQuerySession>();
 
-			Expression<Func<AllPropertyTypes, bool>> predicate = x => x.StringProperty == a.B.C.PrimaryD.Id.ToString();
+            var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
+            mockTarget
+                .Setup(x => x.BuildQuery())
+                .Returns(mockQueryContext.Object);
 
-			var subject = CreateSubject(
-				session,
-				mockTarget.Object,
-				predicate);
+            Expression<Func<AllPropertyTypes, bool>> predicate = x => x.StringProperty == a.B.C.PrimaryD.Id.ToString();
 
-			var result = subject.BuildQuery();
+            var subject = CreateSubject(
+                session,
+                mockTarget.Object,
+                predicate);
 
-			Assert.Same(mockQueryContext.Object, result);
+            var result = subject.BuildQuery();
 
-			mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"stringProperty[eq]'{d.Id}'"), Times.Once);
-		}
+            Assert.Same(mockQueryContext.Object, result);
 
-		[Theory, AutoData]
-		public void BuildQuery__Given_Target__When_ExpressionHasExtension__Then_InvokeMethodsAndAddFilter
-			(Guid[] ids)
-		{
-			var a = new CircularReferenceA();
-			var b = new CircularReferenceB();
-			var c = new CircularReferenceC();
-			var ds = ids.Select(x => new CircularReferenceD()).ToArray();
+            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"stringProperty[eq]'{d.Id}'"), Times.Once);
+        }
 
-			a.B = b;
-			b.C = c;
-			c.A = a;
-			c.AllDs = ds;
+        [Theory, AutoData]
+        public void BuildQuery__Given_Target__When_ExpressionHasExtension__Then_InvokeMethodsAndAddFilter
+            (Guid[] ids)
+        {
+            var a = new CircularReferenceA();
+            var b = new CircularReferenceB();
+            var c = new CircularReferenceC();
+            var ds = ids.Select(x => new CircularReferenceD()).ToArray();
 
-			var expectedId = ds.First().Id;
+            a.B = b;
+            b.C = c;
+            c.A = a;
+            c.AllDs = ds;
 
-			var mockQueryContext = new Mock<IQueryContext>();
+            var expectedId = ds.First().Id;
 
-			var session = Mock.Of<IQuerySession>();
+            var mockQueryContext = new Mock<IQueryContext>();
 
-			var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
-			mockTarget
-				.Setup(x => x.BuildQuery())
-				.Returns(mockQueryContext.Object);
+            var session = Mock.Of<IQuerySession>();
 
-			Expression<Func<AllPropertyTypes, bool>> predicate = x => x.StringProperty == a.B.C.AllDs.First().Id.ToString();
+            var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
+            mockTarget
+                .Setup(x => x.BuildQuery())
+                .Returns(mockQueryContext.Object);
 
-			var subject = CreateSubject(
-				session,
-				mockTarget.Object,
-				predicate);
+            Expression<Func<AllPropertyTypes, bool>> predicate =
+                x => x.StringProperty == a.B.C.AllDs.First().Id.ToString();
 
-			var result = subject.BuildQuery();
+            var subject = CreateSubject(
+                session,
+                mockTarget.Object,
+                predicate);
 
-			Assert.Same(mockQueryContext.Object, result);
+            var result = subject.BuildQuery();
 
-			mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"stringProperty[eq]'{expectedId}'"), Times.Once);
-		}
+            Assert.Same(mockQueryContext.Object, result);
 
-		[Theory, AutoData]
-		public void BuildQuery__Given_Target__When_CircualrChain__Then_InvokeMethodsAndAddFilter
-			(Guid id)
-		{
-			var a = new CircularReferenceA {Id = id};
-			var b = new CircularReferenceB();
-			var c = new CircularReferenceC();
+            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"stringProperty[eq]'{expectedId}'"),
+                Times.Once);
+        }
 
-			a.B = b;
-			b.C = c;
-			c.A = a;
-			
-			var mockQueryContext = new Mock<IQueryContext>();
+        [Theory, AutoData]
+        public void BuildQuery__Given_Target__When_CircualrChain__Then_InvokeMethodsAndAddFilter
+            (Guid id)
+        {
+            var a = new CircularReferenceA {Id = id};
+            var b = new CircularReferenceB();
+            var c = new CircularReferenceC();
 
-			var session = Mock.Of<IQuerySession>();
+            a.B = b;
+            b.C = c;
+            c.A = a;
 
-			var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
-			mockTarget
-				.Setup(x => x.BuildQuery())
-				.Returns(mockQueryContext.Object);
+            var mockQueryContext = new Mock<IQueryContext>();
 
-			Expression<Func<AllPropertyTypes, bool>> predicate = x => x.StringProperty == $"{a.B.C.A.B.C.A.B.C.A.Id}";
+            var session = Mock.Of<IQuerySession>();
 
-			var subject = CreateSubject(
-				session,
-				mockTarget.Object,
-				predicate);
+            var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
+            mockTarget
+                .Setup(x => x.BuildQuery())
+                .Returns(mockQueryContext.Object);
 
-			var result = subject.BuildQuery();
+            Expression<Func<AllPropertyTypes, bool>> predicate = x => x.StringProperty == $"{a.B.C.A.B.C.A.B.C.A.Id}";
 
-			Assert.Same(mockQueryContext.Object, result);
+            var subject = CreateSubject(
+                session,
+                mockTarget.Object,
+                predicate);
 
-			mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"stringProperty[eq]'{id}'"), Times.Once);
-		}
+            var result = subject.BuildQuery();
 
-		[Theory, AutoData]
+            Assert.Same(mockQueryContext.Object, result);
+
+            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"stringProperty[eq]'{id}'"), Times.Once);
+        }
+
+        [Theory, AutoData]
         public void BuildQuery__Given_Target__When_ExpressionSimpleStringEquals__Then_AddFilter
             (string expectedValue)
         {
@@ -207,9 +211,10 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
             Assert.Same(mockQueryContext.Object, result);
 
-            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"stringProperty[eq]'{expectedValue}'"), Times.Once);
+            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"stringProperty[eq]'{expectedValue}'"),
+                Times.Once);
         }
-        
+
         [Theory, AutoData]
         public void BuildQuery__Given_Target__When_ExpressionSimpleGuidEquals__Then_AddFilter
             (Guid expectedValue)
@@ -234,7 +239,8 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
             Assert.Same(mockQueryContext.Object, result);
 
-            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"guidProperty[eq]'{expectedValue}'"), Times.Once);
+            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"guidProperty[eq]'{expectedValue}'"),
+                Times.Once);
         }
 
         [Theory, AutoData]
@@ -261,7 +267,8 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
             Assert.Same(mockQueryContext.Object, result);
 
-            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"dateTimeProperty[eq]'{expectedValue:O}'"), Times.Once);
+            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"dateTimeProperty[eq]'{expectedValue:O}'"),
+                Times.Once);
         }
 
         [Theory, AutoData]
@@ -288,7 +295,8 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
             Assert.Same(mockQueryContext.Object, result);
 
-            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"intProperty[eq]{expectedValue}"), Times.Once);
+            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"intProperty[eq]{expectedValue}"),
+                Times.Once);
         }
 
         [Theory, AutoData]
@@ -315,7 +323,8 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
             Assert.Same(mockQueryContext.Object, result);
 
-            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"longProperty[eq]{expectedValue}"), Times.Once);
+            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"longProperty[eq]{expectedValue}"),
+                Times.Once);
         }
 
         [Theory, AutoData]
@@ -342,7 +351,9 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
             Assert.Same(mockQueryContext.Object, result);
 
-            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"doubleProperty[eq]{JsonConvert.SerializeObject(expectedValue)}"), Times.Once);
+            mockQueryContext.Verify(
+                x => x.AppendFilter("allPropertyTypes",
+                    $"doubleProperty[eq]{JsonConvert.SerializeObject(expectedValue)}"), Times.Once);
         }
 
         [Theory, AutoData]
@@ -369,7 +380,9 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
             Assert.Same(mockQueryContext.Object, result);
 
-            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"decimalProperty[eq]{JsonConvert.SerializeObject(expectedValue)}"), Times.Once);
+            mockQueryContext.Verify(
+                x => x.AppendFilter("allPropertyTypes",
+                    $"decimalProperty[eq]{JsonConvert.SerializeObject(expectedValue)}"), Times.Once);
         }
 
         [Theory, AutoData]
@@ -396,7 +409,9 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
             Assert.Same(mockQueryContext.Object, result);
 
-            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"floatProperty[eq]{JsonConvert.SerializeObject(expectedValue)}"), Times.Once);
+            mockQueryContext.Verify(
+                x => x.AppendFilter("allPropertyTypes",
+                    $"floatProperty[eq]{JsonConvert.SerializeObject(expectedValue)}"), Times.Once);
         }
 
         [Theory, AutoData]
@@ -423,7 +438,8 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
             Assert.Same(mockQueryContext.Object, result);
 
-            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"intProperty[lt]{expectedValue}"), Times.Once);
+            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"intProperty[lt]{expectedValue}"),
+                Times.Once);
         }
 
         [Theory, AutoData]
@@ -450,7 +466,8 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
             Assert.Same(mockQueryContext.Object, result);
 
-            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"intProperty[gt]{expectedValue}"), Times.Once);
+            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"intProperty[gt]{expectedValue}"),
+                Times.Once);
         }
 
         [Theory, AutoData]
@@ -477,7 +494,8 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
             Assert.Same(mockQueryContext.Object, result);
 
-            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"intProperty[lte]{expectedValue}"), Times.Once);
+            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"intProperty[lte]{expectedValue}"),
+                Times.Once);
         }
 
         [Theory, AutoData]
@@ -504,7 +522,8 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
             Assert.Same(mockQueryContext.Object, result);
 
-            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"intProperty[gte]{expectedValue}"), Times.Once);
+            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"intProperty[gte]{expectedValue}"),
+                Times.Once);
         }
 
         [Theory, AutoData]
@@ -531,7 +550,8 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
             Assert.Same(mockQueryContext.Object, result);
 
-            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"intProperty[ne]{expectedValue}"), Times.Once);
+            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"intProperty[ne]{expectedValue}"),
+                Times.Once);
         }
 
         [Theory, AutoData]
@@ -562,7 +582,8 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
             Assert.Same(mockQueryContext.Object, result);
 
             mockQueryContext.Verify(x =>
-                x.AppendFilter("allPropertyTypes", $"((intProperty[gt]{expectedMin},intProperty[lt]{expectedMax}),|intProperty[eq]{expectedSpecific})"),
+                    x.AppendFilter("allPropertyTypes",
+                        $"((intProperty[gt]{expectedMin},intProperty[lt]{expectedMax}),|intProperty[eq]{expectedSpecific})"),
                 Times.Once);
         }
 
@@ -591,7 +612,7 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
             Assert.Same(mockQueryContext.Object, result);
 
             mockQueryContext.Verify(x =>
-                x.AppendFilter("allPropertyTypes", $"stringArrayProperty[acnt]'{value}'"),
+                    x.AppendFilter("allPropertyTypes", $"stringArrayProperty[acnt]'{value}'"),
                 Times.Once);
         }
 
@@ -620,7 +641,7 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
             Assert.Same(mockQueryContext.Object, result);
 
             mockQueryContext.Verify(x =>
-                x.AppendFilter("allPropertyTypes", $"stringProperty[cnt]'{value}'"),
+                    x.AppendFilter("allPropertyTypes", $"stringProperty[cnt]'{value}'"),
                 Times.Once);
         }
 
@@ -649,7 +670,7 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
             Assert.Same(mockQueryContext.Object, result);
 
             mockQueryContext.Verify(x =>
-                x.AppendFilter("allPropertyTypes", $"stringProperty[sw]'{value}'"),
+                    x.AppendFilter("allPropertyTypes", $"stringProperty[sw]'{value}'"),
                 Times.Once);
         }
 
@@ -678,7 +699,7 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
             Assert.Same(mockQueryContext.Object, result);
 
             mockQueryContext.Verify(x =>
-                x.AppendFilter("allPropertyTypes", $"stringProperty[eq]'{value}'"),
+                    x.AppendFilter("allPropertyTypes", $"stringProperty[eq]'{value}'"),
                 Times.Once);
         }
 
@@ -695,7 +716,8 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
                 .Setup(x => x.BuildQuery())
                 .Returns(mockQueryContext.Object);
 
-            Expression<Func<AllPropertyTypes, bool>> predicate = x => x.StringProperty.Equals(value, StringComparison.OrdinalIgnoreCase);
+            Expression<Func<AllPropertyTypes, bool>> predicate =
+                x => x.StringProperty.Equals(value, StringComparison.OrdinalIgnoreCase);
 
             var subject = CreateSubject(
                 session,
@@ -730,7 +752,7 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
             Assert.Same(mockQueryContext.Object, result);
 
             mockQueryContext.Verify(x =>
-                x.AppendFilter("allPropertyTypes", $"stringProperty[ew]'{value}'"),
+                    x.AppendFilter("allPropertyTypes", $"stringProperty[ew]'{value}'"),
                 Times.Once);
         }
 

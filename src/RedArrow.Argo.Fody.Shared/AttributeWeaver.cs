@@ -52,7 +52,8 @@ namespace RedArrow.Argo
             string attrName)
         {
             // supply generic type arguments to template
-            var sessionSetAttr = sessionSetAttrGeneric.MakeGenericMethod(context.ModelTypeDef, attrPropDef.PropertyType);
+            var sessionSetAttr = sessionSetAttrGeneric
+                .MakeGenericMethod(context.ModelTypeDef, attrPropDef.PropertyType);
 
             attrPropDef.SetMethod.Body.Instructions.Clear();
 
@@ -92,7 +93,11 @@ namespace RedArrow.Argo
             proc.Emit(OpCodes.Ret); // return
         }
 
-        private void EmitInequalityCheck(ModelWeavingContext context, ILProcessor proc, FieldReference backingField, Instruction endif)
+        private void EmitInequalityCheck(
+            ModelWeavingContext context,
+            ILProcessor proc,
+            FieldReference backingField,
+            Instruction endif)
         {
             var returnType = backingField.FieldType;
 
@@ -129,10 +134,12 @@ namespace RedArrow.Argo
                     {
                         var equalityComparerTypeDef = _equalityComparerTypeDef.Resolve();
 
-                        var returnTypeComparer = context.ImportReference(equalityComparerTypeDef.MakeGenericInstanceType(returnType));
+                        var returnTypeComparer = context.ImportReference(equalityComparerTypeDef
+                            .MakeGenericInstanceType(returnType));
                         var getDefaultMethRef = context.ImportReference(equalityComparerTypeDef
                             .Properties
-                            .Single(prop => prop.Name == "Default").GetMethod);
+                            .Single(prop => prop.Name == "Default")
+                            .GetMethod);
                         var equalsMethRef = context.ImportReference(equalityComparerTypeDef
                             .Methods
                             .Single(meth => meth.Name == "Equals" && meth.Parameters.Count == 2));

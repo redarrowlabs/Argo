@@ -9,6 +9,6 @@ namespace RedArrow.Argo.Client.Cache
 
         void Update(Guid id, object model);
         TModel Retrieve<TModel>(Guid id);
-		void Remove(Guid id);
+        void Remove(Guid id);
     }
 }

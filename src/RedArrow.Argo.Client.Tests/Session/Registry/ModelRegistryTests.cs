@@ -204,7 +204,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
             var a = new CircularReferenceA();
             var b = new CircularReferenceB();
             var c = new CircularReferenceC();
-            
+
             a.B = b;
 
             b.A = a;
@@ -325,14 +325,14 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
         }
 
         [Fact]
-	    public void GetInclude__Given_ModelType__Then_ReturnStaticIncludeValue()
-	    {
-		    var subject = CreateSubject(typeof (CircularReferenceB));
-			
-		    var result = subject.GetInclude<CircularReferenceB>();
+        public void GetInclude__Given_ModelType__Then_ReturnStaticIncludeValue()
+        {
+            var subject = CreateSubject(typeof(CircularReferenceB));
 
-			Assert.Equal("a,c.a,c.primaryD", result);
-	    }
+            var result = subject.GetInclude<CircularReferenceB>();
+
+            Assert.Equal("a,c.a,c.primaryD", result);
+        }
 
         private static ModelRegistry CreateSubject(params Type[] modelTypes)
         {

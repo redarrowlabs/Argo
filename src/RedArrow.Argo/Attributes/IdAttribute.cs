@@ -2,8 +2,8 @@
 
 namespace RedArrow.Argo.Attributes
 {
-	[AttributeUsage(AttributeTargets.Property)]
-	public class IdAttribute : Attribute
-	{
-	}
+    [AttributeUsage(AttributeTargets.Property)]
+    public class IdAttribute : Attribute
+    {
+    }
 }

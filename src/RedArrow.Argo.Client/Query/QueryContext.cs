@@ -7,7 +7,7 @@ namespace RedArrow.Argo.Client.Query
 {
     public class QueryContext<TModel> : IQueryContext
     {
-	    public string BasePath { get; protected set; }
+        public string BasePath { get; protected set; }
 
         public string Sort => string.Join(",", SortBuilder);
         private ICollection<string> SortBuilder { get; } = new List<string>();
@@ -20,17 +20,19 @@ namespace RedArrow.Argo.Client.Query
         public IDictionary<string, string> Filters => FilterBuilders.ToDictionary(
             x => x.Key,
             x => string.Join(",", x.Value));
-        private IDictionary<string, ICollection<string>> FilterBuilders { get; } = new Dictionary<string, ICollection<string>>();
 
-	    public QueryContext()
-	    {
-		    BasePath = typeof(TModel).GetModelResourceType();
-	    }
+        private IDictionary<string, ICollection<string>> FilterBuilders { get; } =
+            new Dictionary<string, ICollection<string>>();
+
+        public QueryContext()
+        {
+            BasePath = typeof(TModel).GetModelResourceType();
+        }
 
         public void AppendSort(string sort)
         {
             if (string.IsNullOrWhiteSpace(sort)) return;
-            
+
             SortBuilder.Add(sort);
         }
 
@@ -48,36 +50,37 @@ namespace RedArrow.Argo.Client.Query
             builder.Add(filter);
         }
 
-	    public string BuildPath()
-	    {
-		    var path = BasePath;
-		    if (Filters != null)
-		    {
-			    path = Filters.Aggregate(path, (current, kvp) => current.SetQueryParam($"filter[{kvp.Key}]", kvp.Value));
-		    }
+        public string BuildPath()
+        {
+            var path = BasePath;
+            if (Filters != null)
+            {
+                path = Filters.Aggregate(path, (current, kvp) =>
+                    current.SetQueryParam($"filter[{kvp.Key}]", kvp.Value));
+            }
 
-		    if (!string.IsNullOrEmpty(Sort))
-		    {
-			    path = path.SetQueryParam("sort", Sort);
-		    }
-		    if (PageSize != null)
-		    {
-			    path = path.SetQueryParam("page[size]", PageSize);
-		    }
-		    if (PageNumber != null)
-		    {
-			    path = path.SetQueryParam("page[number]", PageNumber);
-		    }
-		    if (PageOffset != null)
-		    {
-			    path = path.SetQueryParam("page[offset]", PageOffset);
-		    }
-		    if (PageLimit != null)
-		    {
-			    path = path.SetQueryParam("page[limit]", PageLimit);
-		    }
+            if (!string.IsNullOrEmpty(Sort))
+            {
+                path = path.SetQueryParam("sort", Sort);
+            }
+            if (PageSize != null)
+            {
+                path = path.SetQueryParam("page[size]", PageSize);
+            }
+            if (PageNumber != null)
+            {
+                path = path.SetQueryParam("page[number]", PageNumber);
+            }
+            if (PageOffset != null)
+            {
+                path = path.SetQueryParam("page[offset]", PageOffset);
+            }
+            if (PageLimit != null)
+            {
+                path = path.SetQueryParam("page[limit]", PageLimit);
+            }
 
-		    return path;
-	    }
+            return path;
+        }
     }
 }

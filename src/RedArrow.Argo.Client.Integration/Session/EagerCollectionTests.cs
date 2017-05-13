@@ -35,7 +35,7 @@ namespace RedArrow.Argo.Client.Integration.Session
                 FirstName = "Deltron",
                 LastName = "3030",
                 Age = 45,
-                AccountBalance = (decimal)15.99,
+                AccountBalance = (decimal) 15.99,
                 Insurance = stubInsuranceCompany
             };
 
@@ -44,7 +44,7 @@ namespace RedArrow.Argo.Client.Integration.Session
                 FirstName = "Del",
                 LastName = "The Funky Homosapien",
                 Age = 35,
-                AccountBalance = (decimal)125.99,
+                AccountBalance = (decimal) 125.99,
                 Insurance = stubInsuranceCompany
             };
 
@@ -52,7 +52,7 @@ namespace RedArrow.Argo.Client.Integration.Session
             {
                 FirstName = "Bob",
                 LastName = "Dobblena",
-                Patients = new List<Patient> { stubPatient1, stubPatient2 }
+                Patients = new List<Patient> {stubPatient1, stubPatient2}
             };
 
             using (var session = SessionFactory.CreateSession())

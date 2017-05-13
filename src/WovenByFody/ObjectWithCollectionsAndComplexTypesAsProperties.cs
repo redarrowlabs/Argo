@@ -4,7 +4,6 @@ using RedArrow.Argo.Attributes;
 
 namespace WovenByFody
 {
-
     public class InnerObject
     {
         public string Value { get; set; }

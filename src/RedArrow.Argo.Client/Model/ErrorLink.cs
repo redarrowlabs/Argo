@@ -7,6 +7,8 @@ namespace RedArrow.Argo.Client.Model
         [JsonProperty("about", NullValueHandling = NullValueHandling.Ignore)]
         public Link About { get; set; }
 
-        internal ErrorLink() { }
+        internal ErrorLink()
+        {
+        }
     }
 }

@@ -10,7 +10,7 @@ namespace RedArrow.Argo.Client.Config
         IRemoteConfigurator Configure(Action<HttpClient> httpClient);
 
         IRemoteConfigurator ConfigureAsync(Func<HttpClient, Task> httpClient);
-		
-	    IRemoteConfigurator Configure(Action<IHttpClientBuilder> builder);
-	}
+
+        IRemoteConfigurator Configure(Action<IHttpClientBuilder> builder);
+    }
 }

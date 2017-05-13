@@ -43,21 +43,21 @@ namespace RedArrow.Argo.Client.Tests.Session
             var resourceType = "test-property-collection";
 
             var fakeHandler = new MockRequestHandler();
-			fakeHandler.Setup(
-				new Uri($"{basePath}/{resourceType}"),
-				x => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted)));
+            fakeHandler.Setup(
+                new Uri($"{basePath}/{resourceType}"),
+                x => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted)));
 
             var sessionFactory = Fluently.Configure(basePath)
                 .Remote()
-                    .Configure(x => x.BaseAddress = new Uri(basePath))
-					.Configure(builder => builder
-						.UseRequestHandler<MockRequestHandler>()
-						.ConfigureRequestHandler(x => ((MockRequestHandler)x)
-							.Setup(
-								new Uri($"{basePath}/{resourceType}"),
-								request => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted)))))
-				.Models()
-                    .Configure(x => x.AssemblyOf<ObjectWithCollectionsAndComplexTypesAsProperties>())
+                .Configure(x => x.BaseAddress = new Uri(basePath))
+                .Configure(builder => builder
+                    .UseRequestHandler<MockRequestHandler>()
+                    .ConfigureRequestHandler(x => ((MockRequestHandler) x)
+                        .Setup(
+                            new Uri($"{basePath}/{resourceType}"),
+                            request => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted)))))
+                .Models()
+                .Configure(x => x.AssemblyOf<ObjectWithCollectionsAndComplexTypesAsProperties>())
                 .BuildSessionFactory();
 
             var session = sessionFactory.CreateSession();
@@ -96,18 +96,18 @@ namespace RedArrow.Argo.Client.Tests.Session
             var basePath = "http://www.test.com";
 
             var resourceType = "integration-test-patient";
-			
-			var sessionFactory = Fluently.Configure(basePath)
+
+            var sessionFactory = Fluently.Configure(basePath)
                 .Remote()
-                    .Configure(x => x.BaseAddress = new Uri(basePath))
-					.Configure(builder => builder
-						.UseRequestHandler<MockRequestHandler>()
-						.ConfigureRequestHandler(x => ((MockRequestHandler)x)
-							.Setup(
-								new Uri($"{basePath}/{resourceType}"),
-								request => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted)))))
-				.Models()
-                    .Configure(x => x.AssemblyOf<Patient>())
+                .Configure(x => x.BaseAddress = new Uri(basePath))
+                .Configure(builder => builder
+                    .UseRequestHandler<MockRequestHandler>()
+                    .ConfigureRequestHandler(x => ((MockRequestHandler) x)
+                        .Setup(
+                            new Uri($"{basePath}/{resourceType}"),
+                            request => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted)))))
+                .Models()
+                .Configure(x => x.AssemblyOf<Patient>())
                 .BuildSessionFactory();
 
             var session = sessionFactory.CreateSession();
@@ -119,146 +119,146 @@ namespace RedArrow.Argo.Client.Tests.Session
             Assert.NotEqual(Guid.Empty, result.Id);
         }
 
-	    [Theory, AutoData]
-	    public async Task Create__Given_BasicModel__Then_PostAndCacheModel
-			(Guid expectedModelId, string expectedPropA, string expectedPropB)
-		{
-			var uri = "http://www.test.com/";
-			
-			var model = new BasicModel
-			{
-				Id = expectedModelId,
-				PropA = expectedPropA,
-				PropB = expectedPropB
-			};
-			
-			var expectedRequest = new HttpRequestMessage(HttpMethod.Post, new Uri(uri));
-			var expectedResultModel = new BasicModel();
+        [Theory, AutoData]
+        public async Task Create__Given_BasicModel__Then_PostAndCacheModel
+            (Guid expectedModelId, string expectedPropA, string expectedPropB)
+        {
+            var uri = "http://www.test.com/";
 
-			var mockRequestBuilder = new Mock<IHttpRequestBuilder>();
-			mockRequestBuilder
-				.Setup(x => x.CreateResource(It.IsAny<Resource>(), It.IsAny<IEnumerable<Resource>>()))
-				.Callback<Resource, IEnumerable<Resource>>((resource, includes) =>
-				{
-					Assert.Equal(expectedModelId, resource.Id);
-					Assert.NotNull(resource.Attributes);
-					Assert.Equal(2, resource.Attributes.Count);
-					Assert.Equal(expectedPropA, resource.Attributes.GetValue("propA").ToObject<string>());
-					Assert.Equal(expectedPropB, resource.Attributes.GetValue("propB").ToObject<string>());
+            var model = new BasicModel
+            {
+                Id = expectedModelId,
+                PropA = expectedPropA,
+                PropB = expectedPropB
+            };
 
-					Assert.Null(resource.Relationships);
-					Assert.Null(resource.Links);
-					Assert.Null(resource.Meta);
+            var expectedRequest = new HttpRequestMessage(HttpMethod.Post, new Uri(uri));
+            var expectedResultModel = new BasicModel();
 
-					Assert.Empty(includes);
-				})
-				.Returns(expectedRequest);
+            var mockRequestBuilder = new Mock<IHttpRequestBuilder>();
+            mockRequestBuilder
+                .Setup(x => x.CreateResource(It.IsAny<Resource>(), It.IsAny<IEnumerable<Resource>>()))
+                .Callback<Resource, IEnumerable<Resource>>((resource, includes) =>
+                {
+                    Assert.Equal(expectedModelId, resource.Id);
+                    Assert.NotNull(resource.Attributes);
+                    Assert.Equal(2, resource.Attributes.Count);
+                    Assert.Equal(expectedPropA, resource.Attributes.GetValue("propA").ToObject<string>());
+                    Assert.Equal(expectedPropB, resource.Attributes.GetValue("propB").ToObject<string>());
 
-			var mockHandler = new MockRequestHandler();
-			mockHandler.Setup(
-				new Uri(uri),
-				request =>
-				{
-					Assert.Same(expectedRequest, request);
-					return Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted));
-				});
+                    Assert.Null(resource.Relationships);
+                    Assert.Null(resource.Links);
+                    Assert.Null(resource.Meta);
 
-		    var mockCacheProvider = new Mock<ICacheProvider>();
-		    mockCacheProvider
-			    .Setup(x => x.Retrieve<BasicModel>(expectedModelId))
-			    .Returns(expectedResultModel);
+                    Assert.Empty(includes);
+                })
+                .Returns(expectedRequest);
 
-			var modelRegistry = CreateModelRegistry(typeof(BasicModel));
+            var mockHandler = new MockRequestHandler();
+            mockHandler.Setup(
+                new Uri(uri),
+                request =>
+                {
+                    Assert.Same(expectedRequest, request);
+                    return Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted));
+                });
 
-			var subject = CreateSubject(
-			    mockHandler,
-			    mockRequestBuilder.Object,
-			    mockCacheProvider.Object,
-				modelRegistry);
+            var mockCacheProvider = new Mock<ICacheProvider>();
+            mockCacheProvider
+                .Setup(x => x.Retrieve<BasicModel>(expectedModelId))
+                .Returns(expectedResultModel);
 
-		    var result = await subject.Create(model);
-			
-			Assert.NotNull(result);
-			Assert.Same(expectedResultModel, result);
+            var modelRegistry = CreateModelRegistry(typeof(BasicModel));
 
-			mockCacheProvider
-				.Verify(x => x.Update(expectedModelId, It.IsAny<BasicModel>()), Times.Once);
-		}
-
-		[Theory, AutoData]
-		public async Task Create__Given_ComplexModel__Then_PostAndCacheModel
-			(Guid modelId)
-		{
-			var uri = "http://www.test.com/";
-
-			var a = new CircularReferenceA {Id = modelId};
-			var b = new CircularReferenceB();
-			var c = new CircularReferenceC();
-
-			a.B = b;
-			b.A = a;
-			b.C = c;
-			c.A = a;
-
-			var expectedRequest = new HttpRequestMessage(HttpMethod.Post, new Uri(uri));
-			var expectedResultModel = new CircularReferenceA();
-			
-			var mockRequestBuilder = new Mock<IHttpRequestBuilder>();
-			mockRequestBuilder
-				.Setup(x => x.CreateResource(It.IsAny<Resource>(), It.IsAny<IEnumerable<Resource>>()))
-				.Callback<Resource, IEnumerable<Resource>>((resource, includes) =>
-				{
-					Assert.Equal(modelId, resource.Id);
-					Assert.Null(resource.Attributes);
-
-					Assert.NotNull(resource.Relationships);
-					Assert.Equal(1, resource.Relationships.Count);
-
-					Assert.NotEmpty(includes);
-					Assert.Equal(2, includes.Count());
-
-					Assert.Null(resource.Links);
-					Assert.Null(resource.Meta);
-				})
-				.Returns(expectedRequest);
-
-			var mockHandler = new MockRequestHandler();
-			mockHandler.Setup(
-				new Uri(uri),
-				request =>
-				{
-					Assert.Same(expectedRequest, request);
-					return Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted));
-				});
-
-			var mockCacheProvider = new Mock<ICacheProvider>();
-			mockCacheProvider
-				.Setup(x => x.Retrieve<CircularReferenceA>(modelId))
-				.Returns(expectedResultModel);
-
-			var modelRegistry = CreateModelRegistry(
-				typeof(CircularReferenceA),
-				typeof(CircularReferenceB),
-				typeof(CircularReferenceC));
-
-			var subject = CreateSubject(
+            var subject = CreateSubject(
                 mockHandler,
-				mockRequestBuilder.Object,
-				mockCacheProvider.Object,
-				modelRegistry);
+                mockRequestBuilder.Object,
+                mockCacheProvider.Object,
+                modelRegistry);
 
-			var result = await subject.Create(a);
+            var result = await subject.Create(model);
 
-			Assert.NotNull(result);
-			Assert.Same(expectedResultModel, result);
+            Assert.NotNull(result);
+            Assert.Same(expectedResultModel, result);
 
-			mockCacheProvider
-				.Verify(x => x.Update(It.IsAny<Guid>(), It.IsAny<CircularReferenceA>()), Times.Once);
-			mockCacheProvider
-				.Verify(x => x.Update(It.IsAny<Guid>(), It.IsAny<CircularReferenceB>()), Times.Once);
-			mockCacheProvider
-				.Verify(x => x.Update(It.IsAny<Guid>(), It.IsAny<CircularReferenceC>()), Times.Once);
-		}
+            mockCacheProvider
+                .Verify(x => x.Update(expectedModelId, It.IsAny<BasicModel>()), Times.Once);
+        }
+
+        [Theory, AutoData]
+        public async Task Create__Given_ComplexModel__Then_PostAndCacheModel
+            (Guid modelId)
+        {
+            var uri = "http://www.test.com/";
+
+            var a = new CircularReferenceA {Id = modelId};
+            var b = new CircularReferenceB();
+            var c = new CircularReferenceC();
+
+            a.B = b;
+            b.A = a;
+            b.C = c;
+            c.A = a;
+
+            var expectedRequest = new HttpRequestMessage(HttpMethod.Post, new Uri(uri));
+            var expectedResultModel = new CircularReferenceA();
+
+            var mockRequestBuilder = new Mock<IHttpRequestBuilder>();
+            mockRequestBuilder
+                .Setup(x => x.CreateResource(It.IsAny<Resource>(), It.IsAny<IEnumerable<Resource>>()))
+                .Callback<Resource, IEnumerable<Resource>>((resource, includes) =>
+                {
+                    Assert.Equal(modelId, resource.Id);
+                    Assert.Null(resource.Attributes);
+
+                    Assert.NotNull(resource.Relationships);
+                    Assert.Equal(1, resource.Relationships.Count);
+
+                    Assert.NotEmpty(includes);
+                    Assert.Equal(2, includes.Count());
+
+                    Assert.Null(resource.Links);
+                    Assert.Null(resource.Meta);
+                })
+                .Returns(expectedRequest);
+
+            var mockHandler = new MockRequestHandler();
+            mockHandler.Setup(
+                new Uri(uri),
+                request =>
+                {
+                    Assert.Same(expectedRequest, request);
+                    return Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted));
+                });
+
+            var mockCacheProvider = new Mock<ICacheProvider>();
+            mockCacheProvider
+                .Setup(x => x.Retrieve<CircularReferenceA>(modelId))
+                .Returns(expectedResultModel);
+
+            var modelRegistry = CreateModelRegistry(
+                typeof(CircularReferenceA),
+                typeof(CircularReferenceB),
+                typeof(CircularReferenceC));
+
+            var subject = CreateSubject(
+                mockHandler,
+                mockRequestBuilder.Object,
+                mockCacheProvider.Object,
+                modelRegistry);
+
+            var result = await subject.Create(a);
+
+            Assert.NotNull(result);
+            Assert.Same(expectedResultModel, result);
+
+            mockCacheProvider
+                .Verify(x => x.Update(It.IsAny<Guid>(), It.IsAny<CircularReferenceA>()), Times.Once);
+            mockCacheProvider
+                .Verify(x => x.Update(It.IsAny<Guid>(), It.IsAny<CircularReferenceB>()), Times.Once);
+            mockCacheProvider
+                .Verify(x => x.Update(It.IsAny<Guid>(), It.IsAny<CircularReferenceC>()), Times.Once);
+        }
 
         [Fact]
         public async Task Update__Given_NullModel__Then_ThrowEx()
@@ -279,15 +279,15 @@ namespace RedArrow.Argo.Client.Tests.Session
         public async Task Update__Given_Model__When_NoPatch__Then_Return
             (Guid modelId)
         {
-            var model = new ComplexModel { Id = modelId };
-            
+            var model = new ComplexModel {Id = modelId};
+
             var mockRequestBuilder = new Mock<IHttpRequestBuilder>();
 
             var mockHandler = new MockRequestHandler();
 
             var modelRegistry = CreateModelRegistry(
-                 typeof(ComplexModel),
-                 typeof(BasicModel));
+                typeof(ComplexModel),
+                typeof(BasicModel));
 
             var mockCacheProvider = new Mock<ICacheProvider>();
 
@@ -303,7 +303,8 @@ namespace RedArrow.Argo.Client.Tests.Session
 
             Assert.Equal(0, mockHandler.RequestsSent);
 
-            mockRequestBuilder.Verify(x => x.UpdateResource(It.IsAny<Resource>(), It.IsAny<IEnumerable<Resource>>()), Times.Never);
+            mockRequestBuilder.Verify(x => x.UpdateResource(It.IsAny<Resource>(), It.IsAny<IEnumerable<Resource>>()),
+                Times.Never);
             mockCacheProvider.Verify(x => x.Update(It.IsAny<Guid>(), It.IsAny<object>()), Times.Never);
         }
 
@@ -317,10 +318,10 @@ namespace RedArrow.Argo.Client.Tests.Session
             var primaryBasicModel = new BasicModel {PropB = modelPropB};
 
             var expectedRequest = new HttpRequestMessage(new HttpMethod("PATCH"), new Uri(uri));
-            
+
             var modelRegistry = CreateModelRegistry(
-                 typeof(ComplexModel),
-                 typeof(BasicModel));
+                typeof(ComplexModel),
+                typeof(BasicModel));
 
             var mockRequestBuilder = new Mock<IHttpRequestBuilder>();
             mockRequestBuilder
@@ -328,7 +329,7 @@ namespace RedArrow.Argo.Client.Tests.Session
                 .Callback<Resource, IEnumerable<Resource>>((resource, includes) =>
                 {
                     Assert.Equal(modelId, resource.Id);
-                    
+
                     Assert.Equal(modelPropA, resource.Attributes?["propertyA"]?.ToObject<string>());
                     Assert.Equal(1, resource.Attributes.Count);
 
@@ -336,7 +337,8 @@ namespace RedArrow.Argo.Client.Tests.Session
                     Assert.Equal(1, resource.Relationships.Count);
                     Assert.Equal(JTokenType.Object, resource.Relationships["primaryBasicModel"]?.Data?.Type);
 
-                    var rltnIdentifier = resource.Relationships["primaryBasicModel"].Data.ToObject<ResourceIdentifier>();
+                    var rltnIdentifier = resource.Relationships["primaryBasicModel"]
+                        .Data.ToObject<ResourceIdentifier>();
                     Assert.NotEqual(Guid.Empty, rltnIdentifier.Id);
                     Assert.Equal(primaryBasicModel.Id, rltnIdentifier.Id);
                     Assert.Equal(modelRegistry.GetResourceType<BasicModel>(), rltnIdentifier.Type);
@@ -395,7 +397,7 @@ namespace RedArrow.Argo.Client.Tests.Session
             mockCacheProvider.Verify(x => x.Update(model.PrimaryBasicModel.Id, model.PrimaryBasicModel), Times.Once);
             mockCacheProvider.Verify(x => x.Update(model.Id, model), Times.Never);
         }
-		
+
         [Theory, AutoData]
         public async Task Get__Given_ModelId__When_CacheContainsModel__Then_ReturnCachedModel
             (Guid modelId)
@@ -448,7 +450,7 @@ namespace RedArrow.Argo.Client.Tests.Session
                 modelRegistry);
 
             var result = await subject.Get<BasicModel>(modelId);
-            
+
             Assert.Null(result);
         }
 
@@ -474,7 +476,9 @@ namespace RedArrow.Argo.Client.Tests.Session
                 request =>
                 {
                     Assert.Same(expectedRequest, request);
-                    var root = ResourceRootSingle.FromResource(new Resource {Id = modelId, Type = modelRegistry.GetResourceType<BasicModel>()});
+                    var root =
+                        ResourceRootSingle.FromResource(
+                            new Resource {Id = modelId, Type = modelRegistry.GetResourceType<BasicModel>()});
                     return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
                     {
                         Content = new StringContent(JsonConvert.SerializeObject(root))
@@ -512,21 +516,21 @@ namespace RedArrow.Argo.Client.Tests.Session
         [Fact]
         public void Dispose__Given_ConfiguredHttpClient__When_Disposed__Then_DisposeClient()
         {
-			MockRequestHandler capturedHandler = null;
+            MockRequestHandler capturedHandler = null;
 
             var sessionFactory = Fluently.Configure("http://mock.test.com")
                 .Remote()
-					.Configure(builder => builder
-						.UseRequestHandler<MockRequestHandler>()
-						.ConfigureRequestHandler(handler => capturedHandler = (MockRequestHandler)handler))
-				.BuildSessionFactory();
+                .Configure(builder => builder
+                    .UseRequestHandler<MockRequestHandler>()
+                    .ConfigureRequestHandler(handler => capturedHandler = (MockRequestHandler) handler))
+                .BuildSessionFactory();
 
             var session = sessionFactory.CreateSession();
             session.Dispose();
 
             Assert.True(((Client.Session.Session) session).Disposed);
-			Assert.NotNull(capturedHandler);
-			Assert.True(capturedHandler.Disposed);
+            Assert.NotNull(capturedHandler);
+            Assert.True(capturedHandler.Disposed);
         }
     }
 }

@@ -108,7 +108,6 @@
     <Compile Include="Model\ErrorSource.cs" />
     <Compile Include="Model\IMetaDecorated.cs" />
     <Compile Include="Model\JModel.cs" />
-    <Compile Include="Model\JModelExtensions.cs" />
     <Compile Include="Model\Link.cs" />
     <Compile Include="Model\Relationship.cs" />
     <Compile Include="Model\Resource.cs" />

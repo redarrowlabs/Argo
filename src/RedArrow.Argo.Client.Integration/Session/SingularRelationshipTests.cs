@@ -25,7 +25,7 @@ namespace RedArrow.Argo.Client.Integration.Session
 
                 Assert.Null(provider);
 
-	            await session.Delete(patient);
+                await session.Delete(patient);
             }
         }
 
@@ -147,10 +147,10 @@ namespace RedArrow.Argo.Client.Integration.Session
                 {
                     Provider = new Provider()
                 });
-                
+
                 patientId = patient?.Id;
                 providerId = patient?.Provider?.Id;
-                
+
                 Assert.NotNull(patientId);
                 Assert.NotNull(providerId);
             }

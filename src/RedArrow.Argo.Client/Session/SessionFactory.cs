@@ -15,7 +15,10 @@ namespace RedArrow.Argo.Client.Session
         private IEnumerable<ModelConfiguration> ModelConfigurations { get; }
         private JsonSerializerSettings JsonSettings { get; }
 
-        internal SessionFactory(Func<HttpClient> httpClientFactory, IEnumerable<ModelConfiguration> modelConfigurations, JsonSerializerSettings jsonSettings)
+        internal SessionFactory(
+            Func<HttpClient> httpClientFactory,
+            IEnumerable<ModelConfiguration> modelConfigurations,
+            JsonSerializerSettings jsonSettings)
         {
             HttpClientFactory = httpClientFactory;
             ModelConfigurations = modelConfigurations;
@@ -25,17 +28,16 @@ namespace RedArrow.Argo.Client.Session
         public ISession CreateSession(Action<HttpClient> configureClient = null)
         {
             var modelRegistry = new ModelRegistry(ModelConfigurations);
-	        return new Session(
-		        () =>
-		        {
-			        var client = HttpClientFactory();
-			        configureClient?.Invoke(client);
-			        return client;
-		        },
-		        new HttpRequestBuilder(),
-		        new BasicCacheProvider(modelRegistry),
-		        modelRegistry,
-	            JsonSettings);
+            return new Session(() =>
+                {
+                    var client = HttpClientFactory();
+                    configureClient?.Invoke(client);
+                    return client;
+                },
+                new HttpRequestBuilder(JsonSettings),
+                new BasicCacheProvider(modelRegistry),
+                modelRegistry,
+                JsonSettings);
         }
     }
 }

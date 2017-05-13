@@ -17,13 +17,13 @@ namespace RedArrow.Argo.Client.Tests.Session
         public void SetReference__Given_SessionManagedModel__When_RefNull__Then_SetNullValue
             (Guid modelId)
         {
-            var model = new CircularReferenceA { Id = modelId };
+            var model = new CircularReferenceA {Id = modelId};
 
             var mockRequestBuilder = new Mock<IHttpRequestBuilder>();
             var mockCacheProvider = new Mock<ICacheProvider>();
             var modelRegistry = CreateModelRegistry(
-                 typeof(CircularReferenceA),
-                 typeof(CircularReferenceB));
+                typeof(CircularReferenceA),
+                typeof(CircularReferenceB));
 
             var subject = CreateSubject(
                 null,
@@ -33,7 +33,7 @@ namespace RedArrow.Argo.Client.Tests.Session
 
             model = subject.ManageModel(model);
 
-            subject.SetReference(model, "b", (CircularReferenceB)null);
+            subject.SetReference(model, "b", (CircularReferenceB) null);
 
             var patch = modelRegistry.GetPatch(model);
             var resource = modelRegistry.GetResource(model);
@@ -57,14 +57,14 @@ namespace RedArrow.Argo.Client.Tests.Session
         public void SetReference__Given_SessionManagedModel__When_RefModelWithId__Then_CreateRelationship
             (Guid modelId, Guid refId)
         {
-            var model = new CircularReferenceA { Id = modelId };
-            var refModel = new CircularReferenceB { Id = refId };
+            var model = new CircularReferenceA {Id = modelId};
+            var refModel = new CircularReferenceB {Id = refId};
 
             var mockRequestBuilder = new Mock<IHttpRequestBuilder>();
             var mockCacheProvider = new Mock<ICacheProvider>();
             var modelRegistry = CreateModelRegistry(
-                 typeof(CircularReferenceA),
-                 typeof(CircularReferenceB));
+                typeof(CircularReferenceA),
+                typeof(CircularReferenceB));
 
             var subject = CreateSubject(
                 null,
@@ -101,14 +101,14 @@ namespace RedArrow.Argo.Client.Tests.Session
         public void SetReference__Given_SessionManagedModel__When_RefModelWithoutId__Then_CreateRelationship
             (Guid modelId)
         {
-            var model = new CircularReferenceA { Id = modelId };
+            var model = new CircularReferenceA {Id = modelId};
             var refModel = new CircularReferenceB();
 
             var mockRequestBuilder = new Mock<IHttpRequestBuilder>();
             var mockCacheProvider = new Mock<ICacheProvider>();
             var modelRegistry = CreateModelRegistry(
-                 typeof(CircularReferenceA),
-                 typeof(CircularReferenceB));
+                typeof(CircularReferenceA),
+                typeof(CircularReferenceB));
 
             var subject = CreateSubject(
                 null,

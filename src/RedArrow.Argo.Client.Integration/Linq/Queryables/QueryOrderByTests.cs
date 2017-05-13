@@ -9,89 +9,85 @@ using Xunit.Abstractions;
 
 namespace RedArrow.Argo.Client.Integration.Linq.Queryables
 {
-	public class QueryOrderByTests : IntegrationTest
-	{
-		public QueryOrderByTests(IntegrationTestFixture fixture, ITestOutputHelper outputHelper) :
-			base(fixture, outputHelper)
-		{
-		}
+    public class QueryOrderByTests : IntegrationTest
+    {
+        public QueryOrderByTests(IntegrationTestFixture fixture, ITestOutputHelper outputHelper) :
+            base(fixture, outputHelper)
+        {
+        }
 
-		[Theory, AutoData, Trait("Category", "Integration")]
-		public async Task OrderBySimple(Guid[] ids, string[] props)
-		{
-			// delete any pre-existing garbage
-			await DeleteAll<BasicModel>();
+        [Theory, AutoData, Trait("Category", "Integration")]
+        public async Task OrderBySimple(Guid[] ids, string[] props)
+        {
+            // delete any pre-existing garbage
+            await DeleteAll<BasicModel>();
 
-			using (var session = SessionFactory.CreateSession())
-			{
-				await Task.WhenAll(ids.Select((t, i) => session.Create(new BasicModel
-				{
-					Id = t,
-					PropA = props[i]
-				})).ToArray());
-			}
+            using (var session = SessionFactory.CreateSession())
+            {
+                await Task.WhenAll(ids.Select((t, i) => session.Create(new BasicModel
+                    {
+                        Id = t,
+                        PropA = props[i]
+                    }))
+                    .ToArray());
+            }
 
-			using (var session = SessionFactory.CreateSession())
-			{
-				var results = session.CreateQuery<BasicModel>()
-					.OrderBy(x => x.PropA)
-					.ToArray();
+            using (var session = SessionFactory.CreateSession())
+            {
+                var results = session.CreateQuery<BasicModel>()
+                    .OrderBy(x => x.PropA)
+                    .ToArray();
 
-				Assert.NotNull(results);
-				Assert.Equal(ids.Length, results.Length);
-				Assert.All(results, result =>
-				{
-					Assert.Contains(result.Id, ids);
-				});
+                Assert.NotNull(results);
+                Assert.Equal(ids.Length, results.Length);
+                Assert.All(results, result => { Assert.Contains(result.Id, ids); });
 
-				var orderedPropAs = props.OrderBy(x => x).ToArray();
-				for(var i = 0; i < ids.Length; ++i)
-				{
-					Assert.Equal(orderedPropAs[i], results[i].PropA);
-				}
+                var orderedPropAs = props.OrderBy(x => x).ToArray();
+                for (var i = 0; i < ids.Length; ++i)
+                {
+                    Assert.Equal(orderedPropAs[i], results[i].PropA);
+                }
             }
 
             // cleanup
             await DeleteAll<BasicModel>();
         }
 
-		[Theory, AutoData, Trait("Category", "Integration")]
-		public async Task OrderByDescendingSimple(Guid[] ids, string[] props)
-		{
-			// delete any pre-existing garbage
-			await DeleteAll<BasicModel>();
+        [Theory, AutoData, Trait("Category", "Integration")]
+        public async Task OrderByDescendingSimple(Guid[] ids, string[] props)
+        {
+            // delete any pre-existing garbage
+            await DeleteAll<BasicModel>();
 
-			using (var session = SessionFactory.CreateSession())
-			{
-				await Task.WhenAll(ids.Select((t, i) => session.Create(new BasicModel
-				{
-					Id = t,
-					PropA = props[i]
-				})).ToArray());
-			}
+            using (var session = SessionFactory.CreateSession())
+            {
+                await Task.WhenAll(ids.Select((t, i) => session.Create(new BasicModel
+                    {
+                        Id = t,
+                        PropA = props[i]
+                    }))
+                    .ToArray());
+            }
 
-			using (var session = SessionFactory.CreateSession())
-			{
-				var results = session.CreateQuery<BasicModel>()
-					.OrderByDescending(x => x.PropA)
-					.ToArray();
+            using (var session = SessionFactory.CreateSession())
+            {
+                var results = session.CreateQuery<BasicModel>()
+                    .OrderByDescending(x => x.PropA)
+                    .ToArray();
 
-				Assert.NotNull(results);
-				Assert.Equal(ids.Length, results.Length);
-				Assert.All(results, result =>
-				{
-					Assert.Contains(result.Id, ids);
-				});
+                Assert.NotNull(results);
+                Assert.Equal(ids.Length, results.Length);
+                Assert.All(results, result => { Assert.Contains(result.Id, ids); });
 
-				var orderedPropAs = props.OrderByDescending(x => x).ToArray();
-				for (var i = 0; i < ids.Length; ++i)
-				{
-					Assert.Equal(orderedPropAs[i], results[i].PropA);
-				}
+                var orderedPropAs = props.OrderByDescending(x => x).ToArray();
+                for (var i = 0; i < ids.Length; ++i)
+                {
+                    Assert.Equal(orderedPropAs[i], results[i].PropA);
+                }
             }
 
             // cleanup
             await DeleteAll<BasicModel>();
-		}
-	}
+        }
+    }
 }

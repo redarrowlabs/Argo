@@ -28,7 +28,7 @@ namespace RedArrow.Argo.TestUtils
 
         private static string GetAccessToken()
         {
-            using (var authClient = new HttpClient { BaseAddress = new Uri($"{Host}/security/") })
+            using (var authClient = new HttpClient {BaseAddress = new Uri($"{Host}/security/")})
             {
                 var reqBody = new StringContent(JsonConvert.SerializeObject(new
                 {

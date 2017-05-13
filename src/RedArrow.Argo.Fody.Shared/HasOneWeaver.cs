@@ -58,35 +58,35 @@ namespace RedArrow.Argo
             // supply generic type arguments to template
             var sessionGetAttr = sessionGetAttrGeneric.MakeGenericMethod(context.ModelTypeDef, refPropDef.PropertyType);
 
-			// get
-			// {
-			//   if (this.__argo__generated_session != null)
-			//   {
-			//     this.<[PropName]>k__BackingField = this.__argo__generated_session.GetReference<[ModelType], [ReturnType]>(this, "[AttrName]");
-			//   }
-			//   return this.<[PropName]>k__BackingField;
-			// }
-			refPropDef.GetMethod.Body.Instructions.Clear();
+            // get
+            // {
+            //   if (this.__argo__generated_session != null)
+            //   {
+            //     this.<[PropName]>k__BackingField = this.__argo__generated_session.GetReference<[ModelType], [ReturnType]>(this, "[AttrName]");
+            //   }
+            //   return this.<[PropName]>k__BackingField;
+            // }
+            refPropDef.GetMethod.Body.Instructions.Clear();
             var proc = refPropDef.GetMethod.Body.GetILProcessor();
 
             var returnField = proc.Create(OpCodes.Ldarg_0);
 
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
             proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
-			proc.Emit(OpCodes.Brfalse, returnField); // if __argo__generated_session != null continue, else returnField
+            proc.Emit(OpCodes.Brfalse, returnField); // if __argo__generated_session != null continue, else returnField
 
-			proc.Emit(OpCodes.Ldarg_0); // load 'this' to reference backing field
+            proc.Emit(OpCodes.Ldarg_0); // load 'this' to reference backing field
 
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
             proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
-			proc.Emit(OpCodes.Ldarg_0); // load 'this'
+            proc.Emit(OpCodes.Ldarg_0); // load 'this'
             proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack
-			proc.Emit(OpCodes.Callvirt, context.ImportReference(
-				sessionGetAttr,
-				refPropDef.PropertyType.IsGenericParameter
-					? context.ModelTypeDef
-					: null)); // invoke session.GetReference(..)
-			proc.Emit(OpCodes.Stfld, backingField); // store return value in 'this'.<backing field>
+            proc.Emit(OpCodes.Callvirt, context.ImportReference(
+                sessionGetAttr,
+                refPropDef.PropertyType.IsGenericParameter
+                    ? context.ModelTypeDef
+                    : null)); // invoke session.GetReference(..)
+            proc.Emit(OpCodes.Stfld, backingField); // store return value in 'this'.<backing field>
 
             proc.Append(returnField); // load 'this' onto stack
             proc.Emit(OpCodes.Ldfld, backingField); // load 'this'.<backing field>
@@ -103,17 +103,17 @@ namespace RedArrow.Argo
             // supply generic type arguments to template
             var sessionSetAttr = sessionSetAttrGeneric.MakeGenericMethod(context.ModelTypeDef, refPropDef.PropertyType);
 
-			refPropDef.SetMethod.Body.Instructions.Clear();
+            refPropDef.SetMethod.Body.Instructions.Clear();
 
-			// set
-			// {
-			//     this.<[PropName]>k__BackingField = value;
-			//     if (this.__argo__generated_session != null)
-			//     {
-			//         this.__argo__generated_session.SetReference<[ModelType], [ReturnType]>(this, "[AttrName]", this.<[PropName]>k__BackingField);
-			//     }
-			// }
-			var proc = refPropDef.SetMethod.Body.GetILProcessor();
+            // set
+            // {
+            //     this.<[PropName]>k__BackingField = value;
+            //     if (this.__argo__generated_session != null)
+            //     {
+            //         this.__argo__generated_session.SetReference<[ModelType], [ReturnType]>(this, "[AttrName]", this.<[PropName]>k__BackingField);
+            //     }
+            // }
+            var proc = refPropDef.SetMethod.Body.GetILProcessor();
 
             var ret = proc.Create(OpCodes.Ret);
 
@@ -123,21 +123,21 @@ namespace RedArrow.Argo
 
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
             proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
-			proc.Emit(OpCodes.Brfalse, ret); // if __argo__generated_session != null continue, else return
+            proc.Emit(OpCodes.Brfalse, ret); // if __argo__generated_session != null continue, else return
 
-			proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
+            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
             proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
-			proc.Emit(OpCodes.Ldarg_0); // load 'this'
+            proc.Emit(OpCodes.Ldarg_0); // load 'this'
             proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack
             proc.Emit(OpCodes.Ldarg_0); // load 'this'
             proc.Emit(OpCodes.Ldfld, backingField); // load backing field
-			proc.Emit(OpCodes.Callvirt, context.ImportReference(
-				sessionSetAttr,
-				refPropDef.PropertyType.IsGenericParameter
-					? context.ModelTypeDef
-					: null)); // invoke session.GetReference(..)
+            proc.Emit(OpCodes.Callvirt, context.ImportReference(
+                sessionSetAttr,
+                refPropDef.PropertyType.IsGenericParameter
+                    ? context.ModelTypeDef
+                    : null)); // invoke session.GetReference(..)
 
-			proc.Append(ret);
+            proc.Append(ret);
         }
     }
 }

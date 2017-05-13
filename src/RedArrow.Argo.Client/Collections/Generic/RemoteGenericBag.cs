@@ -11,7 +11,7 @@ namespace RedArrow.Argo.Client.Collections.Generic
 {
     internal class RemoteGenericBag<TItem> : AbstractRemoteCollection, ICollection<TItem>
     {
-	    protected ICollection<Guid> Ids { get; } = new List<Guid>();
+        protected ICollection<Guid> Ids { get; } = new List<Guid>();
 
         public bool Empty => Count == 0;
 
@@ -23,38 +23,38 @@ namespace RedArrow.Argo.Client.Collections.Generic
                 return Ids.Count;
             }
         }
-        
+
         internal RemoteGenericBag(Session.Session session, object owner, string name, IEnumerable<TItem> items = null) :
             base(session, owner, name)
-		{
-		    if (items == null)
-		    {
-		        // pull from owner resource
-		        var relationships = ModelRegistry.GetResource(owner).Relationships;
-		        Relationship rltn;
+        {
+            if (items == null)
+            {
+                // pull from owner resource
+                var relationships = ModelRegistry.GetResource(owner).Relationships;
+                Relationship rltn;
                 if (relationships != null && relationships.TryGetValue(name, out rltn))
                 {
                     var ids = rltn.Data?.SelectTokens("[*].id");
                     ids.Each(id => Ids.Add(id.ToObject<Guid>()));
                 }
-		    }
-		    else
+            }
+            else
             {
                 items.Each(Add);
             }
-		}
-        
-		// should only be used by session when loading remotely, so we can assume these models are cached
+        }
+
+        // should only be used by session when loading remotely, so we can assume these models are cached
         public override void SetItems(IEnumerable items)
         {
-			if (items == null) return;
+            if (items == null) return;
 
-	        foreach (var item in items.OfType<TItem>())
-	        {
-		        AddInternal(item);
-	        }
+            foreach (var item in items.OfType<TItem>())
+            {
+                AddInternal(item);
+            }
         }
-        
+
         IEnumerator<TItem> IEnumerable<TItem>.GetEnumerator()
         {
             Initialize();
@@ -81,34 +81,34 @@ namespace RedArrow.Argo.Client.Collections.Generic
 
             Initialize();
 
-	        if (!AddInternal(item)) return;
+            if (!AddInternal(item)) return;
 
-	        var rltn = GetOrCreateRelationship();
-	        rltn.Add(JObject.FromObject(new ResourceIdentifier
-	        {
-		        Id = ModelRegistry.GetId(item),
-		        Type = ModelRegistry.GetResourceType(item.GetType())
-	        }));
+            var rltn = GetOrCreateRelationship();
+            rltn.Add(JObject.FromObject(new ResourceIdentifier
+            {
+                Id = ModelRegistry.GetId(item),
+                Type = ModelRegistry.GetResourceType(item.GetType())
+            }));
         }
 
-	    private bool AddInternal(TItem item)
-	    {
-		    if (item == null) return false;
+        private bool AddInternal(TItem item)
+        {
+            if (item == null) return false;
 
-			if (ModelRegistry.IsManagedModel(item) && !ModelRegistry.IsManagedBy(Session, item))
-			{
-				var id = ModelRegistry.GetId(item);
-				throw new UnmanagedModelException(item.GetType(), id);
-			}
+            if (ModelRegistry.IsManagedModel(item) && !ModelRegistry.IsManagedBy(Session, item))
+            {
+                var id = ModelRegistry.GetId(item);
+                throw new UnmanagedModelException(item.GetType(), id);
+            }
 
-			var itemId = ModelRegistry.GetOrCreateId(item);
-			Session.Cache.Update(itemId, item);
+            var itemId = ModelRegistry.GetOrCreateId(item);
+            Session.Cache.Update(itemId, item);
 
-			if (Ids.Contains(itemId)) return false;
+            if (Ids.Contains(itemId)) return false;
 
-		    Ids.Add(itemId);
-		    return true;
-	    }
+            Ids.Add(itemId);
+            return true;
+        }
 
         public void Clear()
         {
@@ -116,14 +116,14 @@ namespace RedArrow.Argo.Client.Collections.Generic
             {
                 Initialize();
                 Ids.Clear();
-	            var relationships = ModelRegistry.GetOrCreatePatch(Owner).GetRelationships();
-				Relationship rltn;
-				if (!relationships.TryGetValue(Name, out rltn))
-	            {
-		            rltn = new Relationship();
-		            relationships[Name] = rltn;
-	            }
-	            rltn.Data = new JArray();
+                var relationships = ModelRegistry.GetOrCreatePatch(Owner).GetRelationships();
+                Relationship rltn;
+                if (!relationships.TryGetValue(Name, out rltn))
+                {
+                    rltn = new Relationship();
+                    relationships[Name] = rltn;
+                }
+                rltn.Data = new JArray();
             }
         }
 
@@ -132,7 +132,7 @@ namespace RedArrow.Argo.Client.Collections.Generic
             if (item == null) return false;
 
             Initialize();
-            
+
             return Ids.Contains(ModelRegistry.GetId(item));
         }
 
@@ -141,17 +141,17 @@ namespace RedArrow.Argo.Client.Collections.Generic
             if (item == null) return true;
 
             Initialize();
-			
-            var itemId = ModelRegistry.GetId(item);
-            
-			var removed = Ids.Remove(itemId);
-	        if (removed)
-	        {
-		        var rltn = GetOrCreateRelationship();
-		        rltn.SelectToken($"[?(@.id == '{itemId}')]")?.Remove();
-	        }
 
-	        return removed;
+            var itemId = ModelRegistry.GetId(item);
+
+            var removed = Ids.Remove(itemId);
+            if (removed)
+            {
+                var rltn = GetOrCreateRelationship();
+                rltn.SelectToken($"[?(@.id == '{itemId}')]")?.Remove();
+            }
+
+            return removed;
         }
 
         public void CopyTo(TItem[] array, int index)
@@ -178,26 +178,26 @@ namespace RedArrow.Argo.Client.Collections.Generic
             }
         }
 
-		private JArray GetOrCreateRelationship()
-		{
-			Relationship rltn;
-			var relationships = ModelRegistry.GetPatch(Owner)?.Relationships;
-			if (relationships == null || !relationships.TryGetValue(Name, out rltn))
-			{
-				var modelResource = ModelRegistry.GetResource(Owner);
-				relationships = modelResource.Relationships;
-				if (relationships == null || !relationships.TryGetValue(Name, out rltn))
-				{
+        private JArray GetOrCreateRelationship()
+        {
+            Relationship rltn;
+            var relationships = ModelRegistry.GetPatch(Owner)?.Relationships;
+            if (relationships == null || !relationships.TryGetValue(Name, out rltn))
+            {
+                var modelResource = ModelRegistry.GetResource(Owner);
+                relationships = modelResource.Relationships;
+                if (relationships == null || !relationships.TryGetValue(Name, out rltn))
+                {
                     //TODO: this shouldn't be necessary, maybe invert the above ifs
-					rltn = new Relationship { Data = new JArray() };
-				}
-				else if (rltn.Data != null && rltn.Data.Type != JTokenType.Array)
-				{
-					throw new ModelMapException(
-						$"Relationship {Name} mapped as [HasMany] but json relationship data was not an array",
-						Owner.GetType(),
-						ModelRegistry.GetId(Owner));
-				}
+                    rltn = new Relationship {Data = new JArray()};
+                }
+                else if (rltn.Data != null && rltn.Data.Type != JTokenType.Array)
+                {
+                    throw new ModelMapException(
+                        $"Relationship {Name} mapped as [HasMany] but json relationship data was not an array",
+                        Owner.GetType(),
+                        ModelRegistry.GetId(Owner));
+                }
 
                 rltn = new Relationship
                 {
@@ -207,9 +207,9 @@ namespace RedArrow.Argo.Client.Collections.Generic
                     Links = rltn.Links,
                     Meta = rltn.Meta
                 };
-			    ModelRegistry.GetOrCreatePatch(Owner).GetRelationships()[Name] = rltn;
-			}
-			return (JArray)rltn.Data;
-		}
-	}
+                ModelRegistry.GetOrCreatePatch(Owner).GetRelationships()[Name] = rltn;
+            }
+            return (JArray) rltn.Data;
+        }
+    }
 }

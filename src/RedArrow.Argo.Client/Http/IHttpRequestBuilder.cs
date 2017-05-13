@@ -9,7 +9,7 @@ namespace RedArrow.Argo.Client.Http
     public interface IHttpRequestBuilder
     {
         HttpRequestMessage GetResource(Guid id, string resourceType, string include);
-		HttpRequestMessage GetRelated(Guid resourceId, string resourceType, string rltnName);
+        HttpRequestMessage GetRelated(Guid resourceId, string resourceType, string rltnName);
         HttpRequestMessage CreateResource(Resource resource, IEnumerable<Resource> included);
         HttpRequestMessage UpdateResource(Resource patch, IEnumerable<Resource> included);
 

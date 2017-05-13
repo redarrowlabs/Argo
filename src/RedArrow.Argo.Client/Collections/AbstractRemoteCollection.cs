@@ -11,16 +11,16 @@ namespace RedArrow.Argo.Client.Collections
 
         public object Owner { get; }
         public string Name { get; }
-     
+
         protected bool Initializing { get; set; }
 
         protected bool Initialized { get; set; }
-        
+
         protected AbstractRemoteCollection(Session.Session session, object owner, string name)
         {
             Session = session;
-	        Owner = owner;
-	        Name = name;
+            Owner = owner;
+            Name = name;
         }
 
         // TODO: read and write are the same, for now - this will likely change

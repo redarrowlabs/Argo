@@ -7,8 +7,8 @@ namespace RedArrow.Argo.Client.Linq.Queryables
     internal class TypeQueryable<TModel> : RemoteQueryable<TModel>
     {
         public TypeQueryable(
-			IQuerySession session, 
-			IQueryProvider provider) :
+            IQuerySession session,
+            IQueryProvider provider) :
             base(session, provider)
         {
         }

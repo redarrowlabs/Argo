@@ -84,6 +84,5 @@ namespace RedArrow.Argo.Client.Integration.Http.Handlers.GZip
                 await session.Delete<Patient>(crossSessionId);
             }
         }
-
     }
 }

@@ -12,19 +12,24 @@ namespace RedArrow.Argo
     {
         // Will log an MessageImportance.Normal message to MSBuild. OPTIONAL
         public Action<string> LogDebug { get; }
+
         // Will log an MessageImportance.High message to MSBuild. OPTIONAL
         public Action<string> LogInfo { get; }
+
         // Will log an warning message to MSBuild. OPTIONAL
         public Action<string> LogWarning { get; }
+
         // Will log an warning message to MSBuild at a specific point in the code. OPTIONAL
         public Action<string, SequencePoint> LogWarningPoint { get; }
+
         // Will log an error message to MSBuild. OPTIONAL
         public Action<string> LogError { get; }
+
         // Will log an error message to MSBuild at a specific point in the code. OPTIONAL
         public Action<string, SequencePoint> LogErrorPoint { get; }
 
         public PropertyDefinition IdPropDef { get; private set; }
-        
+
         public IEnumerable<PropertyDefinition> MappedAttributes { get; }
         public IEnumerable<PropertyDefinition> MappedHasOnes { get; }
         public IEnumerable<PropertyDefinition> MappedHasManys { get; }
@@ -41,7 +46,7 @@ namespace RedArrow.Argo
 
         public PropertyDefinition ResourcePropDef { get; set; }
         public PropertyDefinition PatchProperty { get; set; }
-	    public PropertyDefinition SessionManagedProperty { get; set; }
+        public PropertyDefinition SessionManagedProperty { get; set; }
 
         public ModelWeavingContext(
             TypeDefinition modelTypeDef,
@@ -60,7 +65,7 @@ namespace RedArrow.Argo
             LogWarningPoint = logWarningPoint;
             LogError = logError;
             LogErrorPoint = logErrorPoint;
-            
+
             GetMappedIdProperty();
 
             MappedAttributes = GetMappedProperties(Constants.Attributes.Property);
@@ -83,7 +88,7 @@ namespace RedArrow.Argo
 
             IdPropDef = idProperties.Single();
         }
-        
+
         private IEnumerable<PropertyDefinition> GetMappedProperties(string attrFullName)
         {
             return ModelTypeDef.Properties

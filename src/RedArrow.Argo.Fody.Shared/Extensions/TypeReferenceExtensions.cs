@@ -13,18 +13,18 @@ namespace RedArrow.Argo.Extensions
         {
             CeqStructNames = new List<string>
             {
-                typeof (int).Name,
-                typeof (uint).Name,
-                typeof (long).Name,
-                typeof (ulong).Name,
-                typeof (float).Name,
-                typeof (double).Name,
-                typeof (bool).Name,
-                typeof (short).Name,
-                typeof (ushort).Name,
-                typeof (byte).Name,
-                typeof (sbyte).Name,
-                typeof (char).Name,
+                typeof(int).Name,
+                typeof(uint).Name,
+                typeof(long).Name,
+                typeof(ulong).Name,
+                typeof(float).Name,
+                typeof(double).Name,
+                typeof(bool).Name,
+                typeof(short).Name,
+                typeof(ushort).Name,
+                typeof(byte).Name,
+                typeof(sbyte).Name,
+                typeof(char).Name,
             };
         }
 

@@ -19,8 +19,10 @@ namespace WovenByFody
     {
         [Id]
         public Guid Id { get; set; }
+
         [HasOne(LoadStrategy.Eager)]
         public CircularReferenceA A { get; set; }
+
         [HasOne(LoadStrategy.Eager)]
         public CircularReferenceC C { get; set; }
     }
@@ -30,14 +32,16 @@ namespace WovenByFody
     {
         [Id]
         public Guid Id { get; set; }
+
         [HasOne(LoadStrategy.Eager)]
         public CircularReferenceA A { get; set; }
+
         [HasOne(LoadStrategy.Eager)]
         public CircularReferenceD PrimaryD { get; set; }
 
         [HasMany]
         public IEnumerable<CircularReferenceD> AllDs { get; set; }
-	}
+    }
 
     [Model]
     public class CircularReferenceD
