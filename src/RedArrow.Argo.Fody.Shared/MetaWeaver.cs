@@ -2,7 +2,6 @@
 using Mono.Cecil.Cil;
 using System;
 using System.Linq;
-using Mono.Cecil.Rocks;
 using RedArrow.Argo.Extensions;
 
 namespace RedArrow.Argo
@@ -12,27 +11,23 @@ namespace RedArrow.Argo
         private void WeaveMeta(ModelWeavingContext context)
         {
             // get a generic method template from session type
-            var sessionGetMetaGeneric = _sessionTypeDef
-                .Methods
-                .SingleOrDefault(x => x.Name == "GetMeta");
-
             var sessionSetMetaGeneric = _sessionTypeDef
                 .Methods
                 .SingleOrDefault(x => x.Name == "SetMeta");
 
-            if (sessionGetMetaGeneric == null || sessionSetMetaGeneric == null)
+            if (sessionSetMetaGeneric == null)
             {
                 throw new Exception("Argo meta weaving failed unexpectedly");
             }
 
-            foreach (var propertyDef in context.MappedMeta)
+            foreach (var propertyDef in context.MappedMeta.Where(prop => prop.SetMethod != null))
             {
                 // get the backing field
                 var backingField = propertyDef.BackingField();
 
                 if (backingField == null)
                 {
-                    throw new Exception($"Failed to load backing field for property {propertyDef?.FullName}");
+                    throw new Exception($"Failed to load backing field for property {propertyDef.FullName}");
                 }
 
                 // find the attrName, if there is one

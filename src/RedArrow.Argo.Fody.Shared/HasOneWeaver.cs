@@ -44,11 +44,12 @@ namespace RedArrow.Argo
                 LogInfo($"\tWeaving {propertyDef} => {attrName}");
 
                 WeaveReferenceGetter(context, backingField, propertyDef, sessionGetRltnGeneric, attrName);
+                if (propertyDef.SetMethod == null) return; 
                 WeaveReferenceSetter(context, backingField, propertyDef, sessionSetRltnGeneric, attrName);
             }
         }
 
-        private void WeaveReferenceGetter(
+        private static void WeaveReferenceGetter(
             ModelWeavingContext context,
             FieldReference backingField,
             PropertyDefinition refPropDef,
@@ -93,7 +94,7 @@ namespace RedArrow.Argo
             proc.Emit(OpCodes.Ret); // return
         }
 
-        private void WeaveReferenceSetter(
+        private static void WeaveReferenceSetter(
             ModelWeavingContext context,
             FieldReference backingField,
             PropertyDefinition refPropDef,
