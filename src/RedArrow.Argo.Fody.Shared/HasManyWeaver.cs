@@ -61,15 +61,16 @@ namespace RedArrow.Argo
                 LogInfo($"\tWeaving {propertyDef} => {rltnName}");
 
                 WeaveRltnGetter(context, backingField, propertyDef, elementTypeDef, getRltnMethRef, rltnName);
+                if (propertyDef.SetMethod == null) return;
                 WeaveRltnSetter(context, backingField, propertyDef, elementTypeDef, setRltnMethRef, rltnName);
             }
         }
 
-        private void WeaveRltnGetter(
+        private static void WeaveRltnGetter(
             ModelWeavingContext context,
             FieldReference backingField,
             PropertyDefinition rltnPropDef,
-            TypeDefinition elementTypeDef,
+            TypeReference elementTypeDef,
             MethodReference sessionGetRltnGeneric,
             string rltnName)
         {
@@ -111,11 +112,11 @@ namespace RedArrow.Argo
             proc.Emit(OpCodes.Ret);
         }
 
-        private void WeaveRltnSetter(
+        private static void WeaveRltnSetter(
             ModelWeavingContext context,
             FieldReference backingField,
             PropertyDefinition rltnPropDef,
-            TypeDefinition elementTypeDef,
+            TypeReference elementTypeDef,
             MethodReference sessionSetRltnGeneric,
             string rltnName)
         {

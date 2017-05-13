@@ -12,20 +12,16 @@ namespace RedArrow.Argo
         private void WeaveAttributes(ModelWeavingContext context)
         {
             // get a generic method template from session type
-            var sessionGetAttrGeneric = _sessionTypeDef
-                .Methods
-                .SingleOrDefault(x => x.Name == "GetAttribute");
-
             var sessionSetAttrGeneric = _sessionTypeDef
                 .Methods
                 .SingleOrDefault(x => x.Name == "SetAttribute");
 
-            if (sessionGetAttrGeneric == null || sessionSetAttrGeneric == null)
+            if (sessionSetAttrGeneric == null)
             {
                 throw new Exception("Argo attribute weaving failed unexpectedly");
             }
 
-            foreach (var propertyDef in context.MappedAttributes)
+            foreach (var propertyDef in context.MappedAttributes.Where(prop => prop.SetMethod != null))
             {
                 // get the backing field
                 var backingField = propertyDef.BackingField();
