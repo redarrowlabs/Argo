@@ -365,7 +365,7 @@ namespace RedArrow.Argo.Client.Session
             }
 
             // if we make it here, 'attr' has been set
-            return attr.ToObject<TAttr>();
+            return attr.ToObject<TAttr>(JsonSerializer.CreateDefault(JsonSettings));
         }
 
         public void SetAttribute<TModel, TAttr>(TModel model, string attrName, TAttr value)
@@ -389,7 +389,7 @@ namespace RedArrow.Argo.Client.Session
             }
 
             // if we make it here, 'attr' has been set
-            return attr.ToObject<TAttr>();
+            return attr.ToObject<TAttr>(JsonSerializer.CreateDefault(JsonSettings));
         }
 
         public void SetMeta<TModel, TAttr>(TModel model, string metaName, TAttr value)

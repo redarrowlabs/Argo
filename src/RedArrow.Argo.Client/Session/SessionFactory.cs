@@ -27,7 +27,7 @@ namespace RedArrow.Argo.Client.Session
 
         public ISession CreateSession(Action<HttpClient> configureClient = null)
         {
-            var modelRegistry = new ModelRegistry(ModelConfigurations);
+            var modelRegistry = new ModelRegistry(ModelConfigurations, JsonSettings);
             return new Session(() =>
                 {
                     var client = HttpClientFactory();

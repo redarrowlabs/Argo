@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RedArrow.Argo.Client.Config.Model;
 using RedArrow.Argo.Client.Exceptions;
@@ -14,13 +15,15 @@ namespace RedArrow.Argo.Client.Session.Registry
     {
         private IDictionary<Type, ModelConfiguration> Registry { get; }
         private IDictionary<string, Type> ResourceTypeToModelType { get; }
+        private JsonSerializerSettings JsonSettings { get; }
 
-        internal ModelRegistry(IEnumerable<ModelConfiguration> config)
+        internal ModelRegistry(IEnumerable<ModelConfiguration> config, JsonSerializerSettings jsonSettings)
         {
             Registry = config.ToDictionary(x => x.ModelType, x => x);
             ResourceTypeToModelType = Registry.ToDictionary(
                 kvp => kvp.Value.ResourceType,
                 kvp => kvp.Key);
+            JsonSettings = jsonSettings;
         }
 
         public string GetResourceType<TModel>()
@@ -35,12 +38,9 @@ namespace RedArrow.Argo.Client.Session.Registry
 
         public Type GetModelType(string resourceType)
         {
-            Type ret;
-            if (ResourceTypeToModelType.TryGetValue(resourceType, out ret))
-            {
-                return ret;
-            }
-            return null;
+            return ResourceTypeToModelType.TryGetValue(resourceType, out Type ret)
+                ? ret
+                : null;
         }
 
         #region Resource
@@ -72,11 +72,9 @@ namespace RedArrow.Argo.Client.Session.Registry
         public Resource GetOrCreatePatch(object model)
         {
             var patch = GetPatch(model);
-            if (patch == null)
-            {
-                patch = new Resource {Id = GetId(model), Type = GetResourceType(model.GetType())};
-                SetPatch(model, patch);
-            }
+            if (patch != null) return patch;
+            patch = new Resource {Id = GetId(model), Type = GetResourceType(model.GetType())};
+            SetPatch(model, patch);
             return patch;
         }
 
@@ -132,11 +130,9 @@ namespace RedArrow.Argo.Client.Session.Registry
         public Guid GetOrCreateId(object model)
         {
             var modelId = GetId(model);
-            if (modelId == Guid.Empty)
-            {
-                modelId = Guid.NewGuid();
-                SetId(model, modelId);
-            }
+            if (modelId != Guid.Empty) return modelId;
+            modelId = Guid.NewGuid();
+            SetId(model, modelId);
             return modelId;
         }
 
@@ -152,12 +148,10 @@ namespace RedArrow.Argo.Client.Session.Registry
 
         public AttributeConfiguration GetAttributeConfig(Type modelType, string attrName)
         {
-            AttributeConfiguration ret;
-            if (!GetModelConfig(modelType).AttributeConfigs.TryGetValue(attrName, out ret))
+            if (!GetModelConfig(modelType).AttributeConfigs.TryGetValue(attrName, out var ret))
             {
                 throw new AttributeNotRegisteredException(attrName, modelType);
             }
-
             return ret;
         }
 
@@ -173,12 +167,10 @@ namespace RedArrow.Argo.Client.Session.Registry
 
         public MetaConfiguration GetMetaConfig(Type modelType, string attrName)
         {
-            MetaConfiguration ret;
-            if (!GetModelConfig(modelType).MetaConfigs.TryGetValue(attrName, out ret))
+            if (!GetModelConfig(modelType).MetaConfigs.TryGetValue(attrName, out var ret))
             {
                 throw new MetaNotRegisteredException(attrName, modelType);
             }
-
             return ret;
         }
 
@@ -192,7 +184,7 @@ namespace RedArrow.Argo.Client.Session.Registry
                     kvp => kvp.Key,
                     kvp => kvp.Value);
             return attrValues.Any()
-                ? JObject.FromObject(attrValues)
+                ? JObject.FromObject(attrValues, JsonSerializer.CreateDefault(JsonSettings))
                 : null;
         }
 
@@ -223,12 +215,10 @@ namespace RedArrow.Argo.Client.Session.Registry
 
         public RelationshipConfiguration GetHasManyConfig(Type modelType, string rltnName)
         {
-            RelationshipConfiguration ret;
-            if (!GetModelConfig(modelType).HasManyProperties.TryGetValue(rltnName, out ret))
+            if (!GetModelConfig(modelType).HasManyProperties.TryGetValue(rltnName, out var ret))
             {
                 throw new RelationshipNotRegisteredExecption(rltnName, modelType);
             }
-
             return ret;
         }
 
@@ -238,7 +228,7 @@ namespace RedArrow.Argo.Client.Session.Registry
             var unmapped = GetModelConfig(modelType).UnmappedAttributesProperty?.GetValue(model);
 
             return unmapped != null
-                ? JObject.FromObject(unmapped)
+                ? JObject.FromObject(unmapped, JsonSerializer.CreateDefault(JsonSettings))
                 : null;
         }
 
@@ -252,7 +242,11 @@ namespace RedArrow.Argo.Client.Session.Registry
             var mappedAttrNames = GetAttributeConfigs(modelType).Select(x => x.AttributeName);
             var unmappedAttrs = attributes?.Properties().Where(x => !mappedAttrNames.Contains(x.Name));
             if (unmappedAttrs == null) return;
-            unmappedProp.SetValue(model, new JObject(unmappedAttrs).ToObject(unmappedProp.PropertyType));
+            unmappedProp.SetValue(
+                model,
+                new JObject(unmappedAttrs).ToObject(
+                    unmappedProp.PropertyType,
+                    JsonSerializer.CreateDefault(JsonSettings)));
         }
 
         private ModelConfiguration GetModelConfig<TModel>()
