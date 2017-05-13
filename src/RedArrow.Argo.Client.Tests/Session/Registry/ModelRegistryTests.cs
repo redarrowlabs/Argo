@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Newtonsoft.Json;
 using Ploeh.AutoFixture.Xunit2;
 using RedArrow.Argo.Client.Config.Model;
 using RedArrow.Argo.Client.Session.Registry;
@@ -17,7 +18,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
         {
             var config = new ModelConfiguration(typeof(ModelWithPrivateIdSetter));
 
-            var subject = new ModelRegistry(new[] {config});
+            var subject = new ModelRegistry(new[] {config}, new JsonSerializerSettings());
 
             var model = new ModelWithPrivateIdSetter();
 
@@ -32,7 +33,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
         {
             var config = new ModelConfiguration(typeof(ModelWithPublicIdSetter));
 
-            var subject = new ModelRegistry(new[] {config});
+            var subject = new ModelRegistry(new[] {config}, new JsonSerializerSettings());
 
             var model = new ModelWithPublicIdSetter();
 
@@ -47,7 +48,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
         {
             var config = new ModelConfiguration(typeof(ModelWithNoIdSetter));
 
-            var subject = new ModelRegistry(new[] {config});
+            var subject = new ModelRegistry(new[] {config}, new JsonSerializerSettings());
 
             var model = new ModelWithNoIdSetter();
 
@@ -62,7 +63,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
         {
             var config = new ModelConfiguration(typeof(ModelWithPublicIdSetter));
 
-            var subject = new ModelRegistry(new[] {config});
+            var subject = new ModelRegistry(new[] {config}, new JsonSerializerSettings());
 
             var model = new ModelWithPublicIdSetter
             {
@@ -79,7 +80,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
         {
             var config = new ModelConfiguration(typeof(TestWovenModel));
 
-            var subject = new ModelRegistry(new[] {config});
+            var subject = new ModelRegistry(new[] {config}, new JsonSerializerSettings());
 
             var result = subject.GetAttributeConfigs(typeof(TestWovenModel));
 
@@ -95,7 +96,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
         {
             var config = new ModelConfiguration(typeof(TestWovenModel));
 
-            var subject = new ModelRegistry(new[] {config});
+            var subject = new ModelRegistry(new[] {config}, new JsonSerializerSettings());
 
             var result1 = subject.GetResourceType(typeof(TestWovenModel));
             var result2 = subject.GetResourceType<TestWovenModel>();
@@ -109,7 +110,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
         {
             var config = new ModelConfiguration(typeof(TestCustomWovenModel));
 
-            var subject = new ModelRegistry(new[] {config});
+            var subject = new ModelRegistry(new[] {config}, new JsonSerializerSettings());
 
             var result1 = subject.GetResourceType(typeof(TestCustomWovenModel));
             var result2 = subject.GetResourceType<TestCustomWovenModel>();
@@ -336,7 +337,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
 
         private static ModelRegistry CreateSubject(params Type[] modelTypes)
         {
-            return new ModelRegistry(modelTypes.Select(x => new ModelConfiguration(x)));
+            return new ModelRegistry(modelTypes.Select(x => new ModelConfiguration(x)), new JsonSerializerSettings());
         }
     }
 }

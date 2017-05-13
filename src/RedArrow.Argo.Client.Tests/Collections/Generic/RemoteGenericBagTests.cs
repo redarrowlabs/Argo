@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using Moq;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Ploeh.AutoFixture.Xunit2;
 using RedArrow.Argo.Client.Cache;
 using RedArrow.Argo.Client.Collections.Generic;
@@ -16,7 +14,6 @@ using RedArrow.Argo.Client.Http;
 using RedArrow.Argo.Client.Model;
 using RedArrow.Argo.Client.Session.Registry;
 using RedArrow.Argo.Client.Tests.Extensions;
-using RedArrow.Argo.Client.Tests.Session.Models;
 using WovenByFody;
 using Xunit;
 
@@ -94,7 +91,7 @@ namespace RedArrow.Argo.Client.Tests.Collections.Generic
 
         private static IModelRegistry CreateModelRegistry(params Type[] types)
         {
-            return new ModelRegistry(types.Select(x => new ModelConfiguration(x)));
+            return new ModelRegistry(types.Select(x => new ModelConfiguration(x)), new JsonSerializerSettings());
         }
 
         private static Client.Session.Session CreateSession(

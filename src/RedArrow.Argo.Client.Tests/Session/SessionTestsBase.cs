@@ -34,7 +34,7 @@ namespace RedArrow.Argo.Client.Tests.Session
 
         protected static IModelRegistry CreateModelRegistry(params Type[] types)
         {
-            return new ModelRegistry(types.Select(x => new ModelConfiguration(x)));
+            return new ModelRegistry(types.Select(x => new ModelConfiguration(x)), new JsonSerializerSettings());
         }
     }
 }
