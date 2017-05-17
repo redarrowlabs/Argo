@@ -1,12 +1,12 @@
-﻿using System;
+﻿using RedArrow.Argo.Client.Config;
+using RedArrow.Argo.Client.Config.Pipeline;
+using RedArrow.Argo.Client.Http.Handlers.ExceptionLogger;
+using RedArrow.Argo.Client.Session;
+using System;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using RedArrow.Argo.Client.Config;
-using RedArrow.Argo.Client.Config.Pipeline;
-using RedArrow.Argo.Client.Session;
 using WovenByFody;
 using Xunit;
 using Xunit.Abstractions;
@@ -46,7 +46,7 @@ namespace RedArrow.Argo.TestUtils
         }
 
         protected virtual Action<HttpClient> HttpClient => _ => { };
-        protected virtual Action<IHttpClientBuilder> HttpClientBuilder => _ => { };
+        protected virtual Action<IHttpClientBuilder> HttpClientBuilder => _ => { _.UseExceptionLogger(); };
 
         protected async Task DeleteAll<TModel>()
         {

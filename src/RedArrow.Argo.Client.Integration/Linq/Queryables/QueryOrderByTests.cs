@@ -89,5 +89,41 @@ namespace RedArrow.Argo.Client.Integration.Linq.Queryables
             // cleanup
             await DeleteAll<BasicModel>();
         }
+
+        [Theory, AutoData, Trait("Category", "Integration")]
+        public async Task MetaOrderBySimple(Guid[] ids, string[] props)
+        {
+            // delete any pre-existing garbage
+            await DeleteAll<Widget>();
+
+            using (var session = SessionFactory.CreateSession())
+            {
+                await Task.WhenAll(ids.Select((t, i) => session.Create(new Widget
+                {
+                    Id = t,
+                    Whatever = props[i]
+                })).ToArray());
+            }
+
+            using (var session = SessionFactory.CreateSession())
+            {
+                var results = session.CreateQuery<Widget>()
+                    .OrderBy(x => x.Whatever)
+                    .ToArray();
+
+                Assert.NotNull(results);
+                Assert.Equal(ids.Length, results.Length);
+                Assert.All(results, result => { Assert.Contains(result.Id, ids); });
+
+                var orderedPropAs = props.OrderBy(x => x).ToArray();
+                for (var i = 0; i < ids.Length; ++i)
+                {
+                    Assert.Equal(orderedPropAs[i], results[i].Whatever);
+                }
+            }
+
+            // cleanup
+            await DeleteAll<BasicModel>();
+        }
     }
 }

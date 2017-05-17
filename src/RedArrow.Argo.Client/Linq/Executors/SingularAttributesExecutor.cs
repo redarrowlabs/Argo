@@ -14,14 +14,14 @@ namespace RedArrow.Argo.Client.Linq.Executors
         Last
     }
 
-    internal class SingularExecutor<TModel> : RemoteExecutor<TModel>
+    internal class SingularAttributesExecutor<TModel> : RemoteExecutor<TModel>
     {
         private SingularExecutorType Type { get; }
         private bool IsOrDefault { get; }
 
         private JsonSerializerSettings JsonSettings { get; }
 
-        public SingularExecutor(
+        public SingularAttributesExecutor(
             RemoteQueryable<TModel> target,
             Expression<Func<TModel, bool>> expression,
             JsonSerializerSettings jsonSettings,
@@ -41,7 +41,7 @@ namespace RedArrow.Argo.Client.Linq.Executors
             var targetQueryable = Target;
             if (Expression != null)
             {
-                targetQueryable = new WhereQueryable<TModel>(session, Target, Expression, JsonSettings);
+                targetQueryable = new WhereAttributesQueryable<TModel>(session, Target, Expression, JsonSettings);
             }
 
             var query = targetQueryable.BuildQuery();

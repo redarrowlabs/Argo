@@ -119,7 +119,8 @@
     <Compile Include="Linq\Queryable\SkipQueryableTests.cs" />
     <Compile Include="Linq\Queryable\TakeQueryableTests.cs" />
     <Compile Include="Linq\Queryable\TypeQueryableTests.cs" />
-    <Compile Include="Linq\Queryable\WhereQueryableTests.cs" />
+    <Compile Include="Linq\Queryable\WhereMetaQueryableTests.cs" />
+    <Compile Include="Linq\Queryable\WhereAttributesQueryableTests.cs" />
     <Compile Include="MockRequestHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Query\QueryContextTests.cs" />

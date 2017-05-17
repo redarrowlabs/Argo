@@ -1,7 +1,9 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using RedArrow.Argo.Attributes;
 using RedArrow.Argo.Client.Query;
 using RedArrow.Argo.Client.Session;
+using System;
+using System.Linq;
+using System.Linq.Expressions;
 
 namespace RedArrow.Argo.Client.Linq.Queryables
 {
@@ -31,13 +33,19 @@ namespace RedArrow.Argo.Client.Linq.Queryables
             var query = Target.BuildQuery();
 
             var sortMember = GetJsonName(mExpression.Member);
-
             if (IsDesc)
             {
                 sortMember = sortMember.Insert(0, "-");
             }
 
-            query.AppendSort(sortMember);
+            if (mExpression.Member.CustomAttributes.Any(x => x.AttributeType == typeof(MetaAttribute)))
+            {
+                query.AppendMetaSort(sortMember);
+            }
+            else
+            {
+                query.AppendAttributesSort(sortMember);
+            }
 
             return query;
         }

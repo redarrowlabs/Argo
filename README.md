@@ -37,6 +37,9 @@ Here is an example of a JSON API resource:
     "lastname": "O'Tyme",
     "age": 42
   },
+  "meta": {
+    "lastAccessed": "2017-05-17T19:53:55.6534431Z"
+  }
   "relationships": {
     "bestFriend": {
       "data": { "type": "person", "id": "2dba2b39-a419-41c1-8d3c-46eb1250dfe8" }
@@ -59,6 +62,7 @@ public class Person
   public string FirstName { get; set; }               // $.attributes.firstName
   public string LastName { get; set; }                // $.attributes.lastName
   public int Age { get; set; }                        // $.attributes.age
+  public DateTime LastAccessed { get; set; }          // $.meta.lastAccessed
   public Person BestFriend { get; set; }              // $.relationships.bestFriend.data.???
   public ICollection<Person> Friends { get; set; }    // $.relationships.friends.data.???
 }
@@ -181,6 +185,7 @@ A LINQ provider is available.  This allows "queries" to be compile-safe instead 
  - [x] SingleOrDefault
  - [x] Last
  - [x] LastOrDefault
+ - [x] Meta (custom extension)
 
 Don't see your favorite LINQ extension?  Create an [issue](https://github.com/redarrowlabs/Argo/issues) and I can get started on adding it!
 
@@ -214,7 +219,9 @@ using (var session = sessionFactory.CreateSession())
 }
 ```
 
-Please note that the `.Where(...)` extension currently follows a [proprietary filter](https://titan-discourse.northcentralus.cloudapp.azure.com/t/data-querying-spec/24) clause format specified as part of the Titan platform.  The `filter` query parameter is [specified, but not defined](http://jsonapi.org/format/#fetching-filtering), in the Json.API spec.
+Please note that the `.Where(...)` extension currently follows a [proprietary filter](https://docs.titan.redarrow.io/docs/retrieving-data) clause format specified as part of the Titan platform.  The `filter` query parameter is [specified, but not defined](http://jsonapi.org/format/#fetching-filtering), in the Json.API spec.
+
+Please note that the `.Meta(...)` is a mirror of the `.Where(...)` extension that specifically targets the `meta` element of the model being queried. The extension currently follows a [proprietary filter/sort](https://docs.titan.redarrow.io/docs/retrieving-data) clause format specified as part of the Titan platform.
 
 ## How
 Argo takes advantage of [Fody](https://github.com/Fody/Fody) to weave code into your POCO Model at compile time in order to bridge the gap between the POCO semantics developers expect and the Json.API json structure.
@@ -243,6 +250,8 @@ public class Person
   public string LastName { get; set; }
   [Property]
   public int Age { get; set; }
+  [Meta]
+  public DateTime LastAccessed { get; set; }
   [HasOne]
   public Friend BestFriend { get; set; }
   [HasMany]
@@ -343,6 +352,28 @@ public class Actor
   public string FirstName { get; set; }
 }
 ```
+
+If dot-notation is used when specifying a property name override, this will create/maintain nested attributes within the stored JSON.
+```csharp
+[Model("person")]
+public class Actor
+{
+  [Property("additionalInfo.middleName")]
+  public string MiddleName { get; set; }
+}
+```
+The above will cause the stored JSON to take the form:
+```javascript
+{
+  "type": "person",
+  "id": "02e8ae9d-b9b5-40e9-9746-906f1fb26b64",
+  "attributes": {
+    "additionalInfo": {
+      "middleName": "Edward"
+    }
+  }
+}
+```
 ### Relationship Weaving
 We can also relate models
 ```csharp
@@ -407,7 +438,7 @@ We're still evaluating the long-term roadmap for this project, but initial tenta
 - [x] Configurable eager loading
 - [x] GZip Compression
 #### 2.0
-- [ ] Experimental Entity Framework Core provider
+- [ ] Refactor/upgrade of LINQ provider
 - [ ] Cache provider plugins with initial support for [Akavache](https://github.com/akavache/Akavache)
 #### 3.0
 - [ ] server to client eventing/sync push via [Rx.NET](https://github.com/Reactive-Extensions/Rx.NET)

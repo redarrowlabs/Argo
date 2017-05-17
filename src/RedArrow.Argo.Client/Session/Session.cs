@@ -1,7 +1,19 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using RedArrow.Argo.Attributes;
 using RedArrow.Argo.Client.Cache;
+using RedArrow.Argo.Client.Collections;
+using RedArrow.Argo.Client.Collections.Generic;
+using RedArrow.Argo.Client.Exceptions;
 using RedArrow.Argo.Client.Extensions;
+using RedArrow.Argo.Client.Http;
+using RedArrow.Argo.Client.Linq;
+using RedArrow.Argo.Client.Linq.Queryables;
+using RedArrow.Argo.Client.Logging;
+using RedArrow.Argo.Client.Model;
+using RedArrow.Argo.Client.Query;
 using RedArrow.Argo.Client.Session.Registry;
+using RedArrow.Argo.Model;
 using RedArrow.Argo.Session;
 using System;
 using System.Collections.Generic;
@@ -10,18 +22,6 @@ using System.Linq.Expressions;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using RedArrow.Argo.Attributes;
-using RedArrow.Argo.Client.Collections;
-using RedArrow.Argo.Client.Collections.Generic;
-using RedArrow.Argo.Client.Exceptions;
-using RedArrow.Argo.Client.Http;
-using RedArrow.Argo.Client.Linq;
-using RedArrow.Argo.Client.Linq.Queryables;
-using RedArrow.Argo.Client.Logging;
-using RedArrow.Argo.Client.Model;
-using RedArrow.Argo.Client.Query;
-using RedArrow.Argo.Model;
 
 namespace RedArrow.Argo.Client.Session
 {
@@ -342,7 +342,7 @@ namespace RedArrow.Argo.Client.Session
             return createData.Result;
         }
 
-        #endregion
+        #endregion IQuerySession
 
         #region IModelSession
 
@@ -356,16 +356,7 @@ namespace RedArrow.Argo.Client.Session
             ThrowIfDisposed();
 
             // NOTE: GetAttribute is only used by model ctor. we can safely check the resource and ignore the patch
-            JToken attr;
-            var attributes = ModelRegistry.GetResource(model).Attributes;
-            if (attributes == null || !attributes.TryGetValue(attrName, out attr))
-            {
-                // the attrName was not found in the resource
-                return default(TAttr);
-            }
-
-            // if we make it here, 'attr' has been set
-            return attr.ToObject<TAttr>(JsonSerializer.CreateDefault(JsonSettings));
+            return ModelRegistry.GetAttributeValue<TModel, TAttr>(model, attrName);
         }
 
         public void SetAttribute<TModel, TAttr>(TModel model, string attrName, TAttr value)
@@ -375,24 +366,15 @@ namespace RedArrow.Argo.Client.Session
             ModelRegistry.GetOrCreatePatch(model).SetAttribute(attrName, value);
         }
 
-        public TAttr GetMeta<TModel, TAttr>(TModel model, string metaName)
+        public TMeta GetMeta<TModel, TMeta>(TModel model, string metaName)
         {
             ThrowIfDisposed();
 
             // NOTE: GetMeta is only used by model ctor. we can safely check the resource and ignore the patch
-            JToken attr;
-            var attributes = ModelRegistry.GetResource(model).Meta;
-            if (attributes == null || !attributes.TryGetValue(metaName, out attr))
-            {
-                // the attrName was not found in the resource
-                return default(TAttr);
-            }
-
-            // if we make it here, 'attr' has been set
-            return attr.ToObject<TAttr>(JsonSerializer.CreateDefault(JsonSettings));
+            return ModelRegistry.GetMetaValue<TModel, TMeta>(model, metaName);
         }
 
-        public void SetMeta<TModel, TAttr>(TModel model, string metaName, TAttr value)
+        public void SetMeta<TModel, TMeta>(TModel model, string metaName, TMeta value)
         {
             ThrowIfDisposed();
 
@@ -553,11 +535,11 @@ namespace RedArrow.Argo.Client.Session
             collection.SetItems(related);
         }
 
-        #endregion
+        #endregion ICollectionSession
 
         public TModel CreateResourceModel<TModel>(IResourceIdentifier resource)
         {
-            return (TModel) CreateResourceModel(resource);
+            return (TModel)CreateResourceModel(resource);
         }
 
         public object CreateResourceModel(IResourceIdentifier resource)

@@ -12,7 +12,7 @@ namespace RedArrow.Argo
             if (context.IdPropDef != null &&
                 context.IdPropDef.GetMethod?.ReturnType.Resolve() != context.ImportReference(typeof(Guid)).Resolve())
             {
-                LogError($"[Id] property must have a System.Guid getter: {context.IdPropDef.FullName} ");
+                LogError($"[Id] property must have a System.Guid getter: {context.IdPropDef.FullName}");
             }
 
             // if id property doesn't have a setter, try to add one

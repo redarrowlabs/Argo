@@ -125,8 +125,7 @@ namespace RedArrow.Argo.Client.Integration.Session
 
                 id = widget.Id;
 
-                Assert.NotNull(widget.Metadata);
-                Assert.NotEqual(Guid.Empty, widget.Metadata.ETag);
+                Assert.NotNull(widget.ETag);
             }
 
             // cleanup

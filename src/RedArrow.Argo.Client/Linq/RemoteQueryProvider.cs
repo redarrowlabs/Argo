@@ -1,11 +1,11 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using RedArrow.Argo.Client.Linq.Executors;
 using RedArrow.Argo.Client.Linq.Queryables;
 using RedArrow.Argo.Client.Session;
+using System;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 
 namespace RedArrow.Argo.Client.Linq
 {
@@ -25,7 +25,7 @@ namespace RedArrow.Argo.Client.Linq
             var elementType = expression.Type.GetElementType();
             try
             {
-                return (IQueryable) Activator.CreateInstance(
+                return (IQueryable)Activator.CreateInstance(
                     typeof(RemoteQueryable<>).MakeGenericType(elementType),
                     this,
                     expression);
@@ -43,7 +43,7 @@ namespace RedArrow.Argo.Client.Linq
         }
 
         // Queryable's "single value" standard query operators call this method.
-        // It is also called from .GetEnumerator(). 
+        // It is also called from .GetEnumerator().
         // TResult may not be TModel.  may be bool (.Any()) or int (.Count())
         public TResult Execute<TResult>(Expression expression)
         {
@@ -81,44 +81,49 @@ namespace RedArrow.Argo.Client.Linq
             switch (methodName)
             {
                 case "Where":
-                {
-                    var operand = ((UnaryExpression) mcExpression.Arguments[1]).Operand;
-                    return CreateWhereQuery<TModel>(target, operand);
-                }
+                    {
+                        var operand = ((UnaryExpression)mcExpression.Arguments[1]).Operand;
+                        return CreateWhereAttributesQuery<TModel>(target, operand);
+                    }
+                case "Meta":
+                    {
+                        var operand = ((UnaryExpression)mcExpression.Arguments[1]).Operand;
+                        return CreateWhereMetaQuery<TModel>(target, operand);
+                    }
                 case "OrderBy":
-                {
-                    var operand = ((UnaryExpression) mcExpression.Arguments[1]).Operand;
-                    return CreateOrderByQuery<TModel>(target, operand, false);
-                }
+                    {
+                        var operand = ((UnaryExpression)mcExpression.Arguments[1]).Operand;
+                        return CreateOrderByQuery<TModel>(target, operand, false);
+                    }
                 case "OrderByDescending":
-                {
-                    var operand = ((UnaryExpression) mcExpression.Arguments[1]).Operand;
-                    return CreateOrderByQuery<TModel>(target, operand, true);
-                }
+                    {
+                        var operand = ((UnaryExpression)mcExpression.Arguments[1]).Operand;
+                        return CreateOrderByQuery<TModel>(target, operand, true);
+                    }
                 case "ThenBy":
-                {
-                    var operand = ((UnaryExpression) mcExpression.Arguments[1]).Operand;
-                    return CreateOrderByQuery<TModel>(target, operand, false);
-                }
+                    {
+                        var operand = ((UnaryExpression)mcExpression.Arguments[1]).Operand;
+                        return CreateOrderByQuery<TModel>(target, operand, false);
+                    }
                 case "ThenByDescending":
-                {
-                    var operand = ((UnaryExpression) mcExpression.Arguments[1]).Operand;
-                    return CreateOrderByQuery<TModel>(target, operand, true);
-                }
+                    {
+                        var operand = ((UnaryExpression)mcExpression.Arguments[1]).Operand;
+                        return CreateOrderByQuery<TModel>(target, operand, true);
+                    }
                 case "Skip":
-                {
-                    var operand = mcExpression.Arguments[1];
-                    return CreateSkipQuery<TModel>(target, operand);
-                }
+                    {
+                        var operand = mcExpression.Arguments[1];
+                        return CreateSkipQuery<TModel>(target, operand);
+                    }
                 case "Take":
-                {
-                    var operand = mcExpression.Arguments[1];
-                    return CreateTakeQuery<TModel>(target, operand);
-                }
+                    {
+                        var operand = mcExpression.Arguments[1];
+                        return CreateTakeQuery<TModel>(target, operand);
+                    }
                 default:
-                {
-                    throw new NotSupportedException();
-                }
+                    {
+                        throw new NotSupportedException();
+                    }
             }
         }
 
@@ -136,53 +141,64 @@ namespace RedArrow.Argo.Client.Linq
             GetExecuteTarget(targetExpression, out target, out targetType);
 
             var predicate = mcExpression.Arguments.Count > 1
-                ? ((UnaryExpression) mcExpression.Arguments[1]).Operand
+                ? ((UnaryExpression)mcExpression.Arguments[1]).Operand
                 : null;
 
             switch (methodName)
             {
                 case "First":
-                {
-                    return (RemoteExecutor) GetExecutorCtor(typeof(SingularExecutor<>), targetType)
-                        .Invoke(new[] {target, predicate, JsonSettings, SingularExecutorType.First, false});
-                }
+                    {
+                        return (RemoteExecutor)GetExecutorCtor(typeof(SingularAttributesExecutor<>), targetType)
+                            .Invoke(new[] { target, predicate, JsonSettings, SingularExecutorType.First, false });
+                    }
                 case "FirstOrDefault":
-                {
-                    return (RemoteExecutor) GetExecutorCtor(typeof(SingularExecutor<>), targetType)
-                        .Invoke(new[] {target, predicate, JsonSettings, SingularExecutorType.First, true});
-                }
+                    {
+                        return (RemoteExecutor)GetExecutorCtor(typeof(SingularAttributesExecutor<>), targetType)
+                            .Invoke(new[] { target, predicate, JsonSettings, SingularExecutorType.First, true });
+                    }
                 case "Single":
-                {
-                    return (RemoteExecutor) GetExecutorCtor(typeof(SingularExecutor<>), targetType)
-                        .Invoke(new[] {target, predicate, JsonSettings, SingularExecutorType.Single, false});
-                }
+                    {
+                        return (RemoteExecutor)GetExecutorCtor(typeof(SingularAttributesExecutor<>), targetType)
+                            .Invoke(new[] { target, predicate, JsonSettings, SingularExecutorType.Single, false });
+                    }
                 case "SingleOrDefault":
-                {
-                    return (RemoteExecutor) GetExecutorCtor(typeof(SingularExecutor<>), targetType)
-                        .Invoke(new[] {target, predicate, JsonSettings, SingularExecutorType.Single, true});
-                }
+                    {
+                        return (RemoteExecutor)GetExecutorCtor(typeof(SingularAttributesExecutor<>), targetType)
+                            .Invoke(new[] { target, predicate, JsonSettings, SingularExecutorType.Single, true });
+                    }
                 case "Last":
-                {
-                    return (RemoteExecutor) GetExecutorCtor(typeof(SingularExecutor<>), targetType)
-                        .Invoke(new[] {target, predicate, JsonSettings, SingularExecutorType.Last, false});
-                }
+                    {
+                        return (RemoteExecutor)GetExecutorCtor(typeof(SingularAttributesExecutor<>), targetType)
+                            .Invoke(new[] { target, predicate, JsonSettings, SingularExecutorType.Last, false });
+                    }
                 case "LastOrDefault":
-                {
-                    return (RemoteExecutor) GetExecutorCtor(typeof(SingularExecutor<>), targetType)
-                        .Invoke(new[] {target, predicate, JsonSettings, SingularExecutorType.Last, true});
-                }
+                    {
+                        return (RemoteExecutor)GetExecutorCtor(typeof(SingularAttributesExecutor<>), targetType)
+                            .Invoke(new[] { target, predicate, JsonSettings, SingularExecutorType.Last, true });
+                    }
                 default:
-                {
-                    throw new NotSupportedException();
-                }
+                    {
+                        throw new NotSupportedException();
+                    }
             }
         }
 
-        private RemoteQueryable<TModel> CreateWhereQuery<TModel>(Expression target, Expression operand)
+        private RemoteQueryable<TModel> CreateWhereAttributesQuery<TModel>(Expression target, Expression operand)
         {
             var targetQueryable = CreateQueryInternal<TModel>(target);
 
-            return new WhereQueryable<TModel>(
+            return new WhereAttributesQueryable<TModel>(
+                Session,
+                targetQueryable,
+                operand as Expression<Func<TModel, bool>>,
+                JsonSettings);
+        }
+
+        private RemoteQueryable<TModel> CreateWhereMetaQuery<TModel>(Expression target, Expression operand)
+        {
+            var targetQueryable = CreateQueryInternal<TModel>(target);
+
+            return new WhereMetaQueryable<TModel>(
                 Session,
                 targetQueryable,
                 operand as Expression<Func<TModel, bool>>,
@@ -201,7 +217,7 @@ namespace RedArrow.Argo.Client.Linq
             var genericOrderyBy = typeof(OrderByQueryable<,>).MakeGenericType(typeof(TModel), memberType);
             var ctor = genericOrderyBy.GetTypeInfo().DeclaredConstructors.Single();
 
-            return (RemoteQueryable<TModel>) ctor.Invoke(new object[]
+            return (RemoteQueryable<TModel>)ctor.Invoke(new object[]
             {
                 Session,
                 targetQueryable,
@@ -244,7 +260,7 @@ namespace RedArrow.Argo.Client.Linq
                 .DeclaredMethods
                 .Single(x => x.IsGenericMethod && x.Name == "CreateQuery")
                 .MakeGenericMethod(targetType)
-                .Invoke(this, new object[] {targetExpression});
+                .Invoke(this, new object[] { targetExpression });
         }
 
         private static ConstructorInfo GetExecutorCtor(Type executorType, Type resultType)

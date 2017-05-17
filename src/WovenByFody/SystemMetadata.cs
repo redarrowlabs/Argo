@@ -12,6 +12,6 @@ namespace WovenByFody
 
         public Guid UpdatedBy { get; set; }
 
-        public Guid ETag { get; set; }
+        public string ETag { get; set; }
     }
 }
