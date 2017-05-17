@@ -12,7 +12,22 @@ namespace WovenByFody
         [Property]
         public string Sku { get; set; }
 
-        [Meta("__system")]
-        public SystemMetadata Metadata { get; set; }
+        [Property("info.name")]
+        public string Name { get; set; }
+
+        [Property("info.stuff")]
+        public string Stuff { get; set; }
+
+        [Meta]
+        public string Whatever { get; set; }
+
+        [Meta("system.createdAt")]
+        public DateTime CreatedAt { get; set; }
+
+        [Meta("system.updatedAt")]
+        public DateTime UpdatedAt { get; set; }
+
+        [Meta("system.eTag")]
+        public string ETag { get; set; }
     }
 }

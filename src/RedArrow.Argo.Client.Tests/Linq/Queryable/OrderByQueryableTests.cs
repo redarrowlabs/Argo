@@ -16,7 +16,7 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
-        public void BuildQuery__Given_TypeTarget__When_IsDescending__Then_AddMemberSort
+        public void BuildQuery__Given_TypeTarget__When_IsAttribute__Then_AddAttributeSort
             (bool expectedDesc)
         {
             var expectedSort = "propA";
@@ -47,7 +47,44 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
             Assert.Same(mockQueryContext.Object, query);
 
-            mockQueryContext.Verify(x => x.AppendSort(expectedSort), Times.Once);
+            mockQueryContext.Verify(x => x.AppendAttributesSort(expectedSort), Times.Once);
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void BuildQuery__Given_TypeTarget__When_IsMeta__Then_AddMetaMemberSort
+            (bool expectedDesc)
+        {
+            var expectedSort = "whatever";
+            if (expectedDesc)
+            {
+                expectedSort = expectedSort.Insert(0, "-");
+            }
+
+            var mockQueryContext = new Mock<IQueryContext>();
+
+            var session = Mock.Of<IQuerySession>();
+
+            var mockTarget = new Mock<RemoteQueryable<Widget>>(session, Mock.Of<IQueryProvider>());
+            mockTarget
+                .Setup(x => x.BuildQuery())
+                .Returns(mockQueryContext.Object);
+
+            var subject = CreateSubject(
+                mockTarget.Object,
+                x => x.Whatever,
+                session,
+                expectedDesc
+            );
+
+            var query = subject.BuildQuery();
+
+            Assert.NotNull(query);
+
+            Assert.Same(mockQueryContext.Object, query);
+
+            mockQueryContext.Verify(x => x.AppendMetaSort(expectedSort), Times.Once);
         }
 
         [Fact]

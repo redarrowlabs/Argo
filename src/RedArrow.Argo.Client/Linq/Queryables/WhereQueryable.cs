@@ -1,17 +1,15 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using RedArrow.Argo.Client.Session;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Newtonsoft.Json;
-using RedArrow.Argo.Client.Extensions;
-using RedArrow.Argo.Client.Query;
-using RedArrow.Argo.Client.Session;
 
 namespace RedArrow.Argo.Client.Linq.Queryables
 {
-    internal class WhereQueryable<TModel> : RemoteQueryable<TModel>
+    internal abstract class WhereQueryable<TModel> : RemoteQueryable<TModel>
     {
         private static readonly IDictionary<ExpressionType, string> OpMap = new Dictionary<ExpressionType, string>
         {
@@ -23,10 +21,10 @@ namespace RedArrow.Argo.Client.Linq.Queryables
             {ExpressionType.LessThanOrEqual, "lte"}
         };
 
-        private RemoteQueryable<TModel> Target { get; }
-        private Expression<Func<TModel, bool>> Predicate { get; }
-
         private JsonSerializerSettings JsonSettings { get; }
+
+        protected RemoteQueryable<TModel> Target { get; }
+        protected Expression<Func<TModel, bool>> Predicate { get; }
 
         public WhereQueryable(
             IQuerySession session,
@@ -40,18 +38,9 @@ namespace RedArrow.Argo.Client.Linq.Queryables
             JsonSettings = jsonSettings;
         }
 
-        public override IQueryContext BuildQuery()
-        {
-            var query = Target.BuildQuery();
+        public virtual Func<MemberExpression, bool> IsValidMemberExpression => me => true;
 
-            var resourceType = typeof(TModel).GetModelResourceType();
-
-            query.AppendFilter(resourceType, TranslateExpression(Predicate?.Body));
-
-            return query;
-        }
-
-        private string TranslateExpression(Expression expression)
+        protected string TranslateExpression(Expression expression)
         {
             if (expression is BinaryExpression) return TranslateBinaryExpression(expression);
             if (expression is MethodCallExpression) return TranslateMethodCallExpression(expression);
@@ -74,35 +63,35 @@ namespace RedArrow.Argo.Client.Linq.Queryables
             switch (mcExpression.Method.Name)
             {
                 case "Equals":
-                {
-                    if (mcExpression.Method.GetParameters().Length == 1)
                     {
-                        return $"{TranslateExpression(mcExpression.Object)}[eq]{TranslateExpression(mcExpression.Arguments[0])}";
+                        if (mcExpression.Method.GetParameters().Length == 1)
+                        {
+                            return $"{TranslateExpression(mcExpression.Object)}[eq]{TranslateExpression(mcExpression.Arguments[0])}";
+                        }
+                        break;
                     }
-                    break;
-                }
                 case "Contains":
-                {
-                    var paramCount = mcExpression.Method.GetParameters().Length;
-                    if (paramCount == 1)
                     {
-                        return $"{TranslateExpression(mcExpression.Object)}[cnt]{TranslateExpression(mcExpression.Arguments[0])}";
-                    }
+                        var paramCount = mcExpression.Method.GetParameters().Length;
+                        if (paramCount == 1)
+                        {
+                            return $"{TranslateExpression(mcExpression.Object)}[cnt]{TranslateExpression(mcExpression.Arguments[0])}";
+                        }
 
-                    if (paramCount == 2)
-                    {
-                        return $"{TranslateExpression(mcExpression.Arguments[0])}[acnt]{TranslateExpression(mcExpression.Arguments[1])}";
+                        if (paramCount == 2)
+                        {
+                            return $"{TranslateExpression(mcExpression.Arguments[0])}[acnt]{TranslateExpression(mcExpression.Arguments[1])}";
+                        }
+                        break;
                     }
-                    break;
-                }
                 case "StartsWith":
-                {
-                    return $"{TranslateExpression(mcExpression.Object)}[sw]{TranslateExpression(mcExpression.Arguments[0])}";
-                }
+                    {
+                        return $"{TranslateExpression(mcExpression.Object)}[sw]{TranslateExpression(mcExpression.Arguments[0])}";
+                    }
                 case "EndsWith":
-                {
-                    return $"{TranslateExpression(mcExpression.Object)}[ew]{TranslateExpression(mcExpression.Arguments[0])}";
-                }
+                    {
+                        return $"{TranslateExpression(mcExpression.Object)}[ew]{TranslateExpression(mcExpression.Arguments[0])}";
+                    }
             }
 
             throw new NotSupportedException();
@@ -123,9 +112,14 @@ namespace RedArrow.Argo.Client.Linq.Queryables
 
             if (mExpression.Expression.NodeType == ExpressionType.Parameter)
             {
+                if (!IsValidMemberExpression(mExpression))
+                {
+                    throw new NotSupportedException();
+                }
+
                 return GetJsonName(mExpression.Member);
             }
-            if (mExpression.Expression.NodeType == ExpressionType.MemberAccess)
+            else if (mExpression.Expression.NodeType == ExpressionType.MemberAccess)
             {
                 var expressionValue = GetExpressionValue(null, mExpression);
                 return GetValueLiteral(expressionValue);
@@ -133,7 +127,6 @@ namespace RedArrow.Argo.Client.Linq.Queryables
 
             var propertyInfo = mExpression.Member as PropertyInfo;
             var fieldInfo = mExpression.Member as FieldInfo;
-
             if (propertyInfo == null && fieldInfo == null)
             {
                 return GetValueLiteral(null);
@@ -176,7 +169,7 @@ namespace RedArrow.Argo.Client.Linq.Queryables
             return $"{TranslateExpression(bExpression.Left)}[{op}]{TranslateExpression(bExpression.Right)}";
         }
 
-        private static object GetExpressionValue(object target, Expression exp)
+        private object GetExpressionValue(object target, Expression exp)
         {
             if (exp == null)
             {
@@ -187,62 +180,68 @@ namespace RedArrow.Argo.Client.Linq.Queryables
             {
                 case ExpressionType.Parameter:
                     return target;
+
                 case ExpressionType.Constant:
-                    return ((ConstantExpression) exp).Value;
+                    return ((ConstantExpression)exp).Value;
+
                 case ExpressionType.Lambda:
                     return exp;
+
                 case ExpressionType.MemberAccess:
-                {
-                    var memberExpression = (MemberExpression) exp;
-                    var parentValue = GetExpressionValue(target, memberExpression.Expression);
-
-                    if (parentValue == null)
                     {
-                        return null;
-                    }
-
-                    var propertyInfo = memberExpression.Member as PropertyInfo;
-                    return propertyInfo != null
-                        ? propertyInfo.GetValue(parentValue, null)
-                        : ((FieldInfo) memberExpression.Member).GetValue(parentValue);
-                }
-                case ExpressionType.Call:
-                {
-                    var methodCallExpression = (MethodCallExpression) exp;
-                    var parentValue = GetExpressionValue(target, methodCallExpression.Object);
-
-                    if (parentValue == null && !methodCallExpression.Method.IsStatic)
-                    {
-                        return null;
-                    }
-
-                    var arguments = methodCallExpression.Arguments.Select(a => GetExpressionValue(target, a)).ToArray();
-
-                    // Required for comverting expression parameters to delegate calls
-                    var parameters = methodCallExpression.Method.GetParameters();
-                    for (var i = 0; i < parameters.Length; i++)
-                    {
-                        if (typeof(Delegate).GetTypeInfo().IsAssignableFrom(parameters[i].ParameterType.GetTypeInfo()))
+                        var memberExpression = (MemberExpression)exp;
+                        if (!IsValidMemberExpression(memberExpression))
                         {
-                            arguments[i] = ((LambdaExpression) arguments[i]).Compile();
+                            throw new NotSupportedException();
                         }
-                    }
 
-                    if (arguments.Length > 0
-                        && arguments[0] == null
-                        && methodCallExpression.Method.IsStatic
-                        && methodCallExpression.Method.IsDefined(typeof(ExtensionAttribute), false)) // extension method
+                        var parentValue = GetExpressionValue(target, memberExpression.Expression);
+                        if (parentValue == null)
+                        {
+                            return null;
+                        }
+
+                        var propertyInfo = memberExpression.Member as PropertyInfo;
+                        return propertyInfo != null
+                            ? propertyInfo.GetValue(parentValue, null)
+                            : ((FieldInfo)memberExpression.Member).GetValue(parentValue);
+                    }
+                case ExpressionType.Call:
                     {
-                        return null;
-                    }
+                        var methodCallExpression = (MethodCallExpression)exp;
+                        var parentValue = GetExpressionValue(target, methodCallExpression.Object);
+                        if (parentValue == null && !methodCallExpression.Method.IsStatic)
+                        {
+                            return null;
+                        }
 
-                    return methodCallExpression.Method.Invoke(parentValue, arguments);
-                }
+                        var arguments = methodCallExpression.Arguments.Select(a => GetExpressionValue(target, a)).ToArray();
+
+                        // Required for converting expression parameters to delegate calls
+                        var parameters = methodCallExpression.Method.GetParameters();
+                        for (var i = 0; i < parameters.Length; i++)
+                        {
+                            if (typeof(Delegate).GetTypeInfo().IsAssignableFrom(parameters[i].ParameterType.GetTypeInfo()))
+                            {
+                                arguments[i] = ((LambdaExpression)arguments[i]).Compile();
+                            }
+                        }
+
+                        if (arguments.Length > 0
+                            && arguments[0] == null
+                            && methodCallExpression.Method.IsStatic
+                            && methodCallExpression.Method.IsDefined(typeof(ExtensionAttribute), false)) // extension method
+                        {
+                            return null;
+                        }
+
+                        return methodCallExpression.Method.Invoke(parentValue, arguments);
+                    }
                 case ExpressionType.Convert:
-                {
-                    var unaryExpression = (UnaryExpression) exp;
-                    return GetExpressionValue(target, unaryExpression.Operand);
-                }
+                    {
+                        var unaryExpression = (UnaryExpression)exp;
+                        return GetExpressionValue(target, unaryExpression.Operand);
+                    }
             }
 
             throw new NotSupportedException();

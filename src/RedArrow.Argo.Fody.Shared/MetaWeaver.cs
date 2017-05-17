@@ -1,8 +1,8 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using RedArrow.Argo.Extensions;
 using System;
 using System.Linq;
-using RedArrow.Argo.Extensions;
 
 namespace RedArrow.Argo
 {
@@ -18,6 +18,14 @@ namespace RedArrow.Argo
             if (sessionSetMetaGeneric == null)
             {
                 throw new Exception("Argo meta weaving failed unexpectedly");
+            }
+
+            foreach (var propertyDef in context.MappedMeta)
+            {
+                if (propertyDef.CustomAttributes.ContainsAttribute(Constants.Attributes.Property))
+                {
+                    LogError($"Property {propertyDef.FullName} cannot be included in both attributes and meta");
+                }
             }
 
             foreach (var propertyDef in context.MappedMeta.Where(prop => prop.SetMethod != null))

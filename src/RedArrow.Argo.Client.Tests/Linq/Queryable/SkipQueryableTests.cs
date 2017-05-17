@@ -65,16 +65,14 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
             Assert.NotNull(results);
             Assert.Empty(results);
 
-            Assert.Same(capturedQuery, capturedQuery);
+			Assert.NotNull(capturedQuery);
+			Assert.NotEmpty(capturedQuery.AttributesSort);
+			Assert.NotNull(capturedQuery.PageOffset);
+			Assert.NotNull(capturedQuery.PageLimit);
 
-            Assert.NotNull(capturedQuery);
-            Assert.NotEmpty(capturedQuery.Sort);
-            Assert.NotNull(capturedQuery.PageOffset);
-            Assert.NotNull(capturedQuery.PageLimit);
-
-            Assert.Equal("propA", capturedQuery.Sort);
-            Assert.Equal(skip, capturedQuery.PageOffset);
-            Assert.Equal(take, capturedQuery.PageLimit);
+			Assert.Equal("propA", capturedQuery.AttributesSort);
+			Assert.Equal(skip, capturedQuery.PageOffset);
+			Assert.Equal(take, capturedQuery.PageLimit);
         }
 
         private static SkipQueryable<TModel> CreateSubject<TModel>(RemoteQueryable<TModel> target, Expression skip)

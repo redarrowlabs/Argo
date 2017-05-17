@@ -21,9 +21,9 @@ namespace RedArrow.Argo.Client.Tests.Query
         {
             var subject = new QueryContext<BasicModel>();
 
-            subject.AppendSort(sort);
+            subject.AppendAttributesSort(sort);
 
-            var result = subject.Sort;
+            var result = subject.AttributesSort;
 
             Assert.Equal(sort, result);
         }
@@ -34,11 +34,11 @@ namespace RedArrow.Argo.Client.Tests.Query
         {
             var subject = new QueryContext<BasicModel>();
 
-            subject.AppendSort(sortA);
-            subject.AppendSort(sortB);
-            subject.AppendSort(sortC);
+            subject.AppendAttributesSort(sortA);
+            subject.AppendAttributesSort(sortB);
+            subject.AppendAttributesSort(sortC);
 
-            var result = subject.Sort;
+            var result = subject.AttributesSort;
 
             Assert.Equal($"{sortA},{sortB},{sortC}", result);
         }
@@ -52,24 +52,24 @@ namespace RedArrow.Argo.Client.Tests.Query
         {
             var subject = new QueryContext<BasicModel>();
 
-            subject.AppendSort(sort);
+            subject.AppendAttributesSort(sort);
 
-            var result = subject.Sort;
+            var result = subject.AttributesSort;
 
             Assert.NotNull(result);
             Assert.Empty(result);
         }
 
         [Theory, AutoData]
-        public void AppendFilter__Given_SingleType__Then_AppendFilter
+        public void AppendAttributesFilter__Given_SingleType__Then_AppendAttributesFilter
             (string resourceType, string filterA, string filterB)
         {
             var subject = new QueryContext<BasicModel>();
 
-            subject.AppendFilter(resourceType, filterA);
-            subject.AppendFilter(resourceType, filterB);
+            subject.AppendAttributesFilter(resourceType, filterA);
+            subject.AppendAttributesFilter(resourceType, filterB);
 
-            var result = subject.Filters;
+            var result = subject.AttributesFilters;
 
             Assert.NotNull(result);
             Assert.NotEmpty(result);
@@ -79,18 +79,18 @@ namespace RedArrow.Argo.Client.Tests.Query
         }
 
         [Theory, AutoData]
-        public void AppendFilter__Given_MultiType__Then_AppendFilter
+        public void AppendAttributesFilter__Given_MultiType__Then_AppendAttributesFilter
             (string resourceType, string resourceTypeA, string resourceTypeB, string filterA, string filterB)
         {
             var subject = new QueryContext<BasicModel>();
 
-            subject.AppendFilter(resourceTypeA, filterA);
-            subject.AppendFilter(resourceTypeA, filterB);
+            subject.AppendAttributesFilter(resourceTypeA, filterA);
+            subject.AppendAttributesFilter(resourceTypeA, filterB);
+            
+            subject.AppendAttributesFilter(resourceTypeB, filterB);
+            subject.AppendAttributesFilter(resourceTypeB, filterA);
 
-            subject.AppendFilter(resourceTypeB, filterB);
-            subject.AppendFilter(resourceTypeB, filterA);
-
-            var result = subject.Filters;
+            var result = subject.AttributesFilters;
 
             Assert.NotNull(result);
             Assert.NotEmpty(result);
@@ -112,9 +112,9 @@ namespace RedArrow.Argo.Client.Tests.Query
         {
             var subject = new QueryContext<BasicModel>();
 
-            subject.AppendFilter("test", filter);
+            subject.AppendAttributesFilter("test", filter);
 
-            var result = subject.Sort;
+            var result = subject.AttributesSort;
 
             Assert.NotNull(result);
             Assert.Empty(result);
@@ -129,9 +129,9 @@ namespace RedArrow.Argo.Client.Tests.Query
         {
             var subject = new QueryContext<BasicModel>();
 
-            subject.AppendFilter(resourceType, "filter");
+            subject.AppendAttributesFilter(resourceType, "filter");
 
-            var result = subject.Sort;
+            var result = subject.AttributesSort;
 
             Assert.NotNull(result);
             Assert.Empty(result);

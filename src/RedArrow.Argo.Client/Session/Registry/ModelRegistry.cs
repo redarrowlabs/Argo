@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RedArrow.Argo.Client.Config.Model;
 using RedArrow.Argo.Client.Exceptions;
 using RedArrow.Argo.Client.Model;
 using RedArrow.Argo.Session;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace RedArrow.Argo.Client.Session.Registry
 {
@@ -48,7 +48,7 @@ namespace RedArrow.Argo.Client.Session.Registry
         public Resource GetResource(object model)
         {
             var modelType = model.GetType();
-            return (Resource) GetModelConfig(modelType).ResourceProperty.GetValue(model);
+            return (Resource)GetModelConfig(modelType).ResourceProperty.GetValue(model);
         }
 
         public void SetResource(object model, Resource resource)
@@ -60,7 +60,7 @@ namespace RedArrow.Argo.Client.Session.Registry
         public Resource GetPatch(object model)
         {
             var modelType = model.GetType();
-            return (Resource) GetModelConfig(modelType).PatchProperty.GetValue(model);
+            return (Resource)GetModelConfig(modelType).PatchProperty.GetValue(model);
         }
 
         public void SetPatch(object model, Resource resource)
@@ -73,7 +73,7 @@ namespace RedArrow.Argo.Client.Session.Registry
         {
             var patch = GetPatch(model);
             if (patch != null) return patch;
-            patch = new Resource {Id = GetId(model), Type = GetResourceType(model.GetType())};
+            patch = new Resource { Id = GetId(model), Type = GetResourceType(model.GetType()) };
             SetPatch(model, patch);
             return patch;
         }
@@ -84,12 +84,12 @@ namespace RedArrow.Argo.Client.Session.Registry
             SetPatch(model, null);
         }
 
-        #endregion
+        #endregion Resource
 
         public bool IsManagedModel(object model)
         {
             var modelType = model.GetType();
-            return (bool) GetModelConfig(modelType).SessionManagedProperty.GetValue(model);
+            return (bool)GetModelConfig(modelType).SessionManagedProperty.GetValue(model);
         }
 
         public bool IsManagedBy(IModelSession session, object model)
@@ -111,14 +111,14 @@ namespace RedArrow.Argo.Client.Session.Registry
 
         public string GetInclude<TModel>()
         {
-            return (string) GetModelConfig<TModel>().IncludeField.GetValue(null);
+            return (string)GetModelConfig<TModel>().IncludeField.GetValue(null);
         }
 
         public Guid GetId(object model)
         {
             if (model == null) throw new ArgumentNullException(nameof(model));
             var modelType = model.GetType();
-            return (Guid) GetModelConfig(modelType).IdProperty.GetValue(model);
+            return (Guid)GetModelConfig(modelType).IdProperty.GetValue(model);
         }
 
         public void SetId(object model, Guid id)
@@ -174,6 +174,26 @@ namespace RedArrow.Argo.Client.Session.Registry
             return ret;
         }
 
+        public TAttr GetAttributeValue<TModel, TAttr>(TModel model, string attrName)
+        {
+            var attributes = GetResource(model).Attributes;
+            if (attributes == null)
+            {
+                // no attributes are present
+                return default(TAttr);
+            }
+
+            var at = attributes.SelectToken(attrName);
+            if (at == null)
+            {
+                // attribute does not exist
+                return default(TAttr);
+            }
+
+            // if we make it here, 'attr' has been set
+            return at.ToObject<TAttr>(JsonSerializer.CreateDefault(JsonSettings));
+        }
+
         public JObject GetAttributeValues(object model)
         {
             if (model == null) return null;
@@ -183,9 +203,19 @@ namespace RedArrow.Argo.Client.Session.Registry
                 .ToDictionary(
                     kvp => kvp.Key,
                     kvp => kvp.Value);
-            return attrValues.Any()
-                ? JObject.FromObject(attrValues, JsonSerializer.CreateDefault(JsonSettings))
-                : null;
+
+            if (!attrValues.Any())
+            {
+                return null;
+            }
+
+            var result = JObject.Parse("{}");
+            foreach (var key in attrValues.Keys)
+            {
+                BuildObject(result, key, attrValues[key]);
+            }
+
+            return result;
         }
 
         public IEnumerable<RelationshipConfiguration> GetHasOneConfigs<TModel>()
@@ -249,30 +279,11 @@ namespace RedArrow.Argo.Client.Session.Registry
                     JsonSerializer.CreateDefault(JsonSettings)));
         }
 
-        private ModelConfiguration GetModelConfig<TModel>()
-        {
-            return GetModelConfig(typeof(TModel));
-        }
-
-        private ModelConfiguration GetModelConfig(Type modelType)
-        {
-            ThrowIfNotRegistered(modelType);
-            return Registry[modelType];
-        }
-
-        private void ThrowIfNotRegistered(Type type)
-        {
-            if (!Registry.ContainsKey(type))
-            {
-                throw new ModelNotRegisteredException(type);
-            }
-        }
-
         public object[] IncludedModelsCreate(object model)
         {
             return model == null
                 ? null
-                : CreateIncludedModels(model, new[] {model}).ToArray();
+                : CreateIncludedModels(model, new[] { model }).ToArray();
         }
 
         private IEnumerable<object> CreateIncludedModels(object model, object[] parentModels)
@@ -341,15 +352,89 @@ namespace RedArrow.Argo.Client.Session.Registry
             return ret;
         }
 
+        public TMeta GetMetaValue<TModel, TMeta>(TModel model, string metaName)
+        {
+            var meta = GetResource(model).Meta;
+            if (meta == null)
+            {
+                // no meta are present
+                return default(TMeta);
+            }
+
+            JToken mt;
+            var pathSegments = metaName.Split(new[] { '.' }, 2);
+            if (pathSegments.Length > 1)
+            {
+                JToken pt;
+                if (!meta.TryGetValue(pathSegments[0], out pt))
+                {
+                    return default(TMeta);
+                }
+
+                mt = pt.SelectToken(pathSegments[1]);
+            }
+            else
+            {
+                if (!meta.TryGetValue(metaName, out mt))
+                {
+                    return default(TMeta);
+                }
+            }
+
+            return mt.ToObject<TMeta>(JsonSerializer.CreateDefault(JsonSettings));
+        }
+
         public IDictionary<string, JToken> GetMetaValues(object model)
         {
             if (model == null) return null;
-            return GetMetaConfigs(model.GetType())
+            var metaValues = GetMetaConfigs(model.GetType())
                 .Select(x => new KeyValuePair<string, object>(x.MetaName, x.Property.GetValue(model)))
                 .Where(kvp => kvp.Value != null)
                 .ToDictionary(
                     kvp => kvp.Key,
                     kvp => JToken.FromObject(kvp.Value));
+
+            var result = new JObject();
+            foreach (var key in metaValues.Keys)
+            {
+                BuildObject(result, key, metaValues[key]);
+            }
+
+            return result;
+        }
+
+        private ModelConfiguration GetModelConfig<TModel>()
+        {
+            return GetModelConfig(typeof(TModel));
+        }
+
+        private ModelConfiguration GetModelConfig(Type modelType)
+        {
+            ThrowIfNotRegistered(modelType);
+            return Registry[modelType];
+        }
+
+        private void ThrowIfNotRegistered(Type type)
+        {
+            if (!Registry.ContainsKey(type))
+            {
+                throw new ModelNotRegisteredException(type);
+            }
+        }
+
+        private void BuildObject(JToken token, string name, object value)
+        {
+            var pathSegments = name.Split(new[] { '.' }, 2);
+            if (pathSegments.Length > 1)
+            {
+                var obj = new JObject();
+                BuildObject(obj, pathSegments[1], value);
+                token[pathSegments[0]] = obj;
+            }
+            else
+            {
+                token[name] = JToken.FromObject(value);
+            }
         }
     }
 }

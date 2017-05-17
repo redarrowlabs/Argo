@@ -20,8 +20,8 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
             Assert.NotNull(qc);
             Assert.Null(qc.PageSize);
             Assert.Null(qc.PageNumber);
-            Assert.Empty(qc.Sort);
-            Assert.Empty(qc.Filters);
+            Assert.Empty(qc.AttributesSort);
+            Assert.Empty(qc.AttributesFilters);
         }
 
         private static TypeQueryable<TModel> CreateSubject<TModel>()

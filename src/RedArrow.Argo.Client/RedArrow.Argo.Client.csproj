@@ -92,12 +92,14 @@
     <Compile Include="Exceptions\ArgoException.cs" />
     <Compile Include="Exceptions\ModelNotRegisteredException.cs" />
     <Compile Include="Exceptions\ModelTypeMismatchException.cs" />
-    <Compile Include="Linq\Executors\SingularExecutor.cs" />
+    <Compile Include="Linq\Executors\SingularAttributesExecutor.cs" />
     <Compile Include="Linq\Queryables\OrderByQueryable.cs" />
     <Compile Include="Linq\Queryables\RelationshipQueryable.cs" />
     <Compile Include="Linq\Queryables\SkipQueryable.cs" />
     <Compile Include="Linq\Queryables\TakeQueryable.cs" />
     <Compile Include="Linq\Queryables\TypeQueryable.cs" />
+    <Compile Include="Linq\Queryables\WhereAttributesQueryable.cs" />
+    <Compile Include="Linq\Queryables\WhereMetaQueryable.cs" />
     <Compile Include="Linq\Queryables\WhereQueryable.cs" />
     <Compile Include="Linq\Executors\RemoteExecutor.cs" />
     <Compile Include="Linq\RemoteQueryable.cs" />
@@ -120,6 +122,7 @@
     <Compile Include="Query\QueryContext.cs" />
     <Compile Include="Query\RelationshipQueryContext.cs" />
     <Compile Include="Session\ICollectionSession.cs" />
+    <Compile Include="Session\IQueryableExtensions.cs" />
     <Compile Include="Session\IQuerySession.cs" />
     <Compile Include="Session\ISession.cs" />
     <Compile Include="Session\ISessionFactory.cs" />

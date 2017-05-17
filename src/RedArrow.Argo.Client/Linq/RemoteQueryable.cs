@@ -1,28 +1,29 @@
-﻿using System;
+﻿using RedArrow.Argo.Attributes;
+using RedArrow.Argo.Client.Extensions;
+using RedArrow.Argo.Client.Query;
+using RedArrow.Argo.Client.Session;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using RedArrow.Argo.Attributes;
-using RedArrow.Argo.Client.Extensions;
-using RedArrow.Argo.Client.Query;
-using RedArrow.Argo.Client.Session;
 
 namespace RedArrow.Argo.Client.Linq
 {
     public abstract class RemoteQueryable<TModel> : IOrderedQueryable<TModel>
-    {
+	{
         private static readonly ISet<Type> PropAttrTypes = new HashSet<Type>
         {
             typeof(PropertyAttribute),
             typeof(HasOneAttribute),
-            typeof(HasManyAttribute)
+            typeof(HasManyAttribute),
+            typeof(MetaAttribute)
         };
 
         protected IQuerySession Session { get; }
 
-        public Type ElementType => typeof(TModel);
+		public Type ElementType => typeof(TModel);
         public Expression Expression { get; }
 
         public IQueryProvider Provider { get; }
