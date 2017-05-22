@@ -47,7 +47,7 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
             Assert.Same(mockQueryContext.Object, query);
 
-            mockQueryContext.Verify(x => x.AppendAttributesSort(expectedSort), Times.Once);
+            mockQueryContext.Verify(x => x.AppendSort(expectedSort), Times.Once);
         }
 
         [Theory]
@@ -56,7 +56,7 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
         public void BuildQuery__Given_TypeTarget__When_IsMeta__Then_AddMetaMemberSort
             (bool expectedDesc)
         {
-            var expectedSort = "whatever";
+            var expectedSort = "meta.whatever";
             if (expectedDesc)
             {
                 expectedSort = expectedSort.Insert(0, "-");
@@ -84,7 +84,7 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
             Assert.Same(mockQueryContext.Object, query);
 
-            mockQueryContext.Verify(x => x.AppendMetaSort(expectedSort), Times.Once);
+            mockQueryContext.Verify(x => x.AppendSort(expectedSort), Times.Once);
         }
 
         [Fact]

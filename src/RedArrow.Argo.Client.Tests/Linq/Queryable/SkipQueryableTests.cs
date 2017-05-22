@@ -66,11 +66,11 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
             Assert.Empty(results);
 
 			Assert.NotNull(capturedQuery);
-			Assert.NotEmpty(capturedQuery.AttributesSort);
+			Assert.NotEmpty(capturedQuery.Sort);
 			Assert.NotNull(capturedQuery.PageOffset);
 			Assert.NotNull(capturedQuery.PageLimit);
 
-			Assert.Equal("propA", capturedQuery.AttributesSort);
+			Assert.Equal("propA", capturedQuery.Sort);
 			Assert.Equal(skip, capturedQuery.PageOffset);
 			Assert.Equal(take, capturedQuery.PageLimit);
         }

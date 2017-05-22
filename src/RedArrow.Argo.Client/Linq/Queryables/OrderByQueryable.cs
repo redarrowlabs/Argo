@@ -30,22 +30,20 @@ namespace RedArrow.Argo.Client.Linq.Queryables
             var mExpression = Comparable?.Body as MemberExpression;
             if (!(mExpression?.Expression is ParameterExpression)) throw new NotSupportedException();
 
-            var query = Target.BuildQuery();
-
             var sortMember = GetJsonName(mExpression.Member);
-            if (IsDesc)
-            {
-                sortMember = sortMember.Insert(0, "-");
-            }
 
             if (mExpression.Member.CustomAttributes.Any(x => x.AttributeType == typeof(MetaAttribute)))
             {
-                query.AppendMetaSort(sortMember);
+                sortMember = $"meta.{sortMember}";
             }
-            else
+
+            if (IsDesc)
             {
-                query.AppendAttributesSort(sortMember);
+                sortMember = $"-{sortMember}"; ;
             }
+
+            var query = Target.BuildQuery();
+            query.AppendSort(sortMember);
 
             return query;
         }

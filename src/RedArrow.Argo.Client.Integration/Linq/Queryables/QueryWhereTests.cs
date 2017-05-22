@@ -153,7 +153,7 @@ namespace RedArrow.Argo.Client.Integration.Linq.Queryables
         }
 
         [Theory, AutoData, Trait("Category", "Integration")]
-        public async Task Where__When_WhereMetaStringEquals__Then_ReturnMatchingResults
+        public async Task Where__When_WhereHasMetaClauses__Then_ReturnMatchingResults
             (string[] meta, string[] attribute)
         {
             await DeleteAll<Widget>();
@@ -173,8 +173,7 @@ namespace RedArrow.Argo.Client.Integration.Linq.Queryables
                 var expectedMeta = meta[1];
                 var expectedAttr = attribute[1];
                 var results = session.CreateQuery<Widget>()
-                    .Where(x => x.Name == expectedAttr)
-                    .Meta(x => x.Whatever == expectedMeta && x.CreatedAt >= now)
+                    .Where(x => x.Name == expectedAttr && x.Whatever == expectedMeta && x.CreatedAt >= now)
                     .ToArray();
 
                 Assert.Equal(1, results.Length);

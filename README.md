@@ -185,7 +185,6 @@ A LINQ provider is available.  This allows "queries" to be compile-safe instead 
  - [x] SingleOrDefault
  - [x] Last
  - [x] LastOrDefault
- - [x] Meta (custom extension)
 
 Don't see your favorite LINQ extension?  Create an [issue](https://github.com/redarrowlabs/Argo/issues) and I can get started on adding it!
 
@@ -220,8 +219,6 @@ using (var session = sessionFactory.CreateSession())
 ```
 
 Please note that the `.Where(...)` extension currently follows a [proprietary filter](https://docs.titan.redarrow.io/docs/retrieving-data) clause format specified as part of the Titan platform.  The `filter` query parameter is [specified, but not defined](http://jsonapi.org/format/#fetching-filtering), in the Json.API spec.
-
-Please note that the `.Meta(...)` is a mirror of the `.Where(...)` extension that specifically targets the `meta` element of the model being queried. The extension currently follows a [proprietary filter/sort](https://docs.titan.redarrow.io/docs/retrieving-data) clause format specified as part of the Titan platform.
 
 ## How
 Argo takes advantage of [Fody](https://github.com/Fody/Fody) to weave code into your POCO Model at compile time in order to bridge the gap between the POCO semantics developers expect and the Json.API json structure.
