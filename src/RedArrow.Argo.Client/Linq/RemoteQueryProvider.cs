@@ -83,12 +83,7 @@ namespace RedArrow.Argo.Client.Linq
                 case "Where":
                     {
                         var operand = ((UnaryExpression)mcExpression.Arguments[1]).Operand;
-                        return CreateWhereAttributesQuery<TModel>(target, operand);
-                    }
-                case "Meta":
-                    {
-                        var operand = ((UnaryExpression)mcExpression.Arguments[1]).Operand;
-                        return CreateWhereMetaQuery<TModel>(target, operand);
+                        return CreateWhereQuery<TModel>(target, operand);
                     }
                 case "OrderBy":
                     {
@@ -183,22 +178,11 @@ namespace RedArrow.Argo.Client.Linq
             }
         }
 
-        private RemoteQueryable<TModel> CreateWhereAttributesQuery<TModel>(Expression target, Expression operand)
+        private RemoteQueryable<TModel> CreateWhereQuery<TModel>(Expression target, Expression operand)
         {
             var targetQueryable = CreateQueryInternal<TModel>(target);
 
-            return new WhereAttributesQueryable<TModel>(
-                Session,
-                targetQueryable,
-                operand as Expression<Func<TModel, bool>>,
-                JsonSettings);
-        }
-
-        private RemoteQueryable<TModel> CreateWhereMetaQuery<TModel>(Expression target, Expression operand)
-        {
-            var targetQueryable = CreateQueryInternal<TModel>(target);
-
-            return new WhereMetaQueryable<TModel>(
+            return new WhereQueryable<TModel>(
                 Session,
                 targetQueryable,
                 operand as Expression<Func<TModel, bool>>,

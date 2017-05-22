@@ -41,7 +41,7 @@ namespace RedArrow.Argo.Client.Linq.Executors
             var targetQueryable = Target;
             if (Expression != null)
             {
-                targetQueryable = new WhereAttributesQueryable<TModel>(session, Target, Expression, JsonSettings);
+                targetQueryable = new WhereQueryable<TModel>(session, Target, Expression, JsonSettings);
             }
 
             var query = targetQueryable.BuildQuery();

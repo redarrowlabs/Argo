@@ -1,4 +1,7 @@
 ﻿using Newtonsoft.Json;
+using RedArrow.Argo.Attributes;
+using RedArrow.Argo.Client.Extensions;
+using RedArrow.Argo.Client.Query;
 using RedArrow.Argo.Client.Session;
 using System;
 using System.Collections.Generic;
@@ -9,7 +12,7 @@ using System.Runtime.CompilerServices;
 
 namespace RedArrow.Argo.Client.Linq.Queryables
 {
-    internal abstract class WhereQueryable<TModel> : RemoteQueryable<TModel>
+    internal class WhereQueryable<TModel> : RemoteQueryable<TModel>
     {
         private static readonly IDictionary<ExpressionType, string> OpMap = new Dictionary<ExpressionType, string>
         {
@@ -23,9 +26,6 @@ namespace RedArrow.Argo.Client.Linq.Queryables
 
         private JsonSerializerSettings JsonSettings { get; }
 
-        protected RemoteQueryable<TModel> Target { get; }
-        protected Expression<Func<TModel, bool>> Predicate { get; }
-
         public WhereQueryable(
             IQuerySession session,
             RemoteQueryable<TModel> target,
@@ -38,15 +38,46 @@ namespace RedArrow.Argo.Client.Linq.Queryables
             JsonSettings = jsonSettings;
         }
 
-        public virtual Func<MemberExpression, bool> IsValidMemberExpression => me => true;
+        public RemoteQueryable<TModel> Target { get; }
+        public Expression<Func<TModel, bool>> Predicate { get; }
 
-        protected string TranslateExpression(Expression expression)
+        public string TranslateExpression(Expression expression)
         {
             if (expression is BinaryExpression) return TranslateBinaryExpression(expression);
             if (expression is MethodCallExpression) return TranslateMethodCallExpression(expression);
             if (expression is MemberExpression) return TranslateMemberExpression(expression);
+            if (expression is UnaryExpression) return TranslateUnaryExpression(expression);
             if (expression is ConstantExpression) return TranslateMemberExpression(expression);
             throw new NotSupportedException();
+        }
+
+        public override IQueryContext BuildQuery()
+        {
+            var query = Target.BuildQuery();
+
+            var resourceType = typeof(TModel).GetModelResourceType();
+
+            query.AppendFilter(resourceType, TranslateExpression(Predicate?.Body));
+
+            return query;
+        }
+
+        // NOTE: only supports dealing with converting to nullable
+        private string TranslateUnaryExpression(Expression expression)
+        {
+            var ue = expression as UnaryExpression;
+            if (ue.NodeType != ExpressionType.Convert || ue.Operand.NodeType != ExpressionType.Constant)
+            {
+                throw new NotSupportedException();
+            }
+
+            var gt = ue.Type.GetGenericTypeDefinition();
+            if (gt == null || gt != typeof(Nullable<>))
+            {
+                throw new NotSupportedException();
+            }
+
+            return GetValueLiteral(((ConstantExpression)ue.Operand).Value);
         }
 
         private string TranslateMethodCallExpression(Expression expression)
@@ -60,6 +91,7 @@ namespace RedArrow.Argo.Client.Linq.Queryables
                 var value = GetExpressionValue(null, mcExpression);
                 return GetValueLiteral(value);
             }
+
             switch (mcExpression.Method.Name)
             {
                 case "Equals":
@@ -112,12 +144,13 @@ namespace RedArrow.Argo.Client.Linq.Queryables
 
             if (mExpression.Expression.NodeType == ExpressionType.Parameter)
             {
-                if (!IsValidMemberExpression(mExpression))
+                var name = GetJsonName(mExpression.Member);
+                if (mExpression.Member.CustomAttributes.Any(x => x.AttributeType == typeof(MetaAttribute)))
                 {
-                    throw new NotSupportedException();
+                    name = $"meta.{name}";
                 }
 
-                return GetJsonName(mExpression.Member);
+                return name;
             }
             else if (mExpression.Expression.NodeType == ExpressionType.MemberAccess)
             {
@@ -190,11 +223,6 @@ namespace RedArrow.Argo.Client.Linq.Queryables
                 case ExpressionType.MemberAccess:
                     {
                         var memberExpression = (MemberExpression)exp;
-                        if (!IsValidMemberExpression(memberExpression))
-                        {
-                            throw new NotSupportedException();
-                        }
-
                         var parentValue = GetExpressionValue(target, memberExpression.Expression);
                         if (parentValue == null)
                         {
@@ -249,10 +277,19 @@ namespace RedArrow.Argo.Client.Linq.Queryables
 
         private string GetValueLiteral(object value)
         {
-            if (value == null) return "NULL";
-            if (value is DateTime) return $"'{value:O}'";
-            if (value is string || value is char || value is Guid) return $"'{value}'";
-            return JsonConvert.SerializeObject(value, JsonSettings);
+            var result = JsonConvert.SerializeObject(value, JsonSettings);
+            if (result.StartsWith("\""))
+            {
+                var trimmed = result.Trim('"');
+                if (trimmed.Contains("'"))
+                {
+                    trimmed = trimmed.Replace("'", "''");
+                }
+
+                return $"'{trimmed}'";
+            }
+
+            return result;
         }
     }
 }

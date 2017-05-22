@@ -9,88 +9,57 @@ namespace RedArrow.Argo.Client.Query
     {
         public string BasePath { get; protected set; }
 
-        public string AttributesSort => string.Join(",", AttributesSortBuilder);
-        private ICollection<string> AttributesSortBuilder { get; } = new List<string>();
-
-        public string MetaSort => string.Join(",", MetaSortBuilder);
-        private ICollection<string> MetaSortBuilder { get; } = new List<string>();
+        public string Sort => string.Join(",", SortBuilder);
+        private ICollection<string> SortBuilder { get; } = new List<string>();
 
         public int? PageSize { get; set; }
         public int? PageNumber { get; set; }
         public int? PageOffset { get; set; }
         public int? PageLimit { get; set; }
 
-        public IDictionary<string, string> AttributesFilters => AttributesFilterBuilders.ToDictionary(
+        public IDictionary<string, string> Filters => FilterBuilders.ToDictionary(
             x => x.Key,
             x => string.Join(",", x.Value));
 
-        private IDictionary<string, ICollection<string>> AttributesFilterBuilders { get; } = new Dictionary<string, ICollection<string>>();
-
-        public string MetaFilters => string.Join(",", MetaFilterBuilders);
-
-        private ICollection<string> MetaFilterBuilders { get; } = new List<string>();
+        private IDictionary<string, ICollection<string>> FilterBuilders { get; } = new Dictionary<string, ICollection<string>>();
 
         public QueryContext()
         {
             BasePath = typeof(TModel).GetModelResourceType();
         }
 
-        public void AppendAttributesSort(string sort)
+        public void AppendSort(string sort)
         {
             if (string.IsNullOrWhiteSpace(sort)) return;
 
-            AttributesSortBuilder.Add(sort);
+            SortBuilder.Add(sort);
         }
 
-        public void AppendMetaSort(string sort)
-        {
-            if (string.IsNullOrWhiteSpace(sort)) return;
-
-            MetaSortBuilder.Add(sort);
-        }
-
-        public void AppendAttributesFilter(string resourceType, string filter)
+        public void AppendFilter(string resourceType, string filter)
         {
             if (string.IsNullOrWhiteSpace(resourceType) || string.IsNullOrWhiteSpace(filter)) return;
 
             ICollection<string> builder;
-            if (!AttributesFilterBuilders.TryGetValue(resourceType, out builder))
+            if (!FilterBuilders.TryGetValue(resourceType, out builder))
             {
                 builder = new List<string>();
-                AttributesFilterBuilders[resourceType] = builder;
+                FilterBuilders[resourceType] = builder;
             }
 
             builder.Add(filter);
         }
 
-        public void AppendMetaFilter(string filter)
-        {
-            if (string.IsNullOrWhiteSpace(filter)) return;
-
-            MetaFilterBuilders.Add(filter);
-        }
-
         public string BuildPath()
         {
             var path = BasePath;
-            if (AttributesFilters != null)
+            if (Filters != null)
             {
-                path = AttributesFilters.Aggregate(path, (current, kvp) => current.SetQueryParam($"filter[{kvp.Key}]", kvp.Value));
+                path = Filters.Aggregate(path, (current, kvp) => current.SetQueryParam($"filter[{kvp.Key}]", kvp.Value));
             }
 
-            if (!string.IsNullOrEmpty(AttributesSort))
+            if (!string.IsNullOrEmpty(Sort))
             {
-                path = path.SetQueryParam("sort", AttributesSort);
-            }
-
-            if (!string.IsNullOrEmpty(MetaFilters))
-            {
-                path = path.SetQueryParam("meta[filter]", MetaFilters);
-            }
-
-            if (!string.IsNullOrEmpty(MetaSort))
-            {
-                path = path.SetQueryParam("meta[sort]", MetaSort);
+                path = path.SetQueryParam("sort", Sort);
             }
 
             if (PageSize != null)
