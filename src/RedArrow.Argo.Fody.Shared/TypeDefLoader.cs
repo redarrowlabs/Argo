@@ -92,15 +92,19 @@ namespace RedArrow.Argo
                             x.Parameters[0].ParameterType.Name == "String" &&
                             x.Parameters[1].ParameterType.Name == "String" &&
                             x.Parameters[2].ParameterType.Name == "StringComparison");
-
-            _stringComparison_ordinal = (int) argoAssemblyDef.MainModule
+            
+            _stringComparison_ordinal = (int) ModuleDefinition
+                .Assembly
+                .MainModule
                 .ImportReference(typeof(StringComparison))
                 .Resolve()
                 .Fields
                 .First(x => x.Name == "Ordinal")
                 .Constant;
 
-            _equalityComparerTypeDef = argoAssemblyDef.MainModule
+            _equalityComparerTypeDef = ModuleDefinition
+                .Assembly
+                .MainModule
                 .ImportReference(typeof(EqualityComparer<>))
                 .Resolve();
 

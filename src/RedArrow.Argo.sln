@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26403.3
+VisualStudioVersion = 15.0.26430.12
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "~Tests", "~Tests", "{38A57A5C-EF3C-423E-A33E-5796E03760AD}"
 EndProject
@@ -41,22 +41,24 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "RedArrow.Argo.Fody.Shared",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RedArrow.Argo.Client.Integration", "RedArrow.Argo.Client.Integration\RedArrow.Argo.Client.Integration.csproj", "{C30CF711-FA9E-4117-9759-12FE27D6F05B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WovenByFody.NETStandard14", "WovenByFody.NETStandard14\WovenByFody.NETStandard14.csproj", "{A5A88694-F8E7-4EBE-AAC1-9B8EEA1CFDC6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WovenByFody.NETStandard14", "WovenByFody.NETStandard14\WovenByFody.NETStandard14.csproj", "{A5A88694-F8E7-4EBE-AAC1-9B8EEA1CFDC6}"
 	ProjectSection(ProjectDependencies) = postProject
 		{E447B66C-DACE-41E3-97EE-2B4E02F3FE2F} = {E447B66C-DACE-41E3-97EE-2B4E02F3FE2F}
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WovenByFody.NETCore10", "WovenByFody.NETCore10\WovenByFody.NETCore10.csproj", "{D1285AC3-98B4-4CA3-99FE-0948C25A251A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WovenByFody.NETStandard15", "WovenByFody.NETStandard15\WovenByFody.NETStandard15.csproj", "{7A26DC44-2D0A-42CD-BDC9-DACB5E215AFB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WovenByFody.NETStandard15", "WovenByFody.NETStandard15\WovenByFody.NETStandard15.csproj", "{7A26DC44-2D0A-42CD-BDC9-DACB5E215AFB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WovenByFody.NETCore11", "WovenByFody.NETCore11\WovenByFody.NETCore11.csproj", "{520962AE-5BFC-4A3B-AABF-67F3DB664DCA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WovenByFody.NETCore11", "WovenByFody.NETCore11\WovenByFody.NETCore11.csproj", "{520962AE-5BFC-4A3B-AABF-67F3DB664DCA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WovenByFody.NETStandard16", "WovenByFody.NETStandard16\WovenByFody.NETStandard16.csproj", "{18C9D33F-E2F1-47D1-99AB-162F9AD35322}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WovenByFody.NETStandard16", "WovenByFody.NETStandard16\WovenByFody.NETStandard16.csproj", "{18C9D33F-E2F1-47D1-99AB-162F9AD35322}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WovenByFody.NETFramework461", "WovenByFody.NETFramework461\WovenByFody.NETFramework461.csproj", "{355BB587-CE51-4C0F-8C29-99D6CBD270AF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WovenByFody.NETFramework462", "WovenByFody.NETFramework462\WovenByFody.NETFramework462.csproj", "{BDD9E464-9918-430A-A51E-9908C5B144CF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WovenByFody.ASP.NETCore11", "WovenByFody.ASP.NETCore11\WovenByFody.ASP.NETCore11.csproj", "{4E39A4AA-61FA-4994-BEF6-921FC41C5E04}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -136,6 +138,10 @@ Global
 		{BDD9E464-9918-430A-A51E-9908C5B144CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BDD9E464-9918-430A-A51E-9908C5B144CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BDD9E464-9918-430A-A51E-9908C5B144CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E39A4AA-61FA-4994-BEF6-921FC41C5E04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E39A4AA-61FA-4994-BEF6-921FC41C5E04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E39A4AA-61FA-4994-BEF6-921FC41C5E04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E39A4AA-61FA-4994-BEF6-921FC41C5E04}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -159,5 +165,6 @@ Global
 		{18C9D33F-E2F1-47D1-99AB-162F9AD35322} = {AD3337CD-2C78-4F77-BB79-F34F0A91E452}
 		{355BB587-CE51-4C0F-8C29-99D6CBD270AF} = {AD3337CD-2C78-4F77-BB79-F34F0A91E452}
 		{BDD9E464-9918-430A-A51E-9908C5B144CF} = {AD3337CD-2C78-4F77-BB79-F34F0A91E452}
+		{4E39A4AA-61FA-4994-BEF6-921FC41C5E04} = {AD3337CD-2C78-4F77-BB79-F34F0A91E452}
 	EndGlobalSection
 EndGlobal
