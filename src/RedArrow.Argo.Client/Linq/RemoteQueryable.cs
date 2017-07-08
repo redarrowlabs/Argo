@@ -15,6 +15,7 @@ namespace RedArrow.Argo.Client.Linq
 	{
         private static readonly ISet<Type> PropAttrTypes = new HashSet<Type>
         {
+            typeof(IdAttribute),
             typeof(PropertyAttribute),
             typeof(HasOneAttribute),
             typeof(HasManyAttribute),
