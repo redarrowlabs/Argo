@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using RedArrow.Argo.Attributes;
 
 namespace RedArrow.Argo.Client.Extensions
 {
@@ -17,6 +18,8 @@ namespace RedArrow.Argo.Client.Extensions
 
         public static string GetJsonName(this CustomAttributeData attr)
         {
+            if (attr.AttributeType == typeof(IdAttribute)) return "id";
+
             return attr.ConstructorArguments
                 .Where(x => x.ArgumentType == typeof(string))
                 .Select(x => (string) x.Value)
