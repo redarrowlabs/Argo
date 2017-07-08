@@ -756,6 +756,35 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
                 Times.Once);
         }
 
+        [Theory, AutoData]
+        public void BuildQuery__Given_Target__When_ExpressionHasEqualsId__Then_AddFilter
+            (Guid id)
+        {
+            var mockQueryContext = new Mock<IQueryContext>();
+
+            var session = Mock.Of<IQuerySession>();
+
+            var mockTarget = new Mock<RemoteQueryable<IdPropertyNotNamedId>>(session, Mock.Of<IQueryProvider>());
+            mockTarget
+                .Setup(x => x.BuildQuery())
+                .Returns(mockQueryContext.Object);
+
+            Expression<Func<IdPropertyNotNamedId, bool>> predicate = x => x.NotNamedId == id;
+
+            var subject = CreateSubject(
+                session,
+                mockTarget.Object,
+                predicate);
+
+            var result = subject.BuildQuery();
+
+            Assert.Same(mockQueryContext.Object, result);
+
+            mockQueryContext.Verify(x =>
+                    x.AppendFilter("idPropertyNotNamedId", $"id[eq]'{id}'"),
+                Times.Once);
+        }
+
         private static WhereQueryable<TModel> CreateSubject<TModel>(
             IQuerySession session,
             RemoteQueryable<TModel> target,
