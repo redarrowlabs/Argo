@@ -158,14 +158,26 @@ namespace RedArrow.Argo.Client.Session
             var response = await HttpClient.SendAsync(request);
             response.EnsureSuccessStatusCode();
 
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                var root = await response.GetContentModel<ResourceRootSingle>(JsonSettings);
+                if (root.Data != null)
+                {
+                    var m = CreateResourceModel(root.Data);
+                    Cache.Update(root.Data.Id, m);
+                }
+            }
+            else if (response.StatusCode == HttpStatusCode.NoContent)
+            {
+                ModelRegistry.ApplyPatch(model);
+            }
+
             // create and cache includes
             await Task.WhenAll(includes.Select(x => Task.Run(() =>
             {
                 var m = CreateResourceModel(x);
                 Cache.Update(x.Id, m);
             })));
-
-            ModelRegistry.ApplyPatch(model);
         }
 
         public async Task<TModel> Get<TModel>(Guid id)
