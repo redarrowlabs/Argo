@@ -157,11 +157,15 @@ namespace RedArrow.Argo.Client.Session
             var request = HttpRequestBuilder.UpdateResource(patch, includes);
             var response = await HttpClient.SendAsync(request);
             response.EnsureSuccessStatusCode();
+
             if (response.StatusCode == HttpStatusCode.OK)
             {
                 var root = await response.GetContentModel<ResourceRootSingle>(JsonSettings);
-                var m = CreateResourceModel(root.Data);
-                Cache.Update(root.Data.Id, m);
+                if (root.Data != null)
+                {
+                    var m = CreateResourceModel(root.Data);
+                    Cache.Update(root.Data.Id, m);
+                }
             }
 
             // create and cache includes
