@@ -91,7 +91,7 @@ namespace RedArrow.Argo
 
         private IEnumerable<PropertyDefinition> GetMappedProperties(string attrFullName)
         {
-            return ModelTypeDef.Properties
+            return ModelTypeDef.GetProperties()
                 .Where(x => x.HasCustomAttributes)
                 .Where(p => p.CustomAttributes.ContainsAttribute(attrFullName))
                 .ToArray();
