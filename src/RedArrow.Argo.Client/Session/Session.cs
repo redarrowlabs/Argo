@@ -167,6 +167,10 @@ namespace RedArrow.Argo.Client.Session
                     Cache.Update(root.Data.Id, m);
                 }
             }
+            else if (response.StatusCode == HttpStatusCode.NoContent)
+            {
+                ModelRegistry.ApplyPatch(model);
+            }
 
             // create and cache includes
             await Task.WhenAll(includes.Select(x => Task.Run(() =>
@@ -174,8 +178,6 @@ namespace RedArrow.Argo.Client.Session
                 var m = CreateResourceModel(x);
                 Cache.Update(x.Id, m);
             })));
-
-            ModelRegistry.ApplyPatch(model);
         }
 
         public async Task<TModel> Get<TModel>(Guid id)
