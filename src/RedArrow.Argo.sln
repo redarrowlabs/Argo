@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.12
+VisualStudioVersion = 15.0.26430.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "~Tests", "~Tests", "{38A57A5C-EF3C-423E-A33E-5796E03760AD}"
 EndProject
@@ -58,7 +58,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WovenByFody.NETFramework461
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WovenByFody.NETFramework462", "WovenByFody.NETFramework462\WovenByFody.NETFramework462.csproj", "{BDD9E464-9918-430A-A51E-9908C5B144CF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WovenByFody.ASP.NETCore11", "WovenByFody.ASP.NETCore11\WovenByFody.ASP.NETCore11.csproj", "{4E39A4AA-61FA-4994-BEF6-921FC41C5E04}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WovenByFody.ASP.NETCore11", "WovenByFody.ASP.NETCore11\WovenByFody.ASP.NETCore11.csproj", "{4E39A4AA-61FA-4994-BEF6-921FC41C5E04}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution

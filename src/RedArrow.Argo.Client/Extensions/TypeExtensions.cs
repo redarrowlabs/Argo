@@ -36,35 +36,35 @@ namespace RedArrow.Argo.Client.Extensions
         public static PropertyInfo GetSessionManagedProperty(this Type type)
         {
             return type.GetTypeInfo()
-                .DeclaredProperties
+                .GetProperties()
                 .Single(prop => prop.Name == "__argo__generated_SessionManaged");
         }
 
         public static PropertyInfo GetModelResourceProperty(this Type type)
         {
             return type.GetTypeInfo()
-                .DeclaredProperties
+                .GetProperties()
                 .Single(prop => prop.Name == "__argo__generated_Resource");
         }
 
         public static PropertyInfo GetModelPatchProperty(this Type type)
         {
             return type.GetTypeInfo()
-                .DeclaredProperties
+                .GetProperties()
                 .Single(prop => prop.Name == "__argo__generated_Patch");
         }
 
         public static PropertyInfo GetModelIdProperty(this Type type)
         {
             return type.GetTypeInfo()
-                .DeclaredProperties
+                .GetProperties()
                 .Single(prop => prop.IsDefined(typeof(IdAttribute)));
         }
 
         public static IDictionary<string, AttributeConfiguration> GetModelAttributeConfigurations(this Type type)
         {
             return type.GetTypeInfo()
-                .DeclaredProperties
+                .GetProperties()
                 .Where(prop => prop.IsDefined(typeof(PropertyAttribute)))
                 .Select(prop => new AttributeConfiguration(prop))
                 .ToDictionary(
@@ -75,7 +75,7 @@ namespace RedArrow.Argo.Client.Extensions
         public static IDictionary<string, MetaConfiguration> GetModelMetaConfigurations(this Type type)
         {
             return type.GetTypeInfo()
-                .DeclaredProperties
+                .GetProperties()
                 .Where(prop => prop.IsDefined(typeof(MetaAttribute)))
                 .Select(prop => new MetaConfiguration(prop))
                 .ToDictionary(
@@ -86,7 +86,7 @@ namespace RedArrow.Argo.Client.Extensions
         public static IDictionary<string, RelationshipConfiguration> GetModelHasOneConfigurations(this Type type)
         {
             return type.GetTypeInfo()
-                .DeclaredProperties
+                .GetProperties()
                 .Where(prop => prop.IsDefined(typeof(HasOneAttribute)))
                 .Select(prop => new HasOneConfiguration(prop))
                 .Cast<RelationshipConfiguration>()
@@ -98,7 +98,7 @@ namespace RedArrow.Argo.Client.Extensions
         public static IDictionary<string, RelationshipConfiguration> GetModelHasManyConfigurations(this Type type)
         {
             return type.GetTypeInfo()
-                .DeclaredProperties
+                .GetProperties()
                 .Where(prop => prop.IsDefined(typeof(HasManyAttribute)))
                 .Select(prop => new HasManyConfiguration(prop))
                 .Cast<RelationshipConfiguration>()
@@ -110,8 +110,20 @@ namespace RedArrow.Argo.Client.Extensions
         public static PropertyInfo GetUnmappedAttributesProperty(this Type type)
         {
             return type.GetTypeInfo()
-                .DeclaredProperties
+                .GetProperties()
                 .SingleOrDefault(prop => prop.IsDefined(typeof(UnmappedAttribute)));
+        }
+
+        private static IEnumerable<PropertyInfo> GetProperties(this TypeInfo typeInfo)
+        {
+            var properties = typeInfo.DeclaredProperties.ToList();
+
+            if (typeInfo.BaseType != typeof(object))
+            {
+                properties.AddRange(typeInfo.BaseType.GetTypeInfo().GetProperties());
+            }
+
+            return properties;
         }
     }
 }
