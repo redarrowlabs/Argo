@@ -6,6 +6,7 @@ using RedArrow.Argo.Client.Linq.Queryables;
 using RedArrow.Argo.Client.Query;
 using RedArrow.Argo.Client.Session;
 using System;
+using System.Collections;
 using System.Linq;
 using System.Linq.Expressions;
 using WovenByFody;
@@ -753,6 +754,122 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
             mockQueryContext.Verify(x =>
                     x.AppendFilter("allPropertyTypes", $"stringProperty[ew]'{value}'"),
+                Times.Once);
+        }
+
+        [Theory, AutoData]
+        public void BuildQuery__Given_Target__When_ExpressionHasIEnumerableContains__Then_AddFilter
+            (Guid value)
+        {
+            var mockQueryContext = new Mock<IQueryContext>();
+
+            var session = Mock.Of<IQuerySession>();
+
+            var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
+            mockTarget
+                .Setup(x => x.BuildQuery())
+                .Returns(mockQueryContext.Object);
+
+            Expression<Func<AllPropertyTypes, bool>> predicate = x => x.GenericEnumerableProperty.Contains(value);
+
+            var subject = CreateSubject(
+                session,
+                mockTarget.Object,
+                predicate);
+
+            var result = subject.BuildQuery();
+
+            Assert.Same(mockQueryContext.Object, result);
+
+            mockQueryContext.Verify(x =>
+                    x.AppendFilter("allPropertyTypes", $"genericEnumerableProperty[acnt]'{value}'"),
+                Times.Once);
+        }
+
+        [Theory, AutoData]
+        public void BuildQuery__Given_Target__When_ExpressionHasGenericCollectionContains__Then_AddFilter
+            (Guid value)
+        {
+            var mockQueryContext = new Mock<IQueryContext>();
+
+            var session = Mock.Of<IQuerySession>();
+
+            var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
+            mockTarget
+                .Setup(x => x.BuildQuery())
+                .Returns(mockQueryContext.Object);
+
+            Expression<Func<AllPropertyTypes, bool>> predicate = x => x.GenericCollectionProperty.Contains(value);
+
+            var subject = CreateSubject(
+                session,
+                mockTarget.Object,
+                predicate);
+
+            var result = subject.BuildQuery();
+
+            Assert.Same(mockQueryContext.Object, result);
+
+            mockQueryContext.Verify(x =>
+                    x.AppendFilter("allPropertyTypes", $"genericCollectionProperty[acnt]'{value}'"),
+                Times.Once);
+        }
+
+        [Theory, AutoData]
+        public void BuildQuery__Given_Target__When_ExpressionHasGenericListContains__Then_AddFilter
+            (Guid value)
+        {
+            var mockQueryContext = new Mock<IQueryContext>();
+
+            var session = Mock.Of<IQuerySession>();
+
+            var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
+            mockTarget
+                .Setup(x => x.BuildQuery())
+                .Returns(mockQueryContext.Object);
+
+            Expression<Func<AllPropertyTypes, bool>> predicate = x => x.GenericListProperty.Contains(value);
+
+            var subject = CreateSubject(
+                session,
+                mockTarget.Object,
+                predicate);
+
+            var result = subject.BuildQuery();
+
+            Assert.Same(mockQueryContext.Object, result);
+
+            mockQueryContext.Verify(x =>
+                    x.AppendFilter("allPropertyTypes", $"genericListProperty[acnt]'{value}'"),
+                Times.Once);
+        }
+
+        [Theory, AutoData]
+        public void BuildQuery__Given_Target__When_ExpressionHasListContains__Then_AddFilter
+            (Guid value)
+        {
+            var mockQueryContext = new Mock<IQueryContext>();
+
+            var session = Mock.Of<IQuerySession>();
+
+            var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
+            mockTarget
+                .Setup(x => x.BuildQuery())
+                .Returns(mockQueryContext.Object);
+
+            Expression<Func<AllPropertyTypes, bool>> predicate = x => x.ListProperty.Contains(value);
+
+            var subject = CreateSubject(
+                session,
+                mockTarget.Object,
+                predicate);
+
+            var result = subject.BuildQuery();
+
+            Assert.Same(mockQueryContext.Object, result);
+
+            mockQueryContext.Verify(x =>
+                    x.AppendFilter("allPropertyTypes", $"listProperty[acnt]'{value}'"),
                 Times.Once);
         }
 
