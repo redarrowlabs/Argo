@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using RedArrow.Argo.Attributes;
 
 namespace WovenByFody
@@ -65,5 +67,23 @@ namespace WovenByFody
 
         [Property]
         public string[] StringArrayProperty { get; set; }
+
+        [Property]
+        public IEnumerable<Guid> GenericEnumerableProperty { get; set; }
+
+        [Property]
+        public ICollection<Guid> GenericCollectionProperty { get; set; }
+
+        [Property]
+        public IList<Guid> GenericListProperty { get; set; }
+
+        [Property]
+        public IEnumerable EnumerableProperty { get; set; }
+
+        [Property]
+        public ICollection CollectionProperty { get; set; }
+
+        [Property]
+        public IList ListProperty { get; set; }
     }
 }

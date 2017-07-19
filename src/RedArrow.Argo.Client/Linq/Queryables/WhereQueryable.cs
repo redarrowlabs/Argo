@@ -4,6 +4,7 @@ using RedArrow.Argo.Client.Extensions;
 using RedArrow.Argo.Client.Query;
 using RedArrow.Argo.Client.Session;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -66,6 +67,11 @@ namespace RedArrow.Argo.Client.Linq.Queryables
         private string TranslateUnaryExpression(Expression expression)
         {
             var ue = expression as UnaryExpression;
+            if (ue.Operand is MemberExpression)
+            {
+                return TranslateMemberExpression(ue.Operand);
+            }
+
             if (ue.NodeType != ExpressionType.Convert || ue.Operand.NodeType != ExpressionType.Constant)
             {
                 throw new NotSupportedException();
@@ -95,35 +101,46 @@ namespace RedArrow.Argo.Client.Linq.Queryables
             switch (mcExpression.Method.Name)
             {
                 case "Equals":
+                {
+                    if (mcExpression.Method.GetParameters().Length == 1)
                     {
-                        if (mcExpression.Method.GetParameters().Length == 1)
-                        {
-                            return $"{TranslateExpression(mcExpression.Object)}[eq]{TranslateExpression(mcExpression.Arguments[0])}";
-                        }
-                        break;
+                        return $"{TranslateExpression(mcExpression.Object)}[eq]{TranslateExpression(mcExpression.Arguments[0])}";
                     }
+                    break;
+                }
                 case "Contains":
+                {
+                    var declaringType = mcExpression.Method.DeclaringType;
+                    if (declaringType.IsConstructedGenericType)
                     {
-                        var paramCount = mcExpression.Method.GetParameters().Length;
-                        if (paramCount == 1)
-                        {
-                            return $"{TranslateExpression(mcExpression.Object)}[cnt]{TranslateExpression(mcExpression.Arguments[0])}";
-                        }
+                        declaringType = declaringType.GetGenericTypeDefinition();
+                    }
 
-                        if (paramCount == 2)
-                        {
-                            return $"{TranslateExpression(mcExpression.Arguments[0])}[acnt]{TranslateExpression(mcExpression.Arguments[1])}";
-                        }
-                        break;
+                    if (declaringType == typeof(ICollection<>) || declaringType == typeof(IList))
+                    {
+                        return $"{TranslateExpression(mcExpression.Object)}[acnt]{TranslateExpression(mcExpression.Arguments[0])}";
                     }
+
+                    if (declaringType == typeof(IEnumerable) || declaringType == typeof(Enumerable)) // extension
+                    {
+                        return $"{TranslateExpression(mcExpression.Arguments[0])}[acnt]{TranslateExpression(mcExpression.Arguments[1])}";
+                    }
+
+                    if (declaringType == typeof(string))
+                    {
+                        return $"{TranslateExpression(mcExpression.Object)}[cnt]{TranslateExpression(mcExpression.Arguments[0])}";
+                    }
+
+                    break;
+                }
                 case "StartsWith":
-                    {
-                        return $"{TranslateExpression(mcExpression.Object)}[sw]{TranslateExpression(mcExpression.Arguments[0])}";
-                    }
+                {
+                    return $"{TranslateExpression(mcExpression.Object)}[sw]{TranslateExpression(mcExpression.Arguments[0])}";
+                }
                 case "EndsWith":
-                    {
-                        return $"{TranslateExpression(mcExpression.Object)}[ew]{TranslateExpression(mcExpression.Arguments[0])}";
-                    }
+                {
+                    return $"{TranslateExpression(mcExpression.Object)}[ew]{TranslateExpression(mcExpression.Arguments[0])}";
+                }
             }
 
             throw new NotSupportedException();
