@@ -122,7 +122,7 @@ namespace RedArrow.Argo.Client.Session
             }
 
             var request = HttpRequestBuilder.CreateResource(rootResource, includes);
-            var response = await HttpClient.SendAsync(request);
+            var response = await HttpClient.SendAsync(request).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
             if (response.StatusCode == HttpStatusCode.Created)
             {
@@ -155,7 +155,7 @@ namespace RedArrow.Argo.Client.Session
                 .Select(CreateModelResource)
                 .ToArray();
             var request = HttpRequestBuilder.UpdateResource(patch, includes);
-            var response = await HttpClient.SendAsync(request);
+            var response = await HttpClient.SendAsync(request).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
             if (response.StatusCode == HttpStatusCode.OK)
@@ -193,7 +193,7 @@ namespace RedArrow.Argo.Client.Session
             var resourceType = ModelRegistry.GetResourceType<TModel>();
             var include = ModelRegistry.GetInclude<TModel>();
             var request = HttpRequestBuilder.GetResource(id, resourceType, include);
-            var response = await HttpClient.SendAsync(request);
+            var response = await HttpClient.SendAsync(request).ConfigureAwait(false);
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
                 return default(TModel); // null
@@ -326,7 +326,7 @@ namespace RedArrow.Argo.Client.Session
 
             var request = HttpRequestBuilder.QueryResources(query, include);
 
-            var response = await HttpClient.SendAsync(request);
+            var response = await HttpClient.SendAsync(request).ConfigureAwait(false);
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
                 return Enumerable.Empty<TModel>();
