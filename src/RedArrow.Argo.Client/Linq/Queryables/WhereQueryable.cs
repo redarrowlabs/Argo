@@ -204,12 +204,12 @@ namespace RedArrow.Argo.Client.Linq.Queryables
             var bExpression = expression as BinaryExpression;
             if (bExpression == null) throw new NotSupportedException();
 
-            if (bExpression.NodeType == ExpressionType.AndAlso || bExpression.NodeType == ExpressionType.And)
+            if (bExpression.NodeType == ExpressionType.AndAlso)
             {
                 return $"({TranslateExpression(bExpression.Left)},{TranslateExpression(bExpression.Right)})";
             }
 
-            if (bExpression.NodeType == ExpressionType.OrElse || bExpression.NodeType == ExpressionType.Or)
+            if (bExpression.NodeType == ExpressionType.OrElse)
             {
                 return $"({TranslateExpression(bExpression.Left)},|{TranslateExpression(bExpression.Right)})";
             }
