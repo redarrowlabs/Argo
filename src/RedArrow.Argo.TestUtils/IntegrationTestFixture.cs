@@ -12,7 +12,7 @@ namespace RedArrow.Argo.TestUtils
     {
         public static Lazy<string> AccessToken { get; } = new Lazy<string>(GetAccessToken);
 
-        public static string Host { get; } = "https://test.redarrow.io/api";
+        public static string Host { get; } = "https://sandbox.redarrow.io/api";
 
         public void ConfigureLogging(ITestOutputHelper outputHelper)
         {
@@ -30,14 +30,18 @@ namespace RedArrow.Argo.TestUtils
         {
             using (var authClient = new HttpClient {BaseAddress = new Uri($"{Host}/security/")})
             {
-                var reqBody = new StringContent(JsonConvert.SerializeObject(new
-                {
-                    accountId = Guid.Parse("10000000-0000-0000-0000-000000000000"),
-                    applicationId = Guid.Parse("10000000-0000-0000-0000-200000000000"),
-                    email = "redarrowqa+adminboth@gmail.com",
-                    password = "Testing1234"
-                }), Encoding.UTF8, "application/json");
-                var response = authClient.PostAsync("authenticate", reqBody).GetAwaiter().GetResult();
+                var response = authClient.SendAsync(
+                    new HttpRequestMessage(HttpMethod.Post, "authenticate")
+                    {
+                        Headers = { {"Api_Version", "1.2"}},
+                        Content = new StringContent(JsonConvert.SerializeObject(new
+                        {
+                            accountId = Guid.Parse("10000000-0000-0000-0000-000000000000"),
+                            applicationId = Guid.Parse("10000000-0000-0000-0000-200000000000"),
+                            email = "redarrowqa+adminboth@gmail.com",
+                            password = "Testing1234"
+                        }), Encoding.UTF8, "application/json")
+                    }).GetAwaiter().GetResult();
 
                 response.EnsureSuccessStatusCode();
 

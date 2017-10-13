@@ -268,7 +268,8 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
 
             Assert.Same(mockQueryContext.Object, result);
 
-            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"dateTimeProperty[eq]'{expectedValue:O}'"),
+            var expectedValueFormatted = JsonConvert.SerializeObject(expectedValue).Replace("\"", string.Empty);
+            mockQueryContext.Verify(x => x.AppendFilter("allPropertyTypes", $"dateTimeProperty[eq]'{expectedValueFormatted}'"),
                 Times.Once);
         }
 

@@ -16,8 +16,14 @@ namespace WovenByFody
         [Property]
         public string PropertyB { get; set; }
 
+        [HasOneId("primaryBasicModel")]
+        public Guid PrimaryBasicModelId { get; }
+
         [HasOne]
         public BasicModel PrimaryBasicModel { get; set; }
+
+        [HasManyIds("basicModels")]
+        public IEnumerable<Guid> BasicModelIds { get; }
 
         [HasMany]
         public IEnumerable<BasicModel> BasicModels { get; set; }

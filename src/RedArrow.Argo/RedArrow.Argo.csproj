@@ -42,8 +42,10 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Attributes\HasManyIdsAttribute.cs" />
     <Compile Include="Attributes\HasManyAttribute.cs" />
     <Compile Include="Attributes\HasOneAttribute.cs" />
+    <Compile Include="Attributes\HasOneIdAttribute.cs" />
     <Compile Include="Attributes\LoadStrategy.cs" />
     <Compile Include="Attributes\MetaAttribute.cs" />
     <Compile Include="Attributes\UnmappedAttribute.cs" />

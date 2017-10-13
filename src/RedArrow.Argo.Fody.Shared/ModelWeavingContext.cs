@@ -31,7 +31,9 @@ namespace RedArrow.Argo
         public PropertyDefinition IdPropDef { get; private set; }
 
         public IEnumerable<PropertyDefinition> MappedAttributes { get; }
+        public IEnumerable<PropertyDefinition> MappedHasOneIds { get; }
         public IEnumerable<PropertyDefinition> MappedHasOnes { get; }
+        public IEnumerable<PropertyDefinition> MappedHasManyIds { get; }
         public IEnumerable<PropertyDefinition> MappedHasManys { get; }
         public IEnumerable<PropertyDefinition> MappedMeta { get; }
 
@@ -69,7 +71,9 @@ namespace RedArrow.Argo
             GetMappedIdProperty();
 
             MappedAttributes = GetMappedProperties(Constants.Attributes.Property);
+            MappedHasOneIds = GetMappedProperties(Constants.Attributes.HasOneId);
             MappedHasOnes = GetMappedProperties(Constants.Attributes.HasOne);
+            MappedHasManyIds = GetMappedProperties(Constants.Attributes.HasManyIds);
             MappedHasManys = GetMappedProperties(Constants.Attributes.HasMany);
             MappedMeta = GetMappedProperties(Constants.Attributes.Meta);
         }

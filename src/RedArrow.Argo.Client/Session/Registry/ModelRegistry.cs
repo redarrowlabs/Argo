@@ -209,7 +209,7 @@ namespace RedArrow.Argo.Client.Session.Registry
                 return null;
             }
 
-            var result = JObject.Parse("{}");
+            var result = new JObject();
             foreach (var key in attrValues.Keys)
             {
                 BuildObject(result, key, attrValues[key]);
