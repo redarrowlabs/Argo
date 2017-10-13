@@ -105,7 +105,9 @@ namespace RedArrow.Argo
                     AddStaticCtor(context);
                     WeaveAttributes(context);
                     WeaveMeta(context);
+                    WeaveHasOneIds(context);
                     WeaveHasOnes(context);
+                    WeaveHasManyIds(context);
                     WeaveHasManys(context);
                 }
             }

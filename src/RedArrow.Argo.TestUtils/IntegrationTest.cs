@@ -35,7 +35,7 @@ namespace RedArrow.Argo.TestUtils
                             .DefaultRequestHeaders
                             .Authorization = new AuthenticationHeaderValue("Bearer", IntegrationTestFixture.AccessToken.Value);
 
-                    httpClient.DefaultRequestHeaders.Add("Api-Version", "1");
+                    httpClient.DefaultRequestHeaders.Add("Api-Version", "1.2");
                     httpClient.DefaultRequestHeaders.Add("Data-Segmentation-Key", "10000000-1000-0000-0000-000000000000");
                 })
                 .Configure(HttpClient)

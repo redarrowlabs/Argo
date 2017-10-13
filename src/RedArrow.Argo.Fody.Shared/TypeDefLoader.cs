@@ -23,7 +23,11 @@ namespace RedArrow.Argo
         private MethodDefinition _session_DisposedGetter;
         private MethodDefinition _session_GetId;
         private MethodDefinition _session_GetAttribute;
+        private MethodDefinition _session_GetReferenceId;
+        private MethodDefinition _session_GetReference;
+        private MethodDefinition _session_SetReference;
         private MethodDefinition _session_GetMeta;
+        private MethodDefinition _session_GetRelationshipIds;
         private MethodDefinition _session_GetGenericEnumerable;
         private MethodDefinition _session_SetGenericEnumerable;
         private MethodDefinition _session_GetGenericCollection;
@@ -65,9 +69,21 @@ namespace RedArrow.Argo
             _session_GetAttribute = _sessionTypeDef
                 .Methods
                 .Single(x => x.Name == "GetAttribute");
+            _session_GetReferenceId = _sessionTypeDef
+                .Methods
+                .Single(x => x.Name == "GetReferenceId");
+            _session_GetReference = _sessionTypeDef
+                .Methods
+                .Single(x => x.Name == "GetReference");
+            _session_SetReference = _sessionTypeDef
+                .Methods
+                .Single(x => x.Name == "SetReference");
             _session_GetMeta = _sessionTypeDef
                 .Methods
                 .Single(x => x.Name == "GetMeta");
+            _session_GetRelationshipIds = _sessionTypeDef
+                .Methods
+                .Single(x => x.Name == "GetRelationshipIds");
             _session_GetGenericEnumerable = _sessionTypeDef
                 .Methods
                 .Single(x => x.Name == "GetGenericEnumerable");

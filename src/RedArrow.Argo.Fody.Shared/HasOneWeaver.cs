@@ -10,15 +10,7 @@ namespace RedArrow.Argo
     {
         private void WeaveHasOnes(ModelWeavingContext context)
         {
-            var sessionGetRltnGeneric = _sessionTypeDef
-                .Methods
-                .SingleOrDefault(x => x.Name == "GetReference");
-
-            var sessionSetRltnGeneric = _sessionTypeDef
-                .Methods
-                .SingleOrDefault(x => x.Name == "SetReference");
-
-            if (sessionGetRltnGeneric == null || sessionSetRltnGeneric == null)
+            if (_session_GetReference == null || _session_SetReference == null)
             {
                 throw new Exception("Argo relationship weaving failed unexpectedly");
             }
@@ -43,21 +35,20 @@ namespace RedArrow.Argo
 
                 LogInfo($"\tWeaving {propertyDef} => {attrName}");
 
-                WeaveReferenceGetter(context, backingField, propertyDef, sessionGetRltnGeneric, attrName);
+                WeaveReferenceGetter(context, backingField, propertyDef, attrName);
                 if (propertyDef.SetMethod == null) return; 
-                WeaveReferenceSetter(context, backingField, propertyDef, sessionSetRltnGeneric, attrName);
+                WeaveReferenceSetter(context, backingField, propertyDef, attrName);
             }
         }
 
-        private static void WeaveReferenceGetter(
+        private void WeaveReferenceGetter(
             ModelWeavingContext context,
             FieldReference backingField,
             PropertyDefinition refPropDef,
-            MethodReference sessionGetAttrGeneric,
             string attrName)
         {
             // supply generic type arguments to template
-            var sessionGetAttr = sessionGetAttrGeneric.MakeGenericMethod(context.ModelTypeDef, refPropDef.PropertyType);
+            var sessionGetAttr = _session_GetReference.MakeGenericMethod(context.ModelTypeDef, refPropDef.PropertyType);
 
             // get
             // {
@@ -94,15 +85,14 @@ namespace RedArrow.Argo
             proc.Emit(OpCodes.Ret); // return
         }
 
-        private static void WeaveReferenceSetter(
+        private void WeaveReferenceSetter(
             ModelWeavingContext context,
             FieldReference backingField,
             PropertyDefinition refPropDef,
-            MethodReference sessionSetAttrGeneric,
             string attrName)
         {
             // supply generic type arguments to template
-            var sessionSetAttr = sessionSetAttrGeneric.MakeGenericMethod(context.ModelTypeDef, refPropDef.PropertyType);
+            var sessionSetAttr = _session_SetReference.MakeGenericMethod(context.ModelTypeDef, refPropDef.PropertyType);
 
             refPropDef.SetMethod.Body.Instructions.Clear();
 

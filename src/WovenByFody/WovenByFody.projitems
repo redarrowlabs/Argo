@@ -9,6 +9,7 @@
     <Import_RootNamespace>WovenByFody</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)AllAttributes.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AllPropertyTypes.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BaseClass.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BasicModel.cs" />

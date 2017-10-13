@@ -248,28 +248,12 @@ namespace RedArrow.Argo.Client.Session
             var resourceType = ModelRegistry.GetResourceType<TModel>();
             var response = await HttpClient.DeleteAsync($"{resourceType}/{id}");
             response.EnsureSuccessStatusCode();
-            Detach<TModel>(id);
-        }
-
-        public void Detach<TModel>(Guid id)
-        {
             var model = Cache.Retrieve<TModel>(id);
             if (model != null)
             {
-                Detach(id, model);
+                ModelRegistry.DetachModel(model);
             }
-        }
-
-        public void Detach<TModel>(TModel model)
-        {
-            var id = ModelRegistry.GetId(model);
-            Detach(id, model);
-        }
-
-        private void Detach(Guid id, object model)
-        {
             Cache.Remove(id);
-            ModelRegistry.DetachModel(model);
         }
 
         public void Dispose()
@@ -393,6 +377,17 @@ namespace RedArrow.Argo.Client.Session
             ModelRegistry.GetOrCreatePatch(model).SetMeta(metaName, value);
         }
 
+        public Guid GetReferenceId<TModel>(TModel model, string attrName)
+        {
+            var relationships = ModelRegistry.GetResource(model)?.Relationships;
+
+            if (relationships == null) return Guid.Empty;
+
+            return relationships.TryGetValue(attrName, out var rltn)
+                ? rltn.Data?.SelectToken("id").ToObject<Guid>() ?? Guid.Empty
+                : Guid.Empty;
+        }
+
         public TRltn GetReference<TModel, TRltn>(TModel model, string rltnName)
         {
             ThrowIfDisposed();
@@ -463,6 +458,19 @@ namespace RedArrow.Argo.Client.Session
             ModelRegistry
                 .GetOrCreatePatch(model)
                 .GetRelationships()[rltnName] = relationship;
+        }
+
+        public IEnumerable<Guid> GetRelationshipIds<TModel>(TModel model, string rltnName)
+        {
+            var relationships = ModelRegistry.GetResource(model)?.Relationships;
+
+            if (relationships == null) return Array.Empty<Guid>();
+
+            return relationships.TryGetValue(rltnName, out var rltn)
+                ? rltn.Data?.SelectTokens("[*].id")
+                    .Select(id => id.ToObject<Guid>())
+                    .ToArray() ?? Array.Empty<Guid>()
+                : Array.Empty<Guid>();
         }
 
         public IEnumerable<TElmnt> GetGenericEnumerable<TModel, TElmnt>(TModel model, string rltnName)

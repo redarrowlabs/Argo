@@ -11,7 +11,5 @@ namespace RedArrow.Argo.Client.Session
         Task Update<TModel>(TModel model);
         Task Delete<TModel>(TModel model);
         Task Delete<TModel>(Guid id);
-        void Detach<TModel>(Guid id);
-        void Detach<TModel>(TModel model);
     }
 }
