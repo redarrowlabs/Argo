@@ -3,6 +3,7 @@ using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using RedArrow.Argo.Client.Exceptions;
 
 namespace RedArrow.Argo.Client.Extensions
 {
@@ -31,6 +32,14 @@ namespace RedArrow.Argo.Client.Extensions
                 return JsonSerializer
                     .Create(jsonSettings)
                     .Deserialize<TModel>(jtr);
+            }
+        }
+
+        internal static void CheckStatusCode(this HttpResponseMessage response)
+        {
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new ArgoResponseException(response);
             }
         }
     }

@@ -4,6 +4,7 @@ using RedArrow.Argo.Client.Http.Handlers.ExceptionLogger;
 using RedArrow.Argo.Client.Session;
 using System;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -23,6 +24,10 @@ namespace RedArrow.Argo.TestUtils
             Fixture = fixture;
             Fixture.ConfigureLogging(outputHelper);
             SessionFactory = CreateSessionFactory();
+
+            // Force the tests to allow TLS 1.2, since the test runners default to lower security protocols
+            // Otherwise you get a SocketException when hitting sandbox.redarrow.io
+            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
         }
 
         private ISessionFactory CreateSessionFactory()
