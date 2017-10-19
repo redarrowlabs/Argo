@@ -167,7 +167,7 @@ namespace RedArrow.Argo.Client.Session
                     Cache.Update(root.Data.Id, m);
                 }
             }
-            else if (response.StatusCode == HttpStatusCode.LengthRequired);
+            else if (response.StatusCode == HttpStatusCode.NoContent)
             {
                 ModelRegistry.ApplyPatch(model);
             }
