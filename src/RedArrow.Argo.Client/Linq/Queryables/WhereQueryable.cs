@@ -66,24 +66,27 @@ namespace RedArrow.Argo.Client.Linq.Queryables
         // NOTE: only supports dealing with converting to nullable
         private string TranslateUnaryExpression(Expression expression)
         {
-            var ue = expression as UnaryExpression;
-            if (ue.Operand is MemberExpression)
+            var uExpression = expression as UnaryExpression;
+
+            if(uExpression == null) throw new NotSupportedException();
+
+            if (uExpression.NodeType == ExpressionType.Convert || uExpression.NodeType == ExpressionType.Constant)
             {
-                return TranslateMemberExpression(ue.Operand);
+                return TranslateMemberExpression(uExpression.Operand);
             }
 
-            if (ue.NodeType != ExpressionType.Convert || ue.Operand.NodeType != ExpressionType.Constant)
+            if (uExpression.NodeType == ExpressionType.Not)
+            {
+                return $"{TranslateMemberExpression(uExpression.Operand)}[eq]false";
+            }
+
+            var genericTypeDef = uExpression.Type.GetGenericTypeDefinition();
+            if (genericTypeDef == null || genericTypeDef != typeof(Nullable<>))
             {
                 throw new NotSupportedException();
             }
 
-            var gt = ue.Type.GetGenericTypeDefinition();
-            if (gt == null || gt != typeof(Nullable<>))
-            {
-                throw new NotSupportedException();
-            }
-
-            return GetValueLiteral(((ConstantExpression)ue.Operand).Value);
+            return GetValueLiteral(((ConstantExpression)uExpression.Operand).Value);
         }
 
         private string TranslateMethodCallExpression(Expression expression)
@@ -169,7 +172,8 @@ namespace RedArrow.Argo.Client.Linq.Queryables
 
                 return name;
             }
-            else if (mExpression.Expression.NodeType == ExpressionType.MemberAccess)
+
+            if (mExpression.Expression.NodeType == ExpressionType.MemberAccess)
             {
                 var expressionValue = GetExpressionValue(null, mExpression);
                 return GetValueLiteral(expressionValue);
@@ -204,19 +208,33 @@ namespace RedArrow.Argo.Client.Linq.Queryables
             var bExpression = expression as BinaryExpression;
             if (bExpression == null) throw new NotSupportedException();
 
+            var lhs = TranslateExpression(bExpression.Left);
+            var rhs = TranslateExpression(bExpression.Right);
+
+            if (bExpression.NodeType == ExpressionType.AndAlso || bExpression.NodeType == ExpressionType.OrElse)
+            {
+                if (bExpression.Left is MemberExpression && bExpression.Left.Type == typeof(bool))
+                {
+                    lhs = $"{lhs}[eq]true";
+                }
+                if (bExpression.Right is MemberExpression && bExpression.Right.Type == typeof(bool))
+                {
+                    rhs = $"{rhs}[eq]true";
+                }
+            }
+
             if (bExpression.NodeType == ExpressionType.AndAlso)
             {
-                return $"({TranslateExpression(bExpression.Left)},{TranslateExpression(bExpression.Right)})";
+                return $"({lhs},{rhs})";
             }
 
             if (bExpression.NodeType == ExpressionType.OrElse)
             {
-                return $"({TranslateExpression(bExpression.Left)},|{TranslateExpression(bExpression.Right)})";
+                return $"({lhs},|{rhs})";
             }
-
-            string op;
-            if (!OpMap.TryGetValue(bExpression.NodeType, out op)) throw new NotSupportedException();
-            return $"{TranslateExpression(bExpression.Left)}[{op}]{TranslateExpression(bExpression.Right)}";
+            
+            if (!OpMap.TryGetValue(bExpression.NodeType, out var op)) throw new NotSupportedException();
+            return $"{lhs}[{op}]{rhs}";
         }
 
         private object GetExpressionValue(object target, Expression exp)

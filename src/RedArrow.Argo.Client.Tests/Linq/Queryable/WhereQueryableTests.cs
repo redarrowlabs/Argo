@@ -570,9 +570,9 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
                 .Returns(mockQueryContext.Object);
 
             Expression<Func<AllPropertyTypes, bool>> predicate = x =>
-                x.IntProperty > expectedMin &&
-                x.IntProperty < expectedMax ||
-                x.IntProperty == expectedSpecific;
+                x.IntProperty > expectedMin
+                && x.IntProperty < expectedMax
+                || x.IntProperty == expectedSpecific;
 
             var subject = CreateSubject(
                 session,
@@ -586,6 +586,68 @@ namespace RedArrow.Argo.Client.Tests.Linq.Queryable
             mockQueryContext.Verify(x =>
                     x.AppendFilter("allPropertyTypes",
                         $"((intProperty[gt]{expectedMin},intProperty[lt]{expectedMax}),|intProperty[eq]{expectedSpecific})"),
+                Times.Once);
+        }
+
+        [Theory, AutoData]
+        public void BuildQuery__Given_Target__When_ExpressionSimpleNotBooleanEqualsWithAnd__Then_AddFilter
+            (int intVal)
+        {
+            var mockQueryContext = new Mock<IQueryContext>();
+
+            var session = Mock.Of<IQuerySession>();
+
+            var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
+            mockTarget
+                .Setup(x => x.BuildQuery())
+                .Returns(mockQueryContext.Object);
+
+            Expression<Func<AllPropertyTypes, bool>> predicate = x =>
+                x.IntProperty == intVal && !x.BoolProperty;
+
+            var subject = CreateSubject(
+                session,
+                mockTarget.Object,
+                predicate);
+
+            var result = subject.BuildQuery();
+
+            Assert.Same(mockQueryContext.Object, result);
+
+            mockQueryContext.Verify(x =>
+                    x.AppendFilter("allPropertyTypes",
+                        $"(intProperty[eq]{intVal},boolProperty[eq]false)"),
+                Times.Once);
+        }
+
+        [Theory, AutoData]
+        public void BuildQuery__Given_Target__When_ExpressionSimpleBooleanEqualsWithAnd__Then_AddFilter
+            (int intVal)
+        {
+            var mockQueryContext = new Mock<IQueryContext>();
+
+            var session = Mock.Of<IQuerySession>();
+
+            var mockTarget = new Mock<RemoteQueryable<AllPropertyTypes>>(session, Mock.Of<IQueryProvider>());
+            mockTarget
+                .Setup(x => x.BuildQuery())
+                .Returns(mockQueryContext.Object);
+
+            Expression<Func<AllPropertyTypes, bool>> predicate = x =>
+                x.IntProperty == intVal && x.BoolProperty;
+
+            var subject = CreateSubject(
+                session,
+                mockTarget.Object,
+                predicate);
+
+            var result = subject.BuildQuery();
+
+            Assert.Same(mockQueryContext.Object, result);
+
+            mockQueryContext.Verify(x =>
+                    x.AppendFilter("allPropertyTypes",
+                        $"(intProperty[eq]{intVal},boolProperty[eq]true)"),
                 Times.Once);
         }
 
