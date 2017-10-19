@@ -19,6 +19,11 @@ namespace RedArrow.Argo.TestUtils
         protected IntegrationTestFixture Fixture { get; }
         protected ISessionFactory SessionFactory { get; }
 
+        static IntegrationTest()
+        {
+            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+        }
+
         protected IntegrationTest(IntegrationTestFixture fixture, ITestOutputHelper outputHelper)
         {
             Fixture = fixture;
