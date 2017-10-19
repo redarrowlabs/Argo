@@ -123,7 +123,7 @@ namespace RedArrow.Argo.Client.Session
 
             var request = HttpRequestBuilder.CreateResource(rootResource, includes);
             var response = await HttpClient.SendAsync(request).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
+            response.CheckStatusCode();
             if (response.StatusCode == HttpStatusCode.Created)
             {
                 var root = await response.GetContentModel<ResourceRootSingle>(JsonSettings);
@@ -156,7 +156,7 @@ namespace RedArrow.Argo.Client.Session
                 .ToArray();
             var request = HttpRequestBuilder.UpdateResource(patch, includes);
             var response = await HttpClient.SendAsync(request).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
+            response.CheckStatusCode();
 
             if (response.StatusCode == HttpStatusCode.OK)
             {
@@ -198,7 +198,7 @@ namespace RedArrow.Argo.Client.Session
             {
                 return default(TModel); // null
             }
-            response.EnsureSuccessStatusCode();
+            response.CheckStatusCode();
 
             var root = await response.GetContentModel<ResourceRootSingle>(JsonSettings);
             model = CreateResourceModel<TModel>(root.Data);
@@ -221,7 +221,7 @@ namespace RedArrow.Argo.Client.Session
             var response = HttpClient.SendAsync(request).GetAwaiter().GetResult();
             if (response.StatusCode == HttpStatusCode.NotFound) return null;
 
-            response.EnsureSuccessStatusCode();
+            response.CheckStatusCode();
 
             // TODO: perhaps use a 3rd ResourceRoot with JToken Data to determine if array was erroneously returned
             var root = response.GetContentModel<ResourceRootSingle>(JsonSettings).GetAwaiter().GetResult();
@@ -247,7 +247,7 @@ namespace RedArrow.Argo.Client.Session
         {
             var resourceType = ModelRegistry.GetResourceType<TModel>();
             var response = await HttpClient.DeleteAsync($"{resourceType}/{id}");
-            response.EnsureSuccessStatusCode();
+            response.CheckStatusCode();
             var model = Cache.Retrieve<TModel>(id);
             if (model != null)
             {
@@ -315,7 +315,7 @@ namespace RedArrow.Argo.Client.Session
             {
                 return Enumerable.Empty<TModel>();
             }
-            response.EnsureSuccessStatusCode();
+            response.CheckStatusCode();
 
             var root = await response.GetContentModel<ResourceRootCollection>(JsonSettings);
 
@@ -541,7 +541,7 @@ namespace RedArrow.Argo.Client.Session
             var response = HttpClient.SendAsync(request).GetAwaiter().GetResult();
             if (response.StatusCode == HttpStatusCode.NotFound) return;
 
-            response.EnsureSuccessStatusCode();
+            response.CheckStatusCode();
 
             // TODO: perhaps use a 3rd ResourceRoot with JToken Data to determine if object was erroneously returned
             var root = response.GetContentModel<ResourceRootCollection>(JsonSettings).GetAwaiter().GetResult();
