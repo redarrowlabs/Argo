@@ -4,6 +4,7 @@ using RedArrow.Argo.Client.Http.Handlers.ExceptionLogger;
 using RedArrow.Argo.Client.Session;
 using System;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -17,6 +18,11 @@ namespace RedArrow.Argo.TestUtils
     {
         protected IntegrationTestFixture Fixture { get; }
         protected ISessionFactory SessionFactory { get; }
+
+        static IntegrationTest()
+        {
+            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+        }
 
         protected IntegrationTest(IntegrationTestFixture fixture, ITestOutputHelper outputHelper)
         {

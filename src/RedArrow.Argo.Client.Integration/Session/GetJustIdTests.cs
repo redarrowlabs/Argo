@@ -40,8 +40,8 @@ namespace RedArrow.Argo.Client.Integration.Session
 
             using (var session = SessionFactory.CreateSession())
             {
-                await session.Delete(rltnId);
-                await session.Delete(modelId);
+                await session.Delete<BasicModel>(rltnId);
+                await session.Delete<ComplexModel>(modelId);
             }
         }
     }

@@ -91,8 +91,9 @@ namespace RedArrow.Argo.Client.Integration.Session
 
                 var patient2 = await session.Get<Patient>(crossSessionId);
 
-                Assert.Equal(patient.FirstName, patient2.FirstName);
-                Assert.Equal(patient.LastName, patient2.LastName);
+                Assert.Equal(patient.Id, patient2.Id);
+                Assert.Equal(patient.Created, patient2.Created);
+                Assert.Equal(patient.Version, patient2.Version);
             }
             // later that day...
             using (var session = SessionFactory.CreateSession())
