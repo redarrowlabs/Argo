@@ -67,7 +67,9 @@ namespace RedArrow.Argo.Client.Integration.Http.Handlers.GZip
 
                 var patient2 = await session.Get<Patient>(crossSessionId);
 
-                Assert.Same(patient, patient2);
+                Assert.Equal(patient.Id, patient2.Id);
+                Assert.Equal(patient.FirstName, patient2.FirstName);
+                Assert.Equal(patient.LastName, patient2.LastName);
             }
             // later that day...
             using (var session = SessionFactory.CreateSession())
