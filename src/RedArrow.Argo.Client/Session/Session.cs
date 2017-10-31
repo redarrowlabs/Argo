@@ -121,7 +121,7 @@ namespace RedArrow.Argo.Client.Session
                 }
             }
 
-            var request = HttpRequestBuilder.CreateResource(rootResource, includes);
+            var request = await HttpRequestBuilder.CreateResource(rootResource, includes);
             var response = await HttpClient.SendAsync(request).ConfigureAwait(false);
             response.CheckStatusCode();
             if (response.StatusCode == HttpStatusCode.Created)
@@ -154,7 +154,8 @@ namespace RedArrow.Argo.Client.Session
                 .Where(ModelRegistry.IsUnmanagedModel)
                 .Select(CreateModelResource)
                 .ToArray();
-            var request = HttpRequestBuilder.UpdateResource(patch, includes);
+            var resource = ModelRegistry.GetResource(model);
+            var request = await HttpRequestBuilder.UpdateResource(resource, patch, includes);
             var response = await HttpClient.SendAsync(request).ConfigureAwait(false);
             response.CheckStatusCode();
 
@@ -246,7 +247,8 @@ namespace RedArrow.Argo.Client.Session
         public async Task Delete<TModel>(Guid id)
         {
             var resourceType = ModelRegistry.GetResourceType<TModel>();
-            var response = await HttpClient.DeleteAsync($"{resourceType}/{id}");
+            var request = HttpRequestBuilder.DeleteResource(resourceType, id);
+            var response = await HttpClient.SendAsync(request);
             response.CheckStatusCode();
             var model = Cache.Retrieve<TModel>(id);
             if (model != null)

@@ -152,7 +152,7 @@ namespace RedArrow.Argo.Client.Tests.Session
 
                     Assert.Empty(includes);
                 })
-                .Returns(expectedRequest);
+                .ReturnsAsync(expectedRequest);
 
             var mockHandler = new MockRequestHandler();
             mockHandler.Setup(
@@ -220,7 +220,7 @@ namespace RedArrow.Argo.Client.Tests.Session
                     Assert.Null(resource.Links);
                     Assert.Null(resource.Meta);
                 })
-                .Returns(expectedRequest);
+                .ReturnsAsync(expectedRequest);
 
             var mockHandler = new MockRequestHandler();
             mockHandler.Setup(
@@ -303,7 +303,7 @@ namespace RedArrow.Argo.Client.Tests.Session
 
             Assert.Equal(0, mockHandler.RequestsSent);
 
-            mockRequestBuilder.Verify(x => x.UpdateResource(It.IsAny<Resource>(), It.IsAny<IEnumerable<Resource>>()),
+            mockRequestBuilder.Verify(x => x.UpdateResource(It.IsAny<Resource>(), It.IsAny<Resource>(), It.IsAny<IEnumerable<Resource>>()),
                 Times.Never);
             mockCacheProvider.Verify(x => x.Update(It.IsAny<Guid>(), It.IsAny<object>()), Times.Never);
         }
@@ -325,19 +325,19 @@ namespace RedArrow.Argo.Client.Tests.Session
 
             var mockRequestBuilder = new Mock<IHttpRequestBuilder>();
             mockRequestBuilder
-                .Setup(x => x.UpdateResource(It.IsAny<Resource>(), It.IsAny<IEnumerable<Resource>>()))
-                .Callback<Resource, IEnumerable<Resource>>((resource, includes) =>
+                .Setup(x => x.UpdateResource(It.IsAny<Resource>(), It.IsAny<Resource>(), It.IsAny<IEnumerable<Resource>>()))
+                .Callback<Resource, Resource, IEnumerable<Resource>>((resource, patch, includes) =>
                 {
-                    Assert.Equal(modelId, resource.Id);
+                    Assert.Equal(modelId, patch.Id);
 
-                    Assert.Equal(modelPropA, resource.Attributes?["propertyA"]?.ToObject<string>());
-                    Assert.Equal(1, resource.Attributes.Count);
+                    Assert.Equal(modelPropA, patch.Attributes?["propertyA"]?.ToObject<string>());
+                    Assert.Equal(1, patch.Attributes.Count);
 
-                    Assert.NotNull(resource.Relationships);
-                    Assert.Equal(1, resource.Relationships.Count);
-                    Assert.Equal(JTokenType.Object, resource.Relationships["primaryBasicModel"]?.Data?.Type);
+                    Assert.NotNull(patch.Relationships);
+                    Assert.Equal(1, patch.Relationships.Count);
+                    Assert.Equal(JTokenType.Object, patch.Relationships["primaryBasicModel"]?.Data?.Type);
 
-                    var rltnIdentifier = resource.Relationships["primaryBasicModel"]
+                    var rltnIdentifier = patch.Relationships["primaryBasicModel"]
                         .Data.ToObject<ResourceIdentifier>();
                     Assert.NotEqual(Guid.Empty, rltnIdentifier.Id);
                     Assert.Equal(primaryBasicModel.Id, rltnIdentifier.Id);
@@ -351,10 +351,10 @@ namespace RedArrow.Argo.Client.Tests.Session
                     Assert.Equal(modelPropB, include.Attributes?["propB"]?.ToObject<string>());
                     Assert.Null(include.Relationships);
 
-                    Assert.Null(resource.Links);
-                    Assert.Null(resource.Meta);
+                    Assert.Null(patch.Links);
+                    Assert.Null(patch.Meta);
                 })
-                .Returns(expectedRequest);
+                .ReturnsAsync(expectedRequest);
 
             var mockHandler = new MockRequestHandler();
             mockHandler.Setup(

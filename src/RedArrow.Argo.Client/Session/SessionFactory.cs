@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using RedArrow.Argo.Client.Cache;
 using RedArrow.Argo.Client.Config.Model;
 using RedArrow.Argo.Client.Http;
+using RedArrow.Argo.Client.Http.Handlers.Request;
 using RedArrow.Argo.Client.Session.Registry;
 
 namespace RedArrow.Argo.Client.Session
@@ -14,15 +15,18 @@ namespace RedArrow.Argo.Client.Session
         private Func<HttpClient> HttpClientFactory { get; }
         private IEnumerable<ModelConfiguration> ModelConfigurations { get; }
         private JsonSerializerSettings JsonSettings { get; }
+        private HttpRequestModifier HttpRequestModifier { get; }
 
         internal SessionFactory(
             Func<HttpClient> httpClientFactory,
             IEnumerable<ModelConfiguration> modelConfigurations,
-            JsonSerializerSettings jsonSettings)
+            JsonSerializerSettings jsonSettings,
+            HttpRequestModifier httpRequestModifier)
         {
             HttpClientFactory = httpClientFactory;
             ModelConfigurations = modelConfigurations;
             JsonSettings = jsonSettings;
+            HttpRequestModifier = httpRequestModifier;
         }
 
         public ISession CreateSession(Action<HttpClient> configureClient = null)
@@ -34,7 +38,7 @@ namespace RedArrow.Argo.Client.Session
                     configureClient?.Invoke(client);
                     return client;
                 },
-                new HttpRequestBuilder(JsonSettings),
+                new HttpRequestBuilder(JsonSettings, HttpRequestModifier),
                 new BasicCacheProvider(modelRegistry),
                 modelRegistry,
                 JsonSettings);

@@ -79,6 +79,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EtagRequestModifier.cs" />
     <Compile Include="IntegrationTest.cs" />
     <Compile Include="IntegrationTestFixture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

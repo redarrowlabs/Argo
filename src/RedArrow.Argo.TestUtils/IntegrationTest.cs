@@ -8,6 +8,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using RedArrow.Argo.Client.Http.Handlers.Request;
 using WovenByFody;
 using Xunit;
 using Xunit.Abstractions;
@@ -21,6 +22,8 @@ namespace RedArrow.Argo.TestUtils
 
         static IntegrationTest()
         {
+            // Force the tests to allow TLS 1.2, since the test runners default to lower security protocols
+            // Otherwise you get a SocketException when hitting sandbox.redarrow.io
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
         }
 
@@ -29,10 +32,6 @@ namespace RedArrow.Argo.TestUtils
             Fixture = fixture;
             Fixture.ConfigureLogging(outputHelper);
             SessionFactory = CreateSessionFactory();
-
-            // Force the tests to allow TLS 1.2, since the test runners default to lower security protocols
-            // Otherwise you get a SocketException when hitting sandbox.redarrow.io
-            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
         }
 
         private ISessionFactory CreateSessionFactory()
@@ -45,11 +44,12 @@ namespace RedArrow.Argo.TestUtils
                             .DefaultRequestHeaders
                             .Authorization = new AuthenticationHeaderValue("Bearer", IntegrationTestFixture.AccessToken.Value);
 
-                    httpClient.DefaultRequestHeaders.Add("Api-Version", "1.2");
+                    httpClient.DefaultRequestHeaders.Add("Api-Version", "1.3");
                     httpClient.DefaultRequestHeaders.Add("Data-Segmentation-Key", "10000000-1000-0000-0000-000000000000");
                 })
                 .Configure(HttpClient)
                 .Configure(HttpClientBuilder)
+                .Use(new EtagRequestModifier())
                 .Models()
                 .Configure(scan => scan.AssemblyOf<Patient>())
                 .BuildSessionFactory();

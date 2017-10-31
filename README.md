@@ -104,6 +104,7 @@ var sessionFactory = Fluently.Configure("http://api.host.com")
         ResourceRetrieved = response => YourAsyncMethod(response),
         ResourceDeleted = response => YourAsyncMethod(response),
       })
+      .Use(new CustomHttpRequestModifier(ctorArg1))
       .UseGZipCompression()
       .UseRequestHandler<Xamarin.Android.Net.AndroidClientHandler>())
   .Models()

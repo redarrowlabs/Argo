@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using Newtonsoft.Json;
 using RedArrow.Argo.Client.Config.Model;
+using RedArrow.Argo.Client.Http.Handlers.Request;
 using RedArrow.Argo.Client.Session;
 
 namespace RedArrow.Argo.Client.Config
@@ -14,6 +15,8 @@ namespace RedArrow.Argo.Client.Config
         private ICollection<ModelConfiguration> ModelConfigurations { get; }
 
         private JsonSerializerSettings JsonSettings { get; set; }
+
+        private HttpRequestModifier HttpRequestModifier { get; set; }
 
         internal SessionFactoryConfiguration()
         {
@@ -30,9 +33,14 @@ namespace RedArrow.Argo.Client.Config
             JsonSettings = jsonSettings;
         }
 
+        internal void Configure(HttpRequestModifier httpRequestModifier)
+        {
+            HttpRequestModifier = httpRequestModifier;
+        }
+
         public ISessionFactory BuildSessionFactory()
         {
-            return new SessionFactory(HttpClientFactory, ModelConfigurations, JsonSettings);
+            return new SessionFactory(HttpClientFactory, ModelConfigurations, JsonSettings, HttpRequestModifier);
         }
     }
 }
