@@ -38,11 +38,11 @@ namespace RedArrow.Argo.Client.Http.Handlers.Request
             }
         }
 
-        public override void UpdateResource(HttpRequestMessage request, Resource resource, ResourceRootSingle patch)
+        public override void UpdateResource(HttpRequestMessage request, Resource originalResource, ResourceRootSingle patch)
         {
             foreach (var httpRequestModifier in HttpRequestModifiers)
             {
-                httpRequestModifier.UpdateResource(request, resource, patch);
+                httpRequestModifier.UpdateResource(request, originalResource, patch);
             }
         }
 

@@ -580,7 +580,7 @@ namespace RedArrow.Argo.Client.Session
 
             JObject attrs = null;
             IDictionary<string, Relationship> rltns = null;
-            IDictionary<string, JToken> meta = null;
+            JObject meta = null;
 
             // attributes
             var modelAttributes = ModelRegistry.GetAttributeValues(model);

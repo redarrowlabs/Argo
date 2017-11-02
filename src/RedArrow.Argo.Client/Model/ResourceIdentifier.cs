@@ -15,7 +15,7 @@ namespace RedArrow.Argo.Client.Model
         public string Type { get; set; }
 
         [JsonProperty("meta", NullValueHandling = NullValueHandling.Ignore)]
-        public IDictionary<string, JToken> Meta { get; set; }
+        public JObject Meta { get; set; }
 
         internal ResourceIdentifier()
         {

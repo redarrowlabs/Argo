@@ -95,6 +95,7 @@ namespace RedArrow.Argo.Client.Integration.Session
                 Assert.Equal(initialLastName, patient.LastName);
 
                 patient.LastName = updatedLastName;
+                patient.Etag = "\"*\"";
 
                 Assert.Equal(updatedLastName, patient.LastName);
 

@@ -49,8 +49,9 @@ namespace RedArrow.Argo.Client.Http.Handlers.Request
         /// Modifies requests to update a resource
         /// </summary>
         /// <param name="request"></param>
-        /// <param name="resource">Resource being updated</param>
-        public virtual void UpdateResource(HttpRequestMessage request, Resource resource, ResourceRootSingle patch)
+        /// <param name="originalResource">Resource being updated</param>
+        /// <param name="patch">Resource patch</param>
+        public virtual void UpdateResource(HttpRequestMessage request, Resource originalResource, ResourceRootSingle patch)
         {
             // Do nothing
         }

@@ -44,7 +44,7 @@ namespace RedArrow.Argo.Client.Session.Registry
         JObject GetAttributeValues(object model);
         IDictionary<string, Relationship> GetRelationshipValues(object model);
         TMeta GetMetaValue<TModel, TMeta>(TModel model, string metaName);
-        IDictionary<string, JToken> GetMetaValues(object model);
+        JObject GetMetaValues(object model);
 
         IEnumerable<RelationshipConfiguration> GetHasOneConfigs<TModel>();
         IEnumerable<RelationshipConfiguration> GetHasOneConfigs(Type modelType);

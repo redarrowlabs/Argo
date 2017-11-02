@@ -8,6 +8,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using RedArrow.Argo.Client.Extensions;
 
 namespace RedArrow.Argo.Client.Session.Registry
 {
@@ -361,30 +362,15 @@ namespace RedArrow.Argo.Client.Session.Registry
                 return default(TMeta);
             }
 
-            JToken mt;
-            var pathSegments = metaName.Split(new[] { '.' }, 2);
-            if (pathSegments.Length > 1)
+            var mt = meta.SelectToken(metaName);
+            if (mt == null)
             {
-                JToken pt;
-                if (!meta.TryGetValue(pathSegments[0], out pt))
-                {
-                    return default(TMeta);
-                }
-
-                mt = pt.SelectToken(pathSegments[1]);
+                return default(TMeta);
             }
-            else
-            {
-                if (!meta.TryGetValue(metaName, out mt))
-                {
-                    return default(TMeta);
-                }
-            }
-
             return mt.ToObject<TMeta>(JsonSerializer.CreateDefault(JsonSettings));
         }
 
-        public IDictionary<string, JToken> GetMetaValues(object model)
+        public JObject GetMetaValues(object model)
         {
             if (model == null) return null;
             var metaValues = GetMetaConfigs(model.GetType())
@@ -397,7 +383,7 @@ namespace RedArrow.Argo.Client.Session.Registry
             var result = new JObject();
             foreach (var key in metaValues.Keys)
             {
-                BuildObject(result, key, metaValues[key]);
+                result.SetMetaValue(key, metaValues[key]);
             }
 
             return result;

@@ -5,6 +5,6 @@ namespace RedArrow.Argo.Client.Model
 {
     public interface IMetaDecorated
     {
-        IDictionary<string, JToken> Meta { get; set; }
+        JObject Meta { get; set; }
     }
 }

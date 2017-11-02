@@ -9,13 +9,14 @@ namespace RedArrow.Argo.TestUtils
 {
     public class EtagRequestModifier : HttpRequestModifier
     {
-        public override void UpdateResource(HttpRequestMessage request, Resource resource, ResourceRootSingle patch)
+        private const string EtagMetaPath = "system.eTag";
+        public override void UpdateResource(HttpRequestMessage request, Resource originalResource, ResourceRootSingle patch)
         {
-            resource.GetMeta().TryGetValue("system", out var system);
-            var eTag = system?.Value<string>("eTag");
+            var eTag = originalResource.GetMeta().SelectToken(EtagMetaPath)
+                ?? originalResource.GetMeta().SelectToken(EtagMetaPath);
             if (eTag != null)
             {
-                request.Headers.IfMatch.Add(new EntityTagHeaderValue(eTag));
+                request.Headers.IfMatch.Add(new EntityTagHeaderValue(eTag.ToString()));
             }
         }
 

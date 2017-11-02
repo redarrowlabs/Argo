@@ -32,5 +32,8 @@ namespace WovenByFody
 
         [Meta]
         public string Version { get; set; }
+
+        [Meta("system.eTag")]
+        public string Etag { get; set; }
     }
 }
