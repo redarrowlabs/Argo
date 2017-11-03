@@ -133,7 +133,6 @@ namespace RedArrow.Argo.Client.Tests.Session
             };
 
             var expectedRequest = new HttpRequestMessage(HttpMethod.Post, new Uri(uri));
-            var expectedResultModel = new BasicModel();
 
             var mockRequestBuilder = new Mock<IHttpRequestBuilder>();
             mockRequestBuilder
@@ -164,9 +163,6 @@ namespace RedArrow.Argo.Client.Tests.Session
                 });
 
             var mockCacheProvider = new Mock<ICacheProvider>();
-            mockCacheProvider
-                .Setup(x => x.Retrieve<BasicModel>(expectedModelId))
-                .Returns(expectedResultModel);
 
             var modelRegistry = CreateModelRegistry(typeof(BasicModel));
 
@@ -179,10 +175,10 @@ namespace RedArrow.Argo.Client.Tests.Session
             var result = await subject.Create(model);
 
             Assert.NotNull(result);
-            Assert.Same(expectedResultModel, result);
+            Assert.Same(model, result);
 
             mockCacheProvider
-                .Verify(x => x.Update(expectedModelId, It.IsAny<BasicModel>()), Times.Once);
+                .Verify(x => x.Update(expectedModelId, model), Times.Once);
         }
 
         [Theory, AutoData]
@@ -201,7 +197,6 @@ namespace RedArrow.Argo.Client.Tests.Session
             c.A = a;
 
             var expectedRequest = new HttpRequestMessage(HttpMethod.Post, new Uri(uri));
-            var expectedResultModel = new CircularReferenceA();
 
             var mockRequestBuilder = new Mock<IHttpRequestBuilder>();
             mockRequestBuilder
@@ -232,9 +227,6 @@ namespace RedArrow.Argo.Client.Tests.Session
                 });
 
             var mockCacheProvider = new Mock<ICacheProvider>();
-            mockCacheProvider
-                .Setup(x => x.Retrieve<CircularReferenceA>(modelId))
-                .Returns(expectedResultModel);
 
             var modelRegistry = CreateModelRegistry(
                 typeof(CircularReferenceA),
@@ -250,7 +242,7 @@ namespace RedArrow.Argo.Client.Tests.Session
             var result = await subject.Create(a);
 
             Assert.NotNull(result);
-            Assert.Same(expectedResultModel, result);
+            Assert.Same(a, result);
 
             mockCacheProvider
                 .Verify(x => x.Update(It.IsAny<Guid>(), It.IsAny<CircularReferenceA>()), Times.Once);

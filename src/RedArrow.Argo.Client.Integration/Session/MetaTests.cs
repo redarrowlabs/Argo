@@ -17,7 +17,7 @@ namespace RedArrow.Argo.Client.Integration.Session
 
         [Theory, AutoData, Trait("Category", "Integration")]
         public async Task GetSetMetaPersisted
-            (DateTime created, string version)
+            (DateTime contactTime, string version)
         {
             Guid id;
             using (var session = SessionFactory.CreateSession())
@@ -25,10 +25,10 @@ namespace RedArrow.Argo.Client.Integration.Session
                 var patient = await session.Create<Patient>();
                 id = patient.Id;
 
-                patient.Created = created;
+                patient.ContactTime = contactTime;
                 patient.Version = version;
 
-                Assert.Equal(created, patient.Created);
+                Assert.Equal(contactTime, patient.ContactTime);
                 Assert.Equal(version, patient.Version);
             }
 
@@ -36,7 +36,7 @@ namespace RedArrow.Argo.Client.Integration.Session
             {
                 var patient = await session.Get<Patient>(id);
 
-                Assert.Equal(DateTime.MinValue, patient.Created);
+                Assert.Equal(DateTime.MinValue, patient.ContactTime);
                 Assert.Null(patient.Version);
             }
         }
@@ -44,7 +44,7 @@ namespace RedArrow.Argo.Client.Integration.Session
         [Fact, Trait("Category", "Integration")]
         public async Task CreateGetDeletePatient()
         {
-            var initialCreated = DateTime.UtcNow;
+            var initialContactTime = DateTime.UtcNow;
             var initialVersion = "abcdef123456789";
 
             var updatedVersion = "987654321fdecba";
@@ -55,21 +55,21 @@ namespace RedArrow.Argo.Client.Integration.Session
             {
                 var patient = new Patient
                 {
-                    Created = initialCreated,
+                    ContactTime = initialContactTime,
                     Version = initialVersion
                 };
 
                 patient = await session.Create(patient);
 
                 Assert.NotEqual(Guid.Empty, patient.Id);
-                Assert.Equal(initialCreated, patient.Created.ToUniversalTime());
+                Assert.Equal(initialContactTime, patient.ContactTime.ToUniversalTime());
                 Assert.Equal(initialVersion, patient.Version);
 
                 crossSessionId = patient.Id;
 
                 var patientRef = await session.Get<Patient>(crossSessionId);
                 
-                Assert.Equal(patient.Created, patientRef.Created);
+                Assert.Equal(patient.ContactTime, patientRef.ContactTime);
                 Assert.Equal(patient.Version, patientRef.Version);
             }
             // update!
@@ -78,7 +78,7 @@ namespace RedArrow.Argo.Client.Integration.Session
                 var patient = await session.Get<Patient>(crossSessionId);
 
                 Assert.Equal(crossSessionId, patient.Id);
-                Assert.Equal(initialCreated, patient.Created.ToUniversalTime());
+                Assert.Equal(initialContactTime, patient.ContactTime.ToUniversalTime());
                 Assert.Equal(initialVersion, patient.Version);
 
                 patient.Version = updatedVersion;
@@ -86,13 +86,13 @@ namespace RedArrow.Argo.Client.Integration.Session
                 Assert.Equal(updatedVersion, patient.Version);
 
                 await session.Update(patient);
-                Assert.Equal(initialCreated, patient.Created.ToUniversalTime());
+                Assert.Equal(initialContactTime, patient.ContactTime.ToUniversalTime());
                 Assert.Equal(updatedVersion, patient.Version);
 
                 var patient2 = await session.Get<Patient>(crossSessionId);
 
                 Assert.Equal(patient.Id, patient2.Id);
-                Assert.Equal(patient.Created, patient2.Created);
+                Assert.Equal(patient.ContactTime, patient2.ContactTime);
                 Assert.Equal(patient.Version, patient2.Version);
             }
             // later that day...
@@ -101,7 +101,7 @@ namespace RedArrow.Argo.Client.Integration.Session
                 var patient = await session.Get<Patient>(crossSessionId);
 
                 Assert.Equal(crossSessionId, patient.Id);
-                Assert.Equal(initialCreated, patient.Created.ToUniversalTime());
+                Assert.Equal(initialContactTime, patient.ContactTime.ToUniversalTime());
                 Assert.Equal(updatedVersion, patient.Version);
             }
             // cleanup

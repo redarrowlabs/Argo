@@ -26,6 +26,6 @@ namespace WovenByFody
         public IEnumerable<Guid> BasicModelIds { get; }
 
         [HasMany]
-        public IEnumerable<BasicModel> BasicModels { get; set; }
+        public ICollection<BasicModel> BasicModels { get; set; }
     }
 }

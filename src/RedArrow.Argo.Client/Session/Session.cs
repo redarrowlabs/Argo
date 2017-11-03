@@ -82,36 +82,27 @@ namespace RedArrow.Argo.Client.Session
                 ModelRegistry.SetId(model, modelId);
             }
 
-            IDictionary<Guid, Resource> resourceIndex;
-
-            if (model != null) // map model to resource
+            // Create a new model instance if not already existing
+            if (model == null)
             {
-                if (ModelRegistry.IsManagedModel(model))
-                {
-                    throw new ManagedModelCreationException(model.GetType(), modelId);
-                }
-
-                // all unmanaged models in the object graph, including root
-                resourceIndex = ModelRegistry.IncludedModelsCreate(model)
-                    .Select(CreateModelResource)
-                    .ToDictionary(x => x.Id);
-            }
-            else // model is null - all we know is resource type
-            {
-                resourceIndex = new Dictionary<Guid, Resource>
-                {
-                    {
-                        modelId, new Resource
-                        {
-                            Id = modelId,
-                            Type = ModelRegistry.GetResourceType(rootModelType)
-                        }
-                    }
-                };
+                model = Activator.CreateInstance<TModel>();
+                ModelRegistry.SetId(model, modelId);
             }
 
-            var rootResource = resourceIndex[modelId];
-            var includes = resourceIndex.Values.Where(x => x.Id != modelId).ToArray();
+            if (ModelRegistry.IsManagedModel(model))
+            {
+                throw new ManagedModelCreationException(model.GetType(), modelId);
+            }
+
+            // all unmanaged models in the object graph, including root
+            var allModels = ModelRegistry.IncludedModelsCreate(model);
+            foreach (var newModel in allModels)
+            {
+                CreateModelResource(newModel);
+            }
+
+            var rootResource = ModelRegistry.GetResource(model);
+            var includes = allModels.Where(x => x != model).Select(ModelRegistry.GetResource).ToArray();
             if (Log.IsDebugEnabled())
             {
                 Log.Debug(() => $"preparing to POST {rootResource.Type}:{{{rootResource.Id}}}");
@@ -127,17 +118,19 @@ namespace RedArrow.Argo.Client.Session
             if (response.StatusCode == HttpStatusCode.Created)
             {
                 var root = await response.GetContentModel<ResourceRootSingle>(JsonSettings);
-                resourceIndex[modelId] = root.Data;
+                // Update the model instance in the argument
+                var initialize = rootModelType.GetInitializeMethod();
+                initialize.Invoke(model, new object[] { root.Data, this });
             }
 
             // create and cache includes
-            await Task.WhenAll(resourceIndex.Values.Select(x => Task.Run(() =>
+            await Task.WhenAll(allModels.Select(x => Task.Run(() =>
             {
-                var m = CreateResourceModel(x);
-                Cache.Update(x.Id, m);
+                var resource = ModelRegistry.GetResource(x);
+                Cache.Update(resource.Id, x);
             })));
 
-            return Cache.Retrieve<TModel>(modelId);
+            return (TModel)model;
         }
 
         public async Task Update<TModel>(TModel model)
@@ -162,11 +155,10 @@ namespace RedArrow.Argo.Client.Session
             if (response.StatusCode == HttpStatusCode.OK)
             {
                 var root = await response.GetContentModel<ResourceRootSingle>(JsonSettings);
-                if (root.Data != null)
-                {
-                    var m = CreateResourceModel(root.Data);
-                    Cache.Update(root.Data.Id, m);
-                }
+                // Update the model instance in the argument
+                var initialize = typeof(TModel).GetInitializeMethod();
+                initialize.Invoke(model, new object[] { root.Data, this });
+                Cache.Update(root.Data.Id, model);
             }
             else if (response.StatusCode == HttpStatusCode.NoContent)
             {
@@ -570,7 +562,10 @@ namespace RedArrow.Argo.Client.Session
 
             var type = ModelRegistry.GetModelType(resource.Type);
             Log.Debug(() => $"activating session-managed instance of {type.FullName}:{{{resource.Id}}}");
-            return Activator.CreateInstance(type, resource, this);
+            var model = Activator.CreateInstance(type);
+            var initialize = type.GetInitializeMethod();
+            initialize.Invoke(model, new object[] { resource, this });
+            return model;
         }
 
         public Resource CreateModelResource(object model)
@@ -603,7 +598,7 @@ namespace RedArrow.Argo.Client.Session
                 meta = modelMeta;
             }
 
-            return new Resource
+            var resource = new Resource
             {
                 Id = ModelRegistry.GetId(model),
                 Type = resourceType,
@@ -611,6 +606,10 @@ namespace RedArrow.Argo.Client.Session
                 Relationships = rltns,
                 Meta = meta
             };
+            // Update the model instance in the argument
+            var initialize = modelType.GetInitializeMethod();
+            initialize.Invoke(model, new object[] { resource, this });
+            return resource;
         }
 
         private void ThrowIfDisposed()

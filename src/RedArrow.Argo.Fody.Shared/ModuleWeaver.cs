@@ -101,7 +101,7 @@ namespace RedArrow.Argo
                 {
                     AddResourceIdentifierProperty(context);
                     AddPatchProperty(context);
-                    AddCtor(context);
+                    AddInitialize(context);
                     AddStaticCtor(context);
                     WeaveAttributes(context);
                     WeaveMeta(context);

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Ploeh.AutoFixture.Xunit2;
 using RedArrow.Argo.TestUtils;
@@ -26,9 +28,12 @@ namespace RedArrow.Argo.Client.Integration.Session
                 modelId = model.Id;
 
                 model.PrimaryBasicModel = new BasicModel();
+                model.BasicModels.Add(model.PrimaryBasicModel);
 
                 await session.Update(model);
                 rltnId = model.PrimaryBasicModel.Id;
+                Assert.Equal(rltnId, model.PrimaryBasicModelId);
+                Assert.Equal(rltnId, model.BasicModelIds.Single());
             }
 
             using (var session = SessionFactory.CreateSession())
@@ -36,6 +41,7 @@ namespace RedArrow.Argo.Client.Integration.Session
                 var persistedModel = await session.Get<ComplexModel>(modelId);
 
                 Assert.Equal(rltnId, persistedModel.PrimaryBasicModelId);
+                Assert.Equal(rltnId, persistedModel.BasicModelIds.Single());
             }
 
             using (var session = SessionFactory.CreateSession())
