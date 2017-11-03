@@ -143,12 +143,13 @@ namespace RedArrow.Argo.Client.Session
             // if nothing was updated, no need to continue
             if (patch == null) return;
 
-            var includes = Cache.Items
+            var includeModels = Cache.Items
                 .Where(ModelRegistry.IsUnmanagedModel)
-                .Select(CreateModelResource)
                 .ToArray();
-            var resource = ModelRegistry.GetResource(model);
-            var request = await HttpRequestBuilder.UpdateResource(resource, patch, includes);
+            var includeResources = includeModels.Select(CreateModelResource).ToArray();
+
+            var originalResource = ModelRegistry.GetResource(model);
+            var request = await HttpRequestBuilder.UpdateResource(originalResource, patch, includeResources);
             var response = await HttpClient.SendAsync(request).ConfigureAwait(false);
             response.CheckStatusCode();
 
@@ -166,10 +167,10 @@ namespace RedArrow.Argo.Client.Session
             }
 
             // create and cache includes
-            await Task.WhenAll(includes.Select(x => Task.Run(() =>
+            await Task.WhenAll(includeModels.Select(x => Task.Run(() =>
             {
-                var m = CreateResourceModel(x);
-                Cache.Update(x.Id, m);
+                var resource = ModelRegistry.GetResource(x);
+                Cache.Update(resource.Id, x);
             })));
         }
 

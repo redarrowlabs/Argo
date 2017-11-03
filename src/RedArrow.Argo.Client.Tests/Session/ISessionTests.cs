@@ -386,7 +386,7 @@ namespace RedArrow.Argo.Client.Tests.Session
 
             await subject.Update(model);
 
-            mockCacheProvider.Verify(x => x.Update(model.PrimaryBasicModel.Id, model.PrimaryBasicModel), Times.Once);
+            mockCacheProvider.Verify(x => x.Update(model.PrimaryBasicModel.Id, model.PrimaryBasicModel));
             mockCacheProvider.Verify(x => x.Update(model.Id, model), Times.Never);
         }
 
