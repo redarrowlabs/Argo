@@ -16,7 +16,7 @@ namespace RedArrow.Argo.Client.Model
         public IList<Error> Errors { get; set; }
 
         [JsonProperty("meta", NullValueHandling = NullValueHandling.Ignore)]
-        public IDictionary<string, JToken> Meta { get; set; }
+        public JObject Meta { get; set; }
 
         [JsonProperty("links", NullValueHandling = NullValueHandling.Ignore)]
         public IDictionary<string, JToken> Links { get; set; }

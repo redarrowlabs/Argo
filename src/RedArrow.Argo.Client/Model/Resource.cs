@@ -29,7 +29,10 @@ namespace RedArrow.Argo.Client.Model
         {
             GetAttributes().Merge(patch.Attributes);
             patch.Relationships?.Each(kvp => GetRelationships()[kvp.Key] = kvp.Value);
-            patch.Meta?.Each(kvp => GetMeta()[kvp.Key] = kvp.Value);
+            if (patch.Meta != null)
+            {
+                GetMeta().Merge(patch.Meta);
+            }
         }
 
         public JObject GetAttributes()
@@ -52,14 +55,14 @@ namespace RedArrow.Argo.Client.Model
             return Links ?? (Links = new Dictionary<string, JToken>());
         }
 
-        public IDictionary<string, JToken> GetMeta()
+        public JObject GetMeta()
         {
-            return Meta ?? (Meta = new Dictionary<string, JToken>());
+            return Meta ?? (Meta = new JObject());
         }
 
         public void SetMeta(string metaName, object value)
         {
-            GetMeta()[metaName] = JToken.FromObject(value);
+            GetMeta().SetMetaValue(metaName, value);
         }
     }
 

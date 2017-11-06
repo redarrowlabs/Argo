@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
 
 namespace RedArrow.Argo.Client.Model
 {
@@ -29,7 +28,7 @@ namespace RedArrow.Argo.Client.Model
         public ErrorSource Source { get; set; }
 
         [JsonProperty("meta", NullValueHandling = NullValueHandling.Ignore)]
-        public IDictionary<string, JToken> Meta { get; set; }
+        public JObject Meta { get; set; }
 
         internal Error()
         {

@@ -28,9 +28,18 @@ namespace WovenByFody
         public Company Insurance { get; set; }
 
         [Meta]
+        public DateTime ContactTime { get; set; }
+
+        [Meta("system.createdAt")]
         public DateTime Created { get; set; }
 
         [Meta]
         public string Version { get; set; }
+
+        [Meta("system.eTag")]
+        public string Etag { get; set; }
+
+        [Meta("system.updatedAt")]
+        public DateTime UpdatedAt { get; set; }
     }
 }

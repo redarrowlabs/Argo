@@ -9,13 +9,15 @@ namespace RedArrow.Argo.TestUtils
 {
     public class EtagRequestModifier : HttpRequestModifier
     {
-        public override void UpdateResource(HttpRequestMessage request, Resource resource, ResourceRootSingle patch)
+        private const string EtagMetaPath = "system.eTag";
+        public override void UpdateResource(HttpRequestMessage request, Resource originalResource, ResourceRootSingle patch)
         {
-            resource.GetMeta().TryGetValue("system", out var system);
-            var eTag = system?.Value<string>("eTag");
+            // First check patch then check the original resource
+            var eTag = patch.Data.GetMeta().SelectToken(EtagMetaPath)
+                ?? originalResource.GetMeta().SelectToken(EtagMetaPath);
             if (eTag != null)
             {
-                request.Headers.IfMatch.Add(new EntityTagHeaderValue(eTag));
+                request.Headers.IfMatch.Add(GetEtagHeader(eTag.ToString()));
             }
         }
 
@@ -23,6 +25,16 @@ namespace RedArrow.Argo.TestUtils
         {
             // Delete anything
             request.Headers.IfMatch.Add(EntityTagHeaderValue.Any);
+        }
+
+        private EntityTagHeaderValue GetEtagHeader(string value)
+        {
+            // Etag header will not parse *
+            if (value == EntityTagHeaderValue.Any.Tag)
+            {
+                return EntityTagHeaderValue.Any;
+            }
+            return new EntityTagHeaderValue(value);
         }
     }
 }

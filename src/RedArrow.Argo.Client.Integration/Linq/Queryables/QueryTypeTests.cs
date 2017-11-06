@@ -49,7 +49,7 @@ namespace RedArrow.Argo.Client.Integration.Linq.Queryables
                 var parent = new ComplexModel
                 {
                     Id = parentId,
-                    BasicModels = childIds.Select(x => new BasicModel {Id = x})
+                    BasicModels = childIds.Select(x => new BasicModel {Id = x}).ToList()
                 };
 
                 await session.Create(parent);

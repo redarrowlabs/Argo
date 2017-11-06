@@ -311,7 +311,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
             var result = subject.GetMetaValues(model);
 
             Assert.Equal(expectedMeta1, result["meta1"].ToObject<string>());
-            Assert.False(result.ContainsKey("meta-2"));
+            Assert.False(result.TryGetValue("meta-2", out var meta2));
             Assert.Equal(expectedMeta3, result["meta3"].ToObject<long>());
         }
 

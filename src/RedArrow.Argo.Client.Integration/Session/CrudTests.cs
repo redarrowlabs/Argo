@@ -73,7 +73,11 @@ namespace RedArrow.Argo.Client.Integration.Session
                     LastName = initialLastName
                 };
 
-                patient = await session.Create(patient);
+                await session.Create(patient);
+
+                // The Create call should also mutate the passed in model with new Meta or attributes
+                Assert.NotEqual(DateTime.MinValue, patient.Created);
+                Assert.NotNull(patient.Etag);
 
                 Assert.NotEqual(Guid.Empty, patient.Id);
                 Assert.Equal(initialFirstName, patient.FirstName);
@@ -98,9 +102,15 @@ namespace RedArrow.Argo.Client.Integration.Session
 
                 Assert.Equal(updatedLastName, patient.LastName);
 
+                var oldUpdatedAt = patient.UpdatedAt;
+                var oldEtag = patient.Etag;
+
                 await session.Update(patient);
                 Assert.Equal(initialFirstName, patient.FirstName);
                 Assert.Equal(updatedLastName, patient.LastName);
+                // The Update call should also mutate the passed in model with new Meta or attributes
+                Assert.NotEqual(oldUpdatedAt, patient.UpdatedAt);
+                Assert.NotEqual(oldEtag, patient.Etag);
 
                 var patient2 = await session.Get<Patient>(crossSessionId);
 

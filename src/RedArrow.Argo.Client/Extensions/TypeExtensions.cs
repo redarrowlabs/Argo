@@ -19,6 +19,13 @@ namespace RedArrow.Argo.Client.Extensions
                        .FirstOrDefault() ?? type.Name.Camelize();
         }
 
+        public static MethodInfo GetInitializeMethod(this Type type)
+        {
+            return type.GetTypeInfo()
+                .DeclaredMethods
+                .Single(method => method.Name == "__argo__generated_Initialize");
+        }
+
         public static FieldInfo GetSessionField(this Type type)
         {
             return type.GetTypeInfo()
