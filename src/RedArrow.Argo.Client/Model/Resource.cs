@@ -42,7 +42,7 @@ namespace RedArrow.Argo.Client.Model
 
         public void SetAttribute(string attrName, object value)
         {
-            GetAttributes()[attrName] = JToken.FromObject(value);
+            GetAttributes()[attrName] = value == null ? JValue.CreateNull() : JToken.FromObject(value);
         }
 
         public IDictionary<string, Relationship> GetRelationships()

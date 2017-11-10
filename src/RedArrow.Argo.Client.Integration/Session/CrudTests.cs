@@ -133,5 +133,45 @@ namespace RedArrow.Argo.Client.Integration.Session
                 await session.Delete<Patient>(crossSessionId);
             }
         }
+
+        [Fact, Trait("Category", "Integration")]
+        public async Task SetAttributesNullPatient()
+        {
+            Guid crossSessionId;
+
+            using (var session = SessionFactory.CreateSession())
+            {
+                var patient = new Patient
+                {
+                    FirstName = "Original",
+                    LastName = "Name"
+                };
+
+                patient = await session.Create(patient);
+
+                patient.FirstName = null;
+                patient.LastName = null;
+                patient.Version = null;
+
+                await session.Update(patient);
+
+                crossSessionId = patient.Id;
+            }
+            using (var session = SessionFactory.CreateSession())
+            {
+                var patient = await session.Get<Patient>(crossSessionId);
+
+                Assert.Equal(crossSessionId, patient.Id);
+                
+                Assert.Null(patient.FirstName);
+                Assert.Null(patient.LastName);
+                Assert.Null(patient.Version);
+            }
+            // cleanup
+            using (var session = SessionFactory.CreateSession())
+            {
+                await session.Delete<Patient>(crossSessionId);
+            }
+        }
     }
 }

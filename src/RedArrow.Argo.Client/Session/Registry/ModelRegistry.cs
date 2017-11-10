@@ -419,7 +419,7 @@ namespace RedArrow.Argo.Client.Session.Registry
             }
             else
             {
-                token[name] = JToken.FromObject(value);
+                token[name] = value == null ? JValue.CreateNull() : JToken.FromObject(value);
             }
         }
     }
