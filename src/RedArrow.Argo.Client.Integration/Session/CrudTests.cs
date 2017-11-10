@@ -144,7 +144,8 @@ namespace RedArrow.Argo.Client.Integration.Session
                 var patient = new Patient
                 {
                     FirstName = "Original",
-                    LastName = "Name"
+                    LastName = "Name",
+                    Version = "1"
                 };
 
                 patient = await session.Create(patient);
