@@ -27,7 +27,7 @@ namespace RedArrow.Argo.Client.Extensions
             }
             // Set the Meta at the terminal node
             var lastSegment = path[path.Length - 1];
-            nextMeta[lastSegment] = JToken.FromObject(value);
+            nextMeta[lastSegment] = value == null ? JValue.CreateNull() : JToken.FromObject(value);
         }
     }
 }
