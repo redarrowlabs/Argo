@@ -1,0 +1,151 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{CCF8A55F-64F2-4305-ABAD-2A3DF0FD3FE0}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>RedArrow.Argo.Client</RootNamespace>
+    <AssemblyName>RedArrow.Argo.Client</AssemblyName>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;LIBLOG_PORTABLE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;LIBLOG_PORTABLE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- A reference to the entire .NET Framework is automatically included -->
+    <None Include="project.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="Cache\BasicCacheProvider.cs" />
+    <Compile Include="Cache\ICacheProvider.cs" />
+    <Compile Include="Collections\AbstractRemoteCollection.cs" />
+    <Compile Include="Collections\Generic\RemoteGenericBag.cs" />
+    <Compile Include="Collections\IRemoteCollection.cs" />
+    <Compile Include="Config\FluentConfigurator.cs" />
+    <Compile Include="Config\Fluently.cs" />
+    <Compile Include="Config\IFluentConfigurator.cs" />
+    <Compile Include="Config\IModelConfigurator.cs" />
+    <Compile Include="Config\IRemoteConfigurator.cs" />
+    <Compile Include="Config\ModelScanner.cs" />
+    <Compile Include="Config\Model\MetaConfiguration.cs" />
+    <Compile Include="Config\Model\AttributeConfiguration.cs" />
+    <Compile Include="Config\Model\HasOneConfiguration.cs" />
+    <Compile Include="Config\Model\RelationshipConfiguration.cs" />
+    <Compile Include="Config\Model\ModelConfiguration.cs" />
+    <Compile Include="Config\Model\HasManyConfiguration.cs" />
+    <Compile Include="Config\Pipeline\IHttpClientBuilder.cs" />
+    <Compile Include="Config\Pipeline\HttpClientBuilder.cs" />
+    <Compile Include="Config\SessionFactoryConfiguration.cs" />
+    <Compile Include="Exceptions\ArgoResponseException.cs" />
+    <Compile Include="Exceptions\MetaNotRegisteredException.cs" />
+    <Compile Include="Exceptions\AttributeNotRegisteredException.cs" />
+    <Compile Include="Exceptions\ManagedModelCreationException.cs" />
+    <Compile Include="Exceptions\ModelMapException.cs" />
+    <Compile Include="Exceptions\RelationshipNotRegisteredExecption.cs" />
+    <Compile Include="Exceptions\UnmanagedModelException.cs" />
+    <Compile Include="Extensions\EnumerableExtensions.cs" />
+    <Compile Include="Extensions\HttpClientExtensions.cs" />
+    <Compile Include="Extensions\HttpResponseMessageExtensions.cs" />
+    <Compile Include="Extensions\JObjectExtensions.cs" />
+    <Compile Include="Extensions\MemberInfoExtensions.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
+    <Compile Include="Extensions\TypeExtensions.cs" />
+    <Compile Include="Flurl\Shared\Util\CommonExtensions.cs" />
+    <Compile Include="Flurl\Shared\QueryParamCollection.cs" />
+    <Compile Include="Flurl\Shared\QueryParameter.cs" />
+    <Compile Include="Flurl\Shared\StringExtensions.cs" />
+    <Compile Include="Flurl\Shared\Url.cs" />
+    <Compile Include="Http\Handlers\ExceptionLogger\ExceptionLoggerHandler.cs" />
+    <Compile Include="Http\Handlers\ExceptionLogger\HttpClientBuilderExtensions.cs" />
+    <Compile Include="Http\Handlers\GZip\GZipCompressionHandler.cs" />
+    <Compile Include="Http\Handlers\GZip\GZipContent.cs" />
+    <Compile Include="Http\Handlers\GZip\HttpClientBuilderExtensions.cs" />
+    <Compile Include="Http\Handlers\Request\BundledHttpRequestModifier.cs" />
+    <Compile Include="Http\Handlers\Request\HttpRequestModifier.cs" />
+    <Compile Include="Http\Handlers\Response\HttpClientBuilderExtensions.cs" />
+    <Compile Include="Http\Handlers\Response\ResponseHandler.cs" />
+    <Compile Include="Http\Handlers\Response\ResponseHandlerOptions.cs" />
+    <Compile Include="Http\IHttpRequestBuilder.cs" />
+    <Compile Include="Http\HttpRequestBuilder.cs" />
+    <Compile Include="Exceptions\ArgoException.cs" />
+    <Compile Include="Exceptions\ModelNotRegisteredException.cs" />
+    <Compile Include="Exceptions\ModelTypeMismatchException.cs" />
+    <Compile Include="Linq\Executors\SingularAttributesExecutor.cs" />
+    <Compile Include="Linq\Queryables\OrderByQueryable.cs" />
+    <Compile Include="Linq\Queryables\RelationshipQueryable.cs" />
+    <Compile Include="Linq\Queryables\SkipQueryable.cs" />
+    <Compile Include="Linq\Queryables\TakeQueryable.cs" />
+    <Compile Include="Linq\Queryables\TypeQueryable.cs" />
+    <Compile Include="Linq\Queryables\WhereQueryable.cs" />
+    <Compile Include="Linq\Executors\RemoteExecutor.cs" />
+    <Compile Include="Linq\RemoteQueryable.cs" />
+    <Compile Include="Linq\RemoteQueryProvider.cs" />
+    <Compile Include="Model\BaseResourceRoot.cs" />
+    <Compile Include="Model\Error.cs" />
+    <Compile Include="Model\ErrorLink.cs" />
+    <Compile Include="Model\ErrorSource.cs" />
+    <Compile Include="Model\IMetaDecorated.cs" />
+    <Compile Include="Model\JModel.cs" />
+    <Compile Include="Model\Link.cs" />
+    <Compile Include="Model\Relationship.cs" />
+    <Compile Include="Model\Resource.cs" />
+    <Compile Include="Model\ResourceIdentifier.cs" />
+    <Compile Include="Model\ResourceRootCollection.cs" />
+    <Compile Include="Model\ResourceRootSingle.cs" />
+    <Compile Include="Logging\Logger.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Query\IQueryContext.cs" />
+    <Compile Include="Query\QueryContext.cs" />
+    <Compile Include="Query\RelationshipQueryContext.cs" />
+    <Compile Include="Session\ICollectionSession.cs" />
+    <Compile Include="Session\IQuerySession.cs" />
+    <Compile Include="Session\ISession.cs" />
+    <Compile Include="Session\ISessionFactory.cs" />
+    <Compile Include="Session\Registry\IModelRegistry.cs" />
+    <Compile Include="Session\Registry\ModelRegistry.cs" />
+    <Compile Include="Session\RelationshipType.cs" />
+    <Compile Include="Session\Session.cs" />
+    <Compile Include="Session\SessionFactory.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RedArrow.Argo\RedArrow.Argo.csproj">
+      <Project>{f540b5ca-b7c2-4799-9eb2-b5401bd1f28c}</Project>
+      <Name>RedArrow.Argo</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

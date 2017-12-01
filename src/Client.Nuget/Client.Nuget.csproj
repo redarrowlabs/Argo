@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{087265B2-671A-4D68-BFC9-1AC59FCBC8E0}</ProjectGuid>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <OutputPath>bin\</OutputPath>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <ConfigurationName>Debug</ConfigurationName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <ConfigurationName>Release</ConfigurationName>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <StartupObject />
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyName>Client.Nuget</AssemblyName>
+  </PropertyGroup>
+  <Target Name="Clean">
+    <ItemGroup>
+      <FilesToDelete Include="$(SolutionDir)Client.NuGetBuild\**\*.*" />
+    </ItemGroup>
+    <Delete Files="@(FilesToDelete)" />
+  </Target>
+  <Target Name="Build" DependsOnTargets="NuGetBuild" />
+  <Target Name="ReBuild" DependsOnTargets="NuGetBuild" />
+  <Target Name="NuGetBuild" DependsOnTargets="Clean">
+    <MakeDir Directories="$(SolutionDir)Client.NuGetBuild" />
+    <Copy SourceFiles="$(SolutionDir)RedArrow.Argo\bin\$(ConfigurationName)\RedArrow.Argo.dll" DestinationFolder="$(SolutionDir)Client.NuGetBuild\Lib\netstandard14" />
+    <Copy SourceFiles="$(SolutionDir)RedArrow.Argo.Client\bin\$(ConfigurationName)\RedArrow.Argo.Client.dll" DestinationFolder="$(SolutionDir)Client.NuGetBuild\Lib\netstandard14" />
+    <Copy SourceFiles="$(SolutionDir)Client.NuGet\RedArrow.Argo.Client.nuspec" DestinationFolder="$(SolutionDir)Client.NuGetBuild" />
+    <Copy SourceFiles="$(SolutionDir)RedArrow.Argo.Client\bin\$(ConfigurationName)\RedArrow.Argo.Client.dll" DestinationFolder="$(SolutionDir)Client.NuGetBuild" />
+    <Copy SourceFiles="$(SolutionDir)RedArrow.Argo.Client\bin\$(ConfigurationName)\RedArrow.Argo.Client.pdb" DestinationFolder="$(SolutionDir)Client.NuGetBuild" />
+    <PepitaPackage.CreatePackageTask NuGetBuildDirectory="$(SolutionDir)Client.NuGetBuild" MetadataAssembly="$(SolutionDir)RedArrow.Argo.Client\bin\$(ConfigurationName)\RedArrow.Argo.Client.dll" />
+  </Target>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="RedArrow.Argo.Client.nuspec">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <Import Project="..\packages\PepitaPackage.1.21.6\build\PepitaPackage.targets" Condition="Exists('..\packages\PepitaPackage.1.21.6\build\PepitaPackage.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\PepitaPackage.1.21.6\build\PepitaPackage.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\PepitaPackage.1.21.6\build\PepitaPackage.targets'))" />
+  </Target>
+</Project>
