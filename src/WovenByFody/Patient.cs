@@ -1,5 +1,6 @@
 ﻿using RedArrow.Argo.Attributes;
 using System;
+using System.Collections.Generic;
 
 namespace WovenByFody
 {
@@ -20,6 +21,9 @@ namespace WovenByFody
 
         [Property]
         public decimal AccountBalance { get; set; }
+
+        [Property]
+        public Dictionary<string, string> RandomStuff { get; set; }
 
         [HasOne(LoadStrategy.Eager)]
         public Provider Provider { get; set; }

@@ -40,9 +40,12 @@ namespace RedArrow.Argo.Client.Model
             return Attributes ?? (Attributes = new JObject());
         }
 
-        public void SetAttribute(string attrName, object value)
+        // HERE
+        public void SetAttribute(string attrName, object value, JsonSerializerSettings settings)
         {
-            GetAttributes()[attrName] = value == null ? JValue.CreateNull() : JToken.FromObject(value);
+            GetAttributes()[attrName] = value == null
+                ? JValue.CreateNull()
+                : JToken.FromObject(value, JsonSerializer.CreateDefault(settings));
         }
 
         public IDictionary<string, Relationship> GetRelationships()
@@ -60,9 +63,9 @@ namespace RedArrow.Argo.Client.Model
             return Meta ?? (Meta = new JObject());
         }
 
-        public void SetMeta(string metaName, object value)
+        public void SetMeta(string metaName, object value, JsonSerializerSettings settings)
         {
-            GetMeta().SetMetaValue(metaName, value);
+            GetMeta().SetMetaValue(metaName, value, settings);
         }
     }
 

@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using RedArrow.Argo.Client.Config.Pipeline;
+using RedArrow.Argo.Client.Config.Serialization;
 using RedArrow.Argo.Client.Http.Handlers.Request;
 using RedArrow.Argo.Client.Session;
 using System;
@@ -62,6 +63,16 @@ namespace RedArrow.Argo.Client.Config
         public IModelConfigurator Configure(Action<JsonSerializerSettings> settings)
         {
             SerializerSettings.Add(settings);
+            return this;
+        }
+
+        public IModelConfigurator SerializeDictionariesAsArrays()
+        {
+            SerializerSettings.Add(settings =>
+            {
+                settings.Converters.Add(new DictionaryAsArrayConverter());
+            });
+
             return this;
         }
 

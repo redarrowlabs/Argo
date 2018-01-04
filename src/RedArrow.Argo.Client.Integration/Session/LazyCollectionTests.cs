@@ -32,8 +32,8 @@ namespace RedArrow.Argo.Client.Integration.Session
                     client.BaseAddress = new Uri($"{IntegrationTestFixture.Host}/data/");
                     client.DefaultRequestHeaders.Authorization =
                         new AuthenticationHeaderValue("Bearer", IntegrationTestFixture.AccessToken.Value);
-                    client.DefaultRequestHeaders.Add("api-version", "2");
-                    client.DefaultRequestHeaders.Add("Titan-Data-Segmentation-Key",
+                    client.DefaultRequestHeaders.Add("api-version", "1.3");
+                    client.DefaultRequestHeaders.Add("Data-Segmentation-Key",
                         "10000000-1000-0000-0000-000000000000");
 
                     var body = new
@@ -65,8 +65,8 @@ namespace RedArrow.Argo.Client.Integration.Session
                 client.BaseAddress = new Uri($"{IntegrationTestFixture.Host}/data/");
                 client.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Bearer", IntegrationTestFixture.AccessToken.Value);
-                client.DefaultRequestHeaders.Add("api-version", "2");
-                client.DefaultRequestHeaders.Add("Titan-Data-Segmentation-Key", "10000000-1000-0000-0000-000000000000");
+                client.DefaultRequestHeaders.Add("api-version", "1.3");
+                client.DefaultRequestHeaders.Add("Data-Segmentation-Key", "10000000-1000-0000-0000-000000000000");
 
                 var body = new
                 {
@@ -128,8 +128,8 @@ namespace RedArrow.Argo.Client.Integration.Session
                 client.BaseAddress = new Uri($"{IntegrationTestFixture.Host}/data/");
                 client.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Bearer", IntegrationTestFixture.AccessToken.Value);
-                client.DefaultRequestHeaders.Add("api-version", "2");
-                client.DefaultRequestHeaders.Add("Titan-Data-Segmentation-Key", "10000000-1000-0000-0000-000000000000");
+                client.DefaultRequestHeaders.Add("api-version", "1.2");
+                client.DefaultRequestHeaders.Add("Data-Segmentation-Key", "10000000-1000-0000-0000-000000000000");
 
                 var body = new
                 {

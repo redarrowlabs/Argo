@@ -47,6 +47,7 @@
     <Compile Include="Collections\AbstractRemoteCollection.cs" />
     <Compile Include="Collections\Generic\RemoteGenericBag.cs" />
     <Compile Include="Collections\IRemoteCollection.cs" />
+    <Compile Include="Config\Serialization\DictionaryAsArrayConverter.cs" />
     <Compile Include="Config\FluentConfigurator.cs" />
     <Compile Include="Config\Fluently.cs" />
     <Compile Include="Config\IFluentConfigurator.cs" />

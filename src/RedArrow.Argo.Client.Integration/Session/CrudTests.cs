@@ -1,7 +1,8 @@
-﻿using System;
-using System.Threading.Tasks;
-using Ploeh.AutoFixture.Xunit2;
+﻿using Ploeh.AutoFixture.Xunit2;
 using RedArrow.Argo.TestUtils;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using WovenByFody;
 using Xunit;
 using Xunit.Abstractions;
@@ -52,6 +53,12 @@ namespace RedArrow.Argo.Client.Integration.Session
 
                 Assert.Null(patient.FirstName);
                 Assert.Null(patient.LastName);
+            }
+
+            // cleanup
+            using (var session = SessionFactory.CreateSession())
+            {
+                await session.Delete<Patient>(id);
             }
         }
 
@@ -163,7 +170,7 @@ namespace RedArrow.Argo.Client.Integration.Session
                 var patient = await session.Get<Patient>(crossSessionId);
 
                 Assert.Equal(crossSessionId, patient.Id);
-                
+
                 Assert.Null(patient.FirstName);
                 Assert.Null(patient.LastName);
                 Assert.Null(patient.Version);
@@ -172,6 +179,45 @@ namespace RedArrow.Argo.Client.Integration.Session
             using (var session = SessionFactory.CreateSession())
             {
                 await session.Delete<Patient>(crossSessionId);
+            }
+        }
+
+        [Fact, Trait("Category", "Integration")]
+        public async Task DictionaryDeserializedProperly()
+        {
+            Guid id;
+            using (var session = SessionFactory.CreateSession())
+            {
+                var patient = new Patient
+                {
+                    FirstName = "Random",
+                    LastName = "Patient",
+                    RandomStuff = new Dictionary<string, string>()
+                    {
+                        { "AwesomeKey", "Awesome Value" }
+                    }
+                };
+
+                var result = await session.Create(patient);
+                id = result.Id;
+            }
+
+            try
+            {
+                using (var session = SessionFactory.CreateSession())
+                {
+                    var patient = await session.Get<Patient>(id);
+
+                    Assert.Single(patient.RandomStuff.Keys);
+                }
+            }
+            finally
+            {
+                // cleanup
+                using (var session = SessionFactory.CreateSession())
+                {
+                    await session.Delete<Patient>(id);
+                }
             }
         }
     }

@@ -1,15 +1,15 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using RedArrow.Argo.Client.Flurl.Shared;
+using RedArrow.Argo.Client.Http.Handlers.Request;
+using RedArrow.Argo.Client.Model;
+using RedArrow.Argo.Client.Query;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using RedArrow.Argo.Client.Flurl.Shared;
-using RedArrow.Argo.Client.Http.Handlers.Request;
-using RedArrow.Argo.Client.Model;
-using RedArrow.Argo.Client.Query;
 
 namespace RedArrow.Argo.Client.Http
 {
@@ -17,15 +17,10 @@ namespace RedArrow.Argo.Client.Http
     {
         private const string JsonApiHeader = "application/vnd.api+json";
 
-        private JsonSerializerSettings JsonSettings { get; }
         private HttpRequestModifier HttpRequestModifier { get; }
 
-        public HttpRequestBuilder(
-            JsonSerializerSettings jsonSettings,
-            HttpRequestModifier httpRequestModifier)
+        public HttpRequestBuilder(HttpRequestModifier httpRequestModifier)
         {
-            JsonSettings = jsonSettings;
-            // RequestModifier can be null
             HttpRequestModifier = httpRequestModifier;
         }
 
@@ -103,10 +98,11 @@ namespace RedArrow.Argo.Client.Http
              * MemoryStream anyway so we're only reducing that extra step of string to stream. */
             //return new StringContent(root.ToJson(JsonSettings), Encoding.UTF8, JsonApiHeader);
 
-            // These settings were set by root.ToJson
-            JsonSettings.NullValueHandling = NullValueHandling.Ignore;
-            JsonSettings.Formatting = Formatting.None;
-            var serializer = JsonSerializer.Create(JsonSettings);
+            var serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore,
+                Formatting = Formatting.None
+            });
 
             var stream = new MemoryStream();
             var sr = new StreamWriter(stream);

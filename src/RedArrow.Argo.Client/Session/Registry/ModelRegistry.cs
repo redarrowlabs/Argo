@@ -8,7 +8,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using RedArrow.Argo.Client.Extensions;
 
 namespace RedArrow.Argo.Client.Session.Registry
 {
@@ -378,12 +377,17 @@ namespace RedArrow.Argo.Client.Session.Registry
                 .Where(kvp => kvp.Value != null)
                 .ToDictionary(
                     kvp => kvp.Key,
-                    kvp => JToken.FromObject(kvp.Value));
+                    kvp => kvp.Value);
+
+            if (!metaValues.Any())
+            {
+                return null;
+            }
 
             var result = new JObject();
             foreach (var key in metaValues.Keys)
             {
-                result.SetMetaValue(key, metaValues[key]);
+                BuildObject(result, key, metaValues[key]);
             }
 
             return result;
@@ -419,7 +423,9 @@ namespace RedArrow.Argo.Client.Session.Registry
             }
             else
             {
-                token[name] = value == null ? JValue.CreateNull() : JToken.FromObject(value);
+                token[name] = value == null
+                    ? JValue.CreateNull()
+                    : JToken.FromObject(value, JsonSerializer.CreateDefault(JsonSettings));
             }
         }
     }

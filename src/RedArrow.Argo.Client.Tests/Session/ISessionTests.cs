@@ -1,24 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Moq;
+﻿using Moq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Ploeh.AutoFixture.Xunit2;
 using RedArrow.Argo.Client.Cache;
 using RedArrow.Argo.Client.Config;
-using RedArrow.Argo.Client.Config.Model;
 using RedArrow.Argo.Client.Exceptions;
 using RedArrow.Argo.Client.Http;
 using RedArrow.Argo.Client.Model;
-using RedArrow.Argo.Client.Session.Registry;
 using RedArrow.Argo.Client.Tests.Extensions;
-using RedArrow.Argo.Client.Tests.Session.Models;
 using RedArrow.Argo.TestUtils.XUnitSink;
 using Serilog;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
 using WovenByFody;
 using Xunit;
 using Xunit.Abstractions;
@@ -52,7 +49,7 @@ namespace RedArrow.Argo.Client.Tests.Session
                 .Configure(x => x.BaseAddress = new Uri(basePath))
                 .Configure(builder => builder
                     .UseRequestHandler<MockRequestHandler>()
-                    .ConfigureRequestHandler(x => ((MockRequestHandler) x)
+                    .ConfigureRequestHandler(x => ((MockRequestHandler)x)
                         .Setup(
                             new Uri($"{basePath}/{resourceType}"),
                             request => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted)))))
@@ -102,7 +99,7 @@ namespace RedArrow.Argo.Client.Tests.Session
                 .Configure(x => x.BaseAddress = new Uri(basePath))
                 .Configure(builder => builder
                     .UseRequestHandler<MockRequestHandler>()
-                    .ConfigureRequestHandler(x => ((MockRequestHandler) x)
+                    .ConfigureRequestHandler(x => ((MockRequestHandler)x)
                         .Setup(
                             new Uri($"{basePath}/{resourceType}"),
                             request => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted)))))
@@ -187,7 +184,7 @@ namespace RedArrow.Argo.Client.Tests.Session
         {
             var uri = "http://www.test.com/";
 
-            var a = new CircularReferenceA {Id = modelId};
+            var a = new CircularReferenceA { Id = modelId };
             var b = new CircularReferenceB();
             var c = new CircularReferenceC();
 
@@ -256,7 +253,7 @@ namespace RedArrow.Argo.Client.Tests.Session
         public async Task Update__Given_NullModel__Then_ThrowEx()
         {
             var subject = CreateSubject();
-            await Assert.ThrowsAsync<ArgumentNullException>(() => subject.Update((BasicModel) null));
+            await Assert.ThrowsAsync<ArgumentNullException>(() => subject.Update((BasicModel)null));
         }
 
         [Fact]
@@ -271,7 +268,7 @@ namespace RedArrow.Argo.Client.Tests.Session
         public async Task Update__Given_Model__When_NoPatch__Then_Return
             (Guid modelId)
         {
-            var model = new ComplexModel {Id = modelId};
+            var model = new ComplexModel { Id = modelId };
 
             var mockRequestBuilder = new Mock<IHttpRequestBuilder>();
 
@@ -306,8 +303,8 @@ namespace RedArrow.Argo.Client.Tests.Session
         {
             var uri = "http://www.test.com/";
 
-            var model = new ComplexModel {Id = modelId};
-            var primaryBasicModel = new BasicModel {PropB = modelPropB};
+            var model = new ComplexModel { Id = modelId };
+            var primaryBasicModel = new BasicModel { PropB = modelPropB };
 
             var expectedRequest = new HttpRequestMessage(new HttpMethod("PATCH"), new Uri(uri));
 
@@ -323,7 +320,7 @@ namespace RedArrow.Argo.Client.Tests.Session
                     Assert.Equal(modelId, patch.Id);
 
                     Assert.Equal(modelPropA, patch.Attributes?["propertyA"]?.ToObject<string>());
-                    Assert.Equal(1, patch.Attributes.Count);
+                    Assert.Single(patch.Attributes);
 
                     Assert.NotNull(patch.Relationships);
                     Assert.Equal(1, patch.Relationships.Count);
@@ -336,7 +333,7 @@ namespace RedArrow.Argo.Client.Tests.Session
                     Assert.Equal(modelRegistry.GetResourceType<BasicModel>(), rltnIdentifier.Type);
 
                     Assert.NotEmpty(includes);
-                    Assert.Equal(1, includes.Count());
+                    Assert.Single(includes);
                     var include = includes.First();
                     Assert.Equal(include.Id, primaryBasicModel.Id);
                     Assert.Equal(modelRegistry.GetResourceType<BasicModel>(), include.Type);
@@ -367,7 +364,7 @@ namespace RedArrow.Argo.Client.Tests.Session
                     cachedItems.Add(m);
                     mockCacheProvider
                         .Setup(y => y.Retrieve<BasicModel>(id))
-                        .Returns((BasicModel) m);
+                        .Returns((BasicModel)m);
                 });
             mockCacheProvider
                 .SetupGet(x => x.Items)
@@ -394,7 +391,7 @@ namespace RedArrow.Argo.Client.Tests.Session
         public async Task Get__Given_ModelId__When_CacheContainsModel__Then_ReturnCachedModel
             (Guid modelId)
         {
-            var cachedModel = new BasicModel {Id = modelId};
+            var cachedModel = new BasicModel { Id = modelId };
 
             var mockCacheProvider = new Mock<ICacheProvider>();
             mockCacheProvider
@@ -470,7 +467,7 @@ namespace RedArrow.Argo.Client.Tests.Session
                     Assert.Same(expectedRequest, request);
                     var root =
                         ResourceRootSingle.FromResource(
-                            new Resource {Id = modelId, Type = modelRegistry.GetResourceType<BasicModel>()});
+                            new Resource { Id = modelId, Type = modelRegistry.GetResourceType<BasicModel>() });
                     return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
                     {
                         Content = new StringContent(JsonConvert.SerializeObject(root))
@@ -514,15 +511,74 @@ namespace RedArrow.Argo.Client.Tests.Session
                 .Remote()
                 .Configure(builder => builder
                     .UseRequestHandler<MockRequestHandler>()
-                    .ConfigureRequestHandler(handler => capturedHandler = (MockRequestHandler) handler))
+                    .ConfigureRequestHandler(handler => capturedHandler = (MockRequestHandler)handler))
                 .BuildSessionFactory();
 
             var session = sessionFactory.CreateSession();
             session.Dispose();
 
-            Assert.True(((Client.Session.Session) session).Disposed);
+            Assert.True(((Client.Session.Session)session).Disposed);
             Assert.NotNull(capturedHandler);
             Assert.True(capturedHandler.Disposed);
+        }
+
+        [Fact]
+        public async Task Create__WithDictionaryAsPropertyUsingResolver__Then_PostModel()
+        {
+            var basePath = "http://www.test.com";
+
+            var resourceType = "test-property-collection";
+
+            var fakeHandler = new MockRequestHandler();
+            fakeHandler.Setup(
+                new Uri($"{basePath}/{resourceType}"),
+                x => Task.FromResult(new HttpResponseMessage(HttpStatusCode.NoContent)));
+
+            var serializedObj = new JObject();
+            var sessionFactory = Fluently.Configure(basePath)
+                .Remote()
+                .Configure(x => x.BaseAddress = new Uri(basePath))
+                .Configure(builder => builder
+                    .UseRequestHandler<MockRequestHandler>()
+                    .ConfigureRequestHandler(x => ((MockRequestHandler)x)
+                        .Setup(
+                            new Uri($"{basePath}/{resourceType}"),
+                            request =>
+                            {
+                                var json = request.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                                serializedObj = JObject.Parse(json);
+                                return Task.FromResult(
+                                    new HttpResponseMessage(HttpStatusCode.NoContent)
+                                );
+                            })))
+                .Models()
+                .Configure(x => x.AssemblyOf<ObjectWithCollectionsAndComplexTypesAsProperties>())
+                .SerializeDictionariesAsArrays()
+                .BuildSessionFactory();
+
+            var session = sessionFactory.CreateSession();
+            var result = await session.Create(new ObjectWithCollectionsAndComplexTypesAsProperties
+            {
+                TestingDescription = new InnerObject
+                {
+                    Value = "A complex type used as a Property"
+                },
+                TestingDescriptions = new List<InnerObject>
+                {
+                    new InnerObject
+                    {
+                        Value = "A complex type in a collection used as a Property"
+                    }
+                },
+                TestingDictionary = new Dictionary<string, string>()
+                {
+                    { "AwesomeKey1", "Sweet Value" },
+                    { "AwesomeKey2", "Super Sweet Value" }
+                }
+            });
+
+            Assert.NotNull(result);
+            Assert.Equal(2, ((JArray)serializedObj.SelectToken("data.attributes.testingDictionary")).Count);
         }
     }
 }
