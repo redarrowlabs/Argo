@@ -354,7 +354,7 @@ namespace RedArrow.Argo.Client.Session
         {
             ThrowIfDisposed();
 
-            ModelRegistry.GetOrCreatePatch(model).SetAttribute(attrName, value);
+            ModelRegistry.GetOrCreatePatch(model).SetAttribute(attrName, value, JsonSettings);
         }
 
         public TMeta GetMeta<TModel, TMeta>(TModel model, string metaName)
@@ -369,7 +369,7 @@ namespace RedArrow.Argo.Client.Session
         {
             ThrowIfDisposed();
 
-            ModelRegistry.GetOrCreatePatch(model).SetMeta(metaName, value);
+            ModelRegistry.GetOrCreatePatch(model).SetMeta(metaName, value, JsonSettings);
         }
 
         public Guid GetReferenceId<TModel>(TModel model, string attrName)

@@ -1,10 +1,11 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace RedArrow.Argo.Client.Extensions
 {
     public static class JObjectExtensions
     {
-        public static void SetMetaValue(this JObject meta, string metaName, object value)
+        public static void SetMetaValue(this JObject meta, string metaName, object value, JsonSerializerSettings settings)
         {
             var path = metaName.Split('.');
             var nextMeta = meta;
@@ -27,7 +28,9 @@ namespace RedArrow.Argo.Client.Extensions
             }
             // Set the Meta at the terminal node
             var lastSegment = path[path.Length - 1];
-            nextMeta[lastSegment] = value == null ? JValue.CreateNull() : JToken.FromObject(value);
+            nextMeta[lastSegment] = value == null
+                ? JValue.CreateNull()
+                : JToken.FromObject(value, JsonSerializer.CreateDefault(settings));
         }
     }
 }

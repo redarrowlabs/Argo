@@ -52,6 +52,7 @@ namespace RedArrow.Argo.TestUtils
                 .Use(new EtagRequestModifier())
                 .Models()
                 .Configure(scan => scan.AssemblyOf<Patient>())
+                .SerializeDictionariesAsArrays()
                 .BuildSessionFactory();
         }
 

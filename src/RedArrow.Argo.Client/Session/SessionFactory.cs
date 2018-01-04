@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using RedArrow.Argo.Client.Cache;
 using RedArrow.Argo.Client.Config.Model;
 using RedArrow.Argo.Client.Http;
 using RedArrow.Argo.Client.Http.Handlers.Request;
 using RedArrow.Argo.Client.Session.Registry;
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
 
 namespace RedArrow.Argo.Client.Session
 {
@@ -38,7 +38,7 @@ namespace RedArrow.Argo.Client.Session
                     configureClient?.Invoke(client);
                     return client;
                 },
-                new HttpRequestBuilder(JsonSettings, HttpRequestModifier),
+                new HttpRequestBuilder(HttpRequestModifier),
                 new BasicCacheProvider(modelRegistry),
                 modelRegistry,
                 JsonSettings);

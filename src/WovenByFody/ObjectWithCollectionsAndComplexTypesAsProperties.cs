@@ -1,6 +1,6 @@
-﻿using System;
+﻿using RedArrow.Argo.Attributes;
+using System;
 using System.Collections.Generic;
-using RedArrow.Argo.Attributes;
 
 namespace WovenByFody
 {
@@ -26,5 +26,8 @@ namespace WovenByFody
         /// </summary>
         [Property]
         public InnerObject TestingDescription { get; set; }
+
+        [Property]
+        public Dictionary<string, string> TestingDictionary { get; set; }
     }
 }
