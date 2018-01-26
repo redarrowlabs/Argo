@@ -193,32 +193,32 @@ namespace RedArrow.Argo.Client.Session.Registry
             return result;
         }
 
-        public IEnumerable<RelationshipConfiguration> GetHasOneConfigs<TModel>()
+        public IEnumerable<HasOneConfiguration> GetHasOneConfigs<TModel>()
         {
             return GetHasOneConfigs(typeof(TModel));
         }
 
-        public IEnumerable<RelationshipConfiguration> GetHasOneConfigs(Type modelType)
+        public IEnumerable<HasOneConfiguration> GetHasOneConfigs(Type modelType)
         {
             return GetModelConfig(modelType).HasOneProperties.Values;
         }
 
-        public IEnumerable<RelationshipConfiguration> GetHasManyConfigs<TModel>()
+        public IEnumerable<HasManyConfiguration> GetHasManyConfigs<TModel>()
         {
             return GetHasManyConfigs(typeof(TModel));
         }
 
-        public IEnumerable<RelationshipConfiguration> GetHasManyConfigs(Type modelType)
+        public IEnumerable<HasManyConfiguration> GetHasManyConfigs(Type modelType)
         {
             return GetModelConfig(modelType).HasManyProperties.Values;
         }
 
-        public RelationshipConfiguration GetHasManyConfig<TModel>(string rltnName)
+        public HasManyConfiguration GetHasManyConfig<TModel>(string rltnName)
         {
             return GetHasManyConfig(typeof(TModel), rltnName);
         }
 
-        public RelationshipConfiguration GetHasManyConfig(Type modelType, string rltnName)
+        public HasManyConfiguration GetHasManyConfig(Type modelType, string rltnName)
         {
             if (!GetModelConfig(modelType).HasManyProperties.TryGetValue(rltnName, out var ret))
             {
@@ -269,15 +269,24 @@ namespace RedArrow.Argo.Client.Session.Registry
                 {
                     Data = JValue.CreateNull()
                 };
-                var related = hasOne.PropertyInfo.GetValue(model);
-                if (related != null)
+                if (!IsManagedModel(model) || (bool) hasOne.IsInitializedFieldInfo.GetValue(model))
                 {
-                    ret[hasOne.RelationshipName].Data =
-                        JObject.FromObject(new ResourceIdentifier
-                        {
-                            Id = GetOrCreateId(related),
-                            Type = GetResourceType(related.GetType())
-                        });
+                    var related = hasOne.PropertyInfo.GetValue(model);
+                    if (related != null)
+                    {
+                        ret[hasOne.RelationshipName].Data =
+                            JObject.FromObject(new ResourceIdentifier
+                            {
+                                Id = GetOrCreateId(related),
+                                Type = GetResourceType(related.GetType())
+                            });
+                    }
+                }
+                else if (resource.GetRelationships()
+                        .TryGetValue(hasOne.RelationshipName, out var existingRtln))
+                {
+                    // Do not try to fetch from the server
+                    ret[hasOne.RelationshipName].Data = existingRtln.Data.DeepClone();
                 }
             }
 
@@ -377,7 +386,7 @@ namespace RedArrow.Argo.Client.Session.Registry
             var pathSegments = name.Split(new[] { '.' }, 2);
             if (pathSegments.Length > 1)
             {
-                var obj = new JObject();
+                var obj = token[pathSegments[0]] ?? new JObject();
                 BuildObject(obj, pathSegments[1], value);
                 token[pathSegments[0]] = obj;
             }

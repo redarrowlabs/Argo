@@ -83,25 +83,33 @@ namespace RedArrow.Argo.Client.Extensions
                     metaConfig => metaConfig);
         }
 
-        public static IDictionary<string, RelationshipConfiguration> GetModelHasOneConfigurations(this Type type)
+        public static IDictionary<string, HasOneConfiguration> GetModelHasOneConfigurations(this Type type)
         {
-            return type.GetTypeInfo()
+            var fields = type
+                .GetTypeInfo()
+                .DeclaredFields
+                .ToArray();
+            return type
+                .GetTypeInfo()
                 .GetProperties()
                 .Where(prop => prop.IsDefined(typeof(HasOneAttribute)))
-                .Select(prop => new HasOneConfiguration(prop))
-                .Cast<RelationshipConfiguration>()
+                .Select(prop =>
+                {
+                    var isInitialized = fields
+                        .Single(x => x.Name == $"__argo__generated_<{prop.Name}>k__BackingFieldInitialized");
+                    return new HasOneConfiguration(prop, isInitialized);
+                })
                 .ToDictionary(
                     has1Cfg => has1Cfg.RelationshipName,
                     has1Cfg => has1Cfg);
         }
 
-        public static IDictionary<string, RelationshipConfiguration> GetModelHasManyConfigurations(this Type type)
+        public static IDictionary<string, HasManyConfiguration> GetModelHasManyConfigurations(this Type type)
         {
             return type.GetTypeInfo()
                 .GetProperties()
                 .Where(prop => prop.IsDefined(typeof(HasManyAttribute)))
                 .Select(prop => new HasManyConfiguration(prop))
-                .Cast<RelationshipConfiguration>()
                 .ToDictionary(
                     hasMCfg => hasMCfg.RelationshipName,
                     hasMCfg => hasMCfg);

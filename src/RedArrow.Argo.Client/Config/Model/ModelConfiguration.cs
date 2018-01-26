@@ -25,10 +25,10 @@ namespace RedArrow.Argo.Client.Config.Model
         public IDictionary<string, MetaConfiguration> MetaConfigs { get; }
 
         // resource relationship name => model property
-        public IDictionary<string, RelationshipConfiguration> HasOneProperties { get; }
+        public IDictionary<string, HasOneConfiguration> HasOneProperties { get; }
 
         // resource relationship name => model property
-        public IDictionary<string, RelationshipConfiguration> HasManyProperties { get; }
+        public IDictionary<string, HasManyConfiguration> HasManyProperties { get; }
 
         internal ModelConfiguration(Type modelType)
         {

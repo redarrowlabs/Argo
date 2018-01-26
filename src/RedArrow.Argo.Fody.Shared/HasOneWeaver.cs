@@ -18,12 +18,7 @@ namespace RedArrow.Argo
             foreach (var propertyDef in context.MappedHasOnes)
             {
                 // get the backing field
-                var backingField = propertyDef
-                    ?.GetMethod
-                    ?.Body
-                    ?.Instructions
-                    ?.SingleOrDefault(x => x.OpCode == OpCodes.Ldfld)
-                    ?.Operand as FieldReference;
+                var backingField = propertyDef.BackingField();
 
                 if (backingField == null)
                 {

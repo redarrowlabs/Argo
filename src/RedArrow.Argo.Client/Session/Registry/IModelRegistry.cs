@@ -43,12 +43,12 @@ namespace RedArrow.Argo.Client.Session.Registry
         TMeta GetMetaValue<TModel, TMeta>(TModel model, string metaName);
         JObject GetMetaValues(object model);
 
-        IEnumerable<RelationshipConfiguration> GetHasOneConfigs<TModel>();
-        IEnumerable<RelationshipConfiguration> GetHasOneConfigs(Type modelType);
-        IEnumerable<RelationshipConfiguration> GetHasManyConfigs<TModel>();
-        IEnumerable<RelationshipConfiguration> GetHasManyConfigs(Type modelType);
-        RelationshipConfiguration GetHasManyConfig<TModel>(string rltnName);
-        RelationshipConfiguration GetHasManyConfig(Type modelType, string rltnName);
+        IEnumerable<HasOneConfiguration> GetHasOneConfigs<TModel>();
+        IEnumerable<HasOneConfiguration> GetHasOneConfigs(Type modelType);
+        IEnumerable<HasManyConfiguration> GetHasManyConfigs<TModel>();
+        IEnumerable<HasManyConfiguration> GetHasManyConfigs(Type modelType);
+        HasManyConfiguration GetHasManyConfig<TModel>(string rltnName);
+        HasManyConfiguration GetHasManyConfig(Type modelType, string rltnName);
 
         object[] IncludedModelsCreate(object model);
     }
