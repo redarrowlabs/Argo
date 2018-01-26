@@ -1,5 +1,4 @@
 ﻿using Ploeh.AutoFixture.Xunit2;
-using RedArrow.Argo.Client.Session;
 using RedArrow.Argo.TestUtils;
 using System;
 using System.Linq;

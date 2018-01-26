@@ -34,7 +34,7 @@ namespace RedArrow.Argo.Client.Integration.Linq.Queryables
                 await Task.WhenAll(models.Select(x => session.Create(x)).ToArray());
             }
 
-            // Titan Data limits query results to only 10 objects
+            // Titan Data will limit query results to 10
             var expectedModels = models
                 .OrderBy(x => x.PropA, StringComparer.Ordinal)
                 .Skip(5)
