@@ -130,57 +130,5 @@ namespace RedArrow.Argo.Client.Tests.Session
             mockCacheProvider.Verify(x => x.Update(modelId, It.IsAny<object>()), Times.Once);
             mockCacheProvider.Verify(x => x.Update(It.IsAny<Guid>(), It.IsAny<object>()), Times.Exactly(4));
         }
-
-        [Theory, AutoData]
-        public void CreateQuery__Given_ParentModelAndRltnExpression__Then_CreateQueryable
-            (Guid modelId)
-        {
-            var parentModel = new ComplexModel {Id = modelId};
-
-            var modelRegistry = CreateModelRegistry(typeof(ComplexModel), typeof(BasicModel));
-
-            var subject = CreateSubject(modelRegistry: modelRegistry);
-
-            var resourceType = modelRegistry.GetResourceType<ComplexModel>();
-            Expression<Func<ComplexModel, IEnumerable<BasicModel>>> expression = x => x.BasicModels;
-            var rltnName = (expression.Body as MemberExpression).Member.GetJsonName(typeof(HasManyAttribute));
-
-            var result = subject.CreateQuery(parentModel, expression);
-            Assert.NotNull(result);
-            Assert.IsType<RelationshipQueryable<ComplexModel, BasicModel>>(result);
-            Assert.Equal($"{resourceType}/{modelId}/{rltnName}",
-                ((RelationshipQueryable<ComplexModel, BasicModel>) result).BuildQuery().BasePath);
-        }
-
-        [Fact]
-        public void CreateQuery__Given_ParentModelAndExpression__When_ModelNull__Then_ThrowArgNull()
-        {
-            var subject = CreateSubject(modelRegistry: CreateModelRegistry(typeof(ComplexModel), typeof(BasicModel)));
-
-            Expression<Func<ComplexModel, IEnumerable<BasicModel>>> expression = x => x.BasicModels;
-
-            Assert.Throws<ArgumentNullException>(() => subject.CreateQuery(null, expression));
-        }
-
-        [Fact]
-        public void CreateQuery__Given_ParentModelAndExpression__When_PropertyNotHasOne__Then_ThrowNotSupported()
-        {
-            var subject = CreateSubject();
-
-            var model = new ComplexModel();
-
-            Assert.Throws<RelationshipNotRegisteredExecption>(() => subject.CreateQuery(model, x => x.PropertyB));
-        }
-
-        [Fact]
-        public void CreateQuery__Given_ParentModelAndExpression__When_ExpressionNotLambda__Then_ThrowNotSupported()
-        {
-            var subject = CreateSubject();
-
-            var model = new ComplexModel();
-
-            Assert.Throws<NotSupportedException>(
-                () => subject.CreateQuery(model, x => x.BasicModels.Where(y => y.PropA == "")));
-        }
     }
 }

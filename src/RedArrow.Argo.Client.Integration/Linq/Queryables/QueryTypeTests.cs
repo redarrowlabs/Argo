@@ -49,7 +49,12 @@ namespace RedArrow.Argo.Client.Integration.Linq.Queryables
                 var parent = new ComplexModel
                 {
                     Id = parentId,
-                    BasicModels = childIds.Select(x => new BasicModel {Id = x}).ToList()
+                    BasicModels = childIds.Select(x => new BasicModel
+                        {
+                            Id = x,
+                            PropA = "hello"
+                        })
+                    .ToList()
                 };
 
                 await session.Create(parent);
@@ -57,7 +62,9 @@ namespace RedArrow.Argo.Client.Integration.Linq.Queryables
 
             using (var session = SessionFactory.CreateSession())
             {
-                var result = session.CreateQuery<ComplexModel, BasicModel>(parentId, x => x.BasicModels).ToArray();
+                var result = session.GetRelated<ComplexModel, BasicModel>(parentId, x => x.BasicModels)
+                    .Where(x => x.PropA == "hello")
+                    .ToArray();
                 Assert.NotNull(result);
                 Assert.Equal(childIds.Length, result.Length);
                 Assert.All(childIds, x => Assert.NotNull(result.SingleOrDefault(c => c.Id == x)));

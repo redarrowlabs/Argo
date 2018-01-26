@@ -21,7 +21,7 @@ namespace RedArrow.Argo.Client.Integration.Linq.Queryables
         {
             await DeleteAll<BasicModel>();
 
-            var models = Enumerable.Range(0, 20)
+            var models = Enumerable.Range(0, 10)
                 .Select(i => new BasicModel
                 {
                     Id = Guid.NewGuid(),
@@ -34,6 +34,7 @@ namespace RedArrow.Argo.Client.Integration.Linq.Queryables
                 await Task.WhenAll(models.Select(x => session.Create(x)).ToArray());
             }
 
+            // Titan Data will limit query results to 10
             var expectedModels = models
                 .OrderBy(x => x.PropA, StringComparer.Ordinal)
                 .Skip(5)

@@ -268,14 +268,7 @@ namespace RedArrow.Argo.Client.Session
                 new RemoteQueryProvider(this, JsonSettings));
         }
 
-        public IQueryable<TRltn> CreateQuery<TParent, TRltn>(
-            TParent model,
-            Expression<Func<TParent, IEnumerable<TRltn>>> relationship)
-        {
-            return CreateQuery(ModelRegistry.GetId(model), relationship);
-        }
-
-        public IQueryable<TRltn> CreateQuery<TParent, TRltn>(
+        public IEnumerable<TRltn> GetRelated<TParent, TRltn>(
             Guid id,
             Expression<Func<TParent, IEnumerable<TRltn>>> relationship)
         {
@@ -286,12 +279,25 @@ namespace RedArrow.Argo.Client.Session
                 .SingleOrDefault(a => a.AttributeType == typeof(HasManyAttribute));
             if (attr == null) throw new RelationshipNotRegisteredExecption(mExpression.Member.Name, modelType);
 
+            var resourceType = ModelRegistry.GetResourceType(typeof(TParent));
             var rltnName = mExpression.Member.GetJsonName(typeof(HasManyAttribute));
-            return new RelationshipQueryable<TParent, TRltn>(
-                id,
-                rltnName,
-                this,
-                new RemoteQueryProvider(this, JsonSettings));
+
+            var request = HttpRequestBuilder.GetRelated(id, resourceType, rltnName);
+            var response = HttpClient.SendAsync(request).GetAwaiter().GetResult();
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return Enumerable.Empty<TRltn>();
+            }
+
+            response.CheckStatusCode();
+
+            var root = response.GetContentModel<ResourceRootCollection>(JsonSettings).GetAwaiter().GetResult();
+            var related = root.Data?
+                .Select(CreateResourceModel)
+                .Cast<TRltn>()
+                .ToArray();
+
+            return related;
         }
 
         public async Task<IEnumerable<TModel>> Query<TModel>(IQueryContext query)
