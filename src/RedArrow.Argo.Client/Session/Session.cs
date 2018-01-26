@@ -588,7 +588,7 @@ namespace RedArrow.Argo.Client.Session
                         modelAttr.Remove();
                     }
                 }
-                else if (JToken.DeepEquals(ogValue, modelAttr.Name))
+                else if (JsonConvert.SerializeObject(ogValue, JsonSettings) == JsonConvert.SerializeObject(modelAttr.Value, JsonSettings))
                 {
                     modelAttr.Remove();
                 }
@@ -606,7 +606,7 @@ namespace RedArrow.Argo.Client.Session
                     }
                 }
                 // Using ToString comparison here because the ID is a Guid in the OG and String in New
-                else if (JToken.DeepEquals(ogRtln.Data.ToString(), modelRltn.Value.Data.ToString()))
+                else if (JsonConvert.SerializeObject(ogRtln.Data, JsonSettings) == JsonConvert.SerializeObject(modelRltn.Value.Data, JsonSettings))
                 {
                     return false;
                 }
@@ -624,7 +624,7 @@ namespace RedArrow.Argo.Client.Session
                         modelMeta.Remove();
                     }
                 }
-                else if (JToken.DeepEquals(ogValue, modelMeta.Name))
+                else if (JsonConvert.SerializeObject(ogValue, JsonSettings) == JsonConvert.SerializeObject(modelMeta.Value, JsonSettings))
                 {
                     modelMeta.Remove();
                 }
