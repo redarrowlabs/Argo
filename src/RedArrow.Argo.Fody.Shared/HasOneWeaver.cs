@@ -10,7 +10,7 @@ namespace RedArrow.Argo
     {
         private void WeaveHasOnes(ModelWeavingContext context)
         {
-            if (_session_GetReference == null || _session_SetReference == null)
+            if (_session_GetReference == null)
             {
                 throw new Exception("Argo relationship weaving failed unexpectedly");
             }
@@ -30,20 +30,29 @@ namespace RedArrow.Argo
                     throw new Exception($"Failed to load backing field for property {propertyDef.FullName}");
                 }
 
+                /* Add a boolean field to track whether the init was attempted.  A null check
+                 * on the backing field is not good enough since they could have set the value to null. */
+                var backingFieldInitialized = AddField(
+                    backingField.Name + "Initialized",
+                    TypeSystem.Boolean,
+                    FieldAttributes.Private,
+                    context);
+
                 // find the attrName, if there is one
                 var attrName = propertyDef.JsonApiName(TypeSystem, Constants.Attributes.HasOne);
 
                 LogInfo($"\tWeaving {propertyDef} => {attrName}");
 
-                WeaveReferenceGetter(context, backingField, propertyDef, attrName);
-                if (propertyDef.SetMethod == null) return; 
-                WeaveReferenceSetter(context, backingField, propertyDef, attrName);
+                WeaveReferenceGetter(context, backingField, backingFieldInitialized, propertyDef, attrName);
+                if (propertyDef.SetMethod == null) return;
+                WeaveReferenceSetter(backingField, backingFieldInitialized, propertyDef);
             }
         }
 
         private void WeaveReferenceGetter(
             ModelWeavingContext context,
             FieldReference backingField,
+            FieldReference backingFieldInitialized,
             PropertyDefinition refPropDef,
             string attrName)
         {
@@ -52,9 +61,10 @@ namespace RedArrow.Argo
 
             // get
             // {
-            //   if (this.__argo__generated_session != null)
+            //   if (this.__argo__generated_session != null && !this.<[PropName]>k__BackingFieldInitialized)
             //   {
             //     this.<[PropName]>k__BackingField = this.__argo__generated_session.GetReference<[ModelType], [ReturnType]>(this, "[AttrName]");
+            //     this.<[PropName]>k__BackingFieldInitialized = true;
             //   }
             //   return this.<[PropName]>k__BackingField;
             // }
@@ -66,6 +76,10 @@ namespace RedArrow.Argo
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
             proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
             proc.Emit(OpCodes.Brfalse, returnField); // if __argo__generated_session != null continue, else returnField
+
+            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+            proc.Emit(OpCodes.Ldfld, backingFieldInitialized); // load <[PropName]>k__BackingFieldInitialized from 'this'
+            proc.Emit(OpCodes.Brtrue, returnField); // !this.<[PropName]>k__BackingFieldInitialized continue, else returnField
 
             proc.Emit(OpCodes.Ldarg_0); // load 'this' to reference backing field
 
@@ -80,55 +94,38 @@ namespace RedArrow.Argo
                     : null)); // invoke session.GetReference(..)
             proc.Emit(OpCodes.Stfld, backingField); // store return value in 'this'.<backing field>
 
+            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
+            proc.Emit(OpCodes.Ldc_I4_1); // load true (1) onto stack
+            proc.Emit(OpCodes.Stfld, backingFieldInitialized); // store true in 'this'.<backing field>Initialized
+
             proc.Append(returnField); // load 'this' onto stack
             proc.Emit(OpCodes.Ldfld, backingField); // load 'this'.<backing field>
             proc.Emit(OpCodes.Ret); // return
         }
 
         private void WeaveReferenceSetter(
-            ModelWeavingContext context,
             FieldReference backingField,
-            PropertyDefinition refPropDef,
-            string attrName)
+            FieldReference backingFieldInitialized,
+            PropertyDefinition refPropDef)
         {
-            // supply generic type arguments to template
-            var sessionSetAttr = _session_SetReference.MakeGenericMethod(context.ModelTypeDef, refPropDef.PropertyType);
-
             refPropDef.SetMethod.Body.Instructions.Clear();
 
             // set
             // {
             //     this.<[PropName]>k__BackingField = value;
-            //     if (this.__argo__generated_session != null)
-            //     {
-            //         this.__argo__generated_session.SetReference<[ModelType], [ReturnType]>(this, "[AttrName]", this.<[PropName]>k__BackingField);
-            //     }
+            //     this.<[PropName]>k__BackingFieldInitialized = true;
             // }
             var proc = refPropDef.SetMethod.Body.GetILProcessor();
-
-            var ret = proc.Create(OpCodes.Ret);
 
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
             proc.Emit(OpCodes.Ldarg_1); // load 'value' onto stack
             proc.Emit(OpCodes.Stfld, backingField); // 'this'.<backing field> = 'value'
 
             proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-            proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
-            proc.Emit(OpCodes.Brfalse, ret); // if __argo__generated_session != null continue, else return
+            proc.Emit(OpCodes.Ldc_I4_1); // load true (1) onto stack
+            proc.Emit(OpCodes.Stfld, backingFieldInitialized); // store true in 'this'.<backing field>Initialized
 
-            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack to reference session field
-            proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
-            proc.Emit(OpCodes.Ldarg_0); // load 'this'
-            proc.Emit(OpCodes.Ldstr, attrName); // load attrName onto stack
-            proc.Emit(OpCodes.Ldarg_0); // load 'this'
-            proc.Emit(OpCodes.Ldfld, backingField); // load backing field
-            proc.Emit(OpCodes.Callvirt, context.ImportReference(
-                sessionSetAttr,
-                refPropDef.PropertyType.IsGenericParameter
-                    ? context.ModelTypeDef
-                    : null)); // invoke session.GetReference(..)
-
-            proc.Append(ret);
+            proc.Emit(OpCodes.Ret); // return
         }
     }
 }

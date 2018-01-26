@@ -12,9 +12,7 @@ namespace RedArrow.Argo
         private void WeaveHasManys(ModelWeavingContext context)
         {
             if (_session_GetGenericEnumerable == null
-                || _session_SetGenericEnumerable == null
-                || _session_GetGenericCollection == null
-                || _session_SetGenericCollection == null)
+                || _session_GetGenericCollection == null)
             {
                 throw new Exception("Argo relationship weaving failed unexpectedly");
             }
@@ -25,17 +23,14 @@ namespace RedArrow.Argo
                 var propertyTypeDef = propertyTypeRef.Resolve();
 
                 MethodReference getRltnMethRef;
-                MethodReference setRltnMethRef;
 
                 if (propertyTypeDef == context.ImportReference(typeof(IEnumerable<>)).Resolve())
                 {
                     getRltnMethRef = _session_GetGenericEnumerable;
-                    setRltnMethRef = _session_SetGenericEnumerable;
                 }
                 else if (propertyTypeDef == context.ImportReference(typeof(ICollection<>)).Resolve())
                 {
                     getRltnMethRef = _session_GetGenericCollection;
-                    setRltnMethRef = _session_SetGenericCollection;
                 }
                 else
                 {
@@ -61,8 +56,6 @@ namespace RedArrow.Argo
                 LogInfo($"\tWeaving {propertyDef} => {rltnName}");
 
                 WeaveRltnGetter(context, backingField, propertyDef, elementTypeDef, getRltnMethRef, rltnName);
-                if (propertyDef.SetMethod == null) return;
-                WeaveRltnSetter(context, backingField, propertyDef, elementTypeDef, setRltnMethRef, rltnName);
             }
         }
 
@@ -110,67 +103,6 @@ namespace RedArrow.Argo
             proc.Append(endif);
             proc.Emit(OpCodes.Ldfld, backingField);
             proc.Emit(OpCodes.Ret);
-        }
-
-        private static void WeaveRltnSetter(
-            ModelWeavingContext context,
-            FieldReference backingField,
-            PropertyDefinition rltnPropDef,
-            TypeReference elementTypeDef,
-            MethodReference sessionSetRltnGeneric,
-            string rltnName)
-        {
-            // supply generic type arguments to template
-            var sessionSetRltn = sessionSetRltnGeneric.MakeGenericMethod(
-                context.ModelTypeDef,
-                elementTypeDef);
-
-            rltnPropDef.SetMethod.Body.Instructions.Clear();
-
-            // set
-            // {
-            //     if (this.__argo__generated_session != null)
-            //     {
-            //         this.<[PropName]>k__BackingField = this.__argo__generated_session.Set<[ModelType], [ElementType]>(this.Id, "[RltnName]", this.<[PropName]>k__BackingField);
-            //     }
-            //     else
-            //     {
-            //         this.<[PropName]>k__BackingField = value;
-            //     }
-            // }
-            var proc = rltnPropDef.SetMethod.Body.GetILProcessor();
-
-            var endif = proc.Create(OpCodes.Ldarg_0);
-            var ret = proc.Create(OpCodes.Ret);
-
-            proc.Emit(OpCodes.Ldarg_0); // load 'this' onto stack
-            proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
-
-            // if __argo__generated_session == null
-            proc.Emit(OpCodes.Brfalse_S, endif);
-
-            proc.Emit(OpCodes.Ldarg_0);
-
-            proc.Emit(OpCodes.Ldarg_0);
-            proc.Emit(OpCodes.Ldfld, context.SessionField); // load __argo__generated_session field from 'this'
-            proc.Emit(OpCodes.Ldarg_0); // load 'this'
-            proc.Emit(OpCodes.Ldstr, rltnName); // load attrName onto stack
-            proc.Emit(OpCodes.Ldarg_1); // load 'value'
-            proc.Emit(OpCodes.Callvirt, context.ImportReference(
-                sessionSetRltn,
-                rltnPropDef.PropertyType.IsGenericParameter
-                    ? context.ModelTypeDef
-                    : null)); // invoke session.GetReference(..)
-
-            proc.Emit(OpCodes.Stfld, backingField);
-
-            proc.Emit(OpCodes.Br_S, ret);
-            // else
-            proc.Append(endif); // load 'this' onto stack to reference session field
-            proc.Emit(OpCodes.Ldarg_1);
-            proc.Emit(OpCodes.Stfld, backingField);
-
-            proc.Append(ret);
         }
     }
 }

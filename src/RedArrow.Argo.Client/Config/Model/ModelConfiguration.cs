@@ -15,7 +15,6 @@ namespace RedArrow.Argo.Client.Config.Model
 
         public PropertyInfo SessionManagedProperty { get; }
         public PropertyInfo ResourceProperty { get; }
-        public PropertyInfo PatchProperty { get; }
 
         public PropertyInfo IdProperty { get; }
 
@@ -31,8 +30,6 @@ namespace RedArrow.Argo.Client.Config.Model
         // resource relationship name => model property
         public IDictionary<string, RelationshipConfiguration> HasManyProperties { get; }
 
-        public PropertyInfo UnmappedAttributesProperty { get; }
-
         internal ModelConfiguration(Type modelType)
         {
             ModelType = modelType;
@@ -43,7 +40,6 @@ namespace RedArrow.Argo.Client.Config.Model
 
             SessionManagedProperty = modelType.GetSessionManagedProperty();
             ResourceProperty = modelType.GetModelResourceProperty();
-            PatchProperty = modelType.GetModelPatchProperty();
 
             IdProperty = modelType.GetModelIdProperty();
 
@@ -52,8 +48,6 @@ namespace RedArrow.Argo.Client.Config.Model
 
             HasOneProperties = modelType.GetModelHasOneConfigurations();
             HasManyProperties = modelType.GetModelHasManyConfigurations();
-
-            UnmappedAttributesProperty = modelType.GetUnmappedAttributesProperty();
         }
     }
 }

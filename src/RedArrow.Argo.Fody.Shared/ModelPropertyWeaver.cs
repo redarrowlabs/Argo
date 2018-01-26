@@ -11,11 +11,6 @@ namespace RedArrow.Argo
             context.ResourcePropDef = AddAutoProperty("__argo__generated_Resource", context);
         }
 
-        private void AddPatchProperty(ModelWeavingContext context)
-        {
-            context.PatchProperty = AddAutoProperty("__argo__generated_Patch", context);
-        }
-
         private PropertyDefinition AddAutoProperty(string propertyName, ModelWeavingContext context)
         {
             var backingField = new FieldDefinition(

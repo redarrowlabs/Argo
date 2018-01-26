@@ -100,10 +100,8 @@ namespace RedArrow.Argo
                 if (context.IdPropDef != null)
                 {
                     AddResourceIdentifierProperty(context);
-                    AddPatchProperty(context);
                     AddInitialize(context);
                     AddStaticCtor(context);
-                    WeaveAttributes(context);
                     WeaveMeta(context);
                     WeaveHasOneIds(context);
                     WeaveHasOnes(context);

@@ -54,13 +54,6 @@ namespace RedArrow.Argo.Client.Extensions
                 .Single(prop => prop.Name == "__argo__generated_Resource");
         }
 
-        public static PropertyInfo GetModelPatchProperty(this Type type)
-        {
-            return type.GetTypeInfo()
-                .GetProperties()
-                .Single(prop => prop.Name == "__argo__generated_Patch");
-        }
-
         public static PropertyInfo GetModelIdProperty(this Type type)
         {
             return type.GetTypeInfo()
@@ -113,14 +106,7 @@ namespace RedArrow.Argo.Client.Extensions
                     hasMCfg => hasMCfg.RelationshipName,
                     hasMCfg => hasMCfg);
         }
-
-        public static PropertyInfo GetUnmappedAttributesProperty(this Type type)
-        {
-            return type.GetTypeInfo()
-                .GetProperties()
-                .SingleOrDefault(prop => prop.IsDefined(typeof(UnmappedAttribute)));
-        }
-
+        
         private static IEnumerable<PropertyInfo> GetProperties(this TypeInfo typeInfo)
         {
             var properties = typeInfo.DeclaredProperties.ToList();

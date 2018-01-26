@@ -98,7 +98,10 @@ namespace RedArrow.Argo.Client.Session
             var allModels = ModelRegistry.IncludedModelsCreate(model);
             foreach (var newModel in allModels)
             {
-                CreateModelResource(newModel);
+                var newResource = BuildModelResource(newModel);
+                // Update the model instance in the argument
+                var initialize = newModel.GetType().GetInitializeMethod();
+                initialize.Invoke(newModel, new object[] { newResource, this });
             }
 
             var rootResource = ModelRegistry.GetResource(model);
@@ -139,17 +142,23 @@ namespace RedArrow.Argo.Client.Session
             if (model == null) throw new ArgumentNullException(nameof(model));
             ThrowIfUnmanaged(model);
 
-            var patch = ModelRegistry.GetPatch(model);
+            var patch = BuildPatch(model);
             // if nothing was updated, no need to continue
             if (patch == null) return;
 
-            var includeModels = Cache.Items
-                .Where(ModelRegistry.IsUnmanagedModel)
-                .ToArray();
-            var includeResources = includeModels.Select(CreateModelResource).ToArray();
+            var allModels = ModelRegistry.IncludedModelsCreate(model);
+            foreach (var newModel in allModels)
+            {
+                var newResource = BuildModelResource(newModel);
+                // Update the model instance in the argument
+                var initialize = newModel.GetType().GetInitializeMethod();
+                initialize.Invoke(newModel, new object[] { newResource, this });
+            }
+
+            var includes = allModels.Select(ModelRegistry.GetResource).ToArray();
 
             var originalResource = ModelRegistry.GetResource(model);
-            var request = await HttpRequestBuilder.UpdateResource(originalResource, patch, includeResources);
+            var request = await HttpRequestBuilder.UpdateResource(originalResource, patch, includes);
             var response = await HttpClient.SendAsync(request).ConfigureAwait(false);
             response.CheckStatusCode();
 
@@ -163,11 +172,11 @@ namespace RedArrow.Argo.Client.Session
             }
             else if (response.StatusCode == HttpStatusCode.NoContent)
             {
-                ModelRegistry.ApplyPatch(model);
+                ModelRegistry.ApplyPatch(model, patch);
             }
 
             // create and cache includes
-            await Task.WhenAll(includeModels.Select(x => Task.Run(() =>
+            await Task.WhenAll(allModels.Select(x => Task.Run(() =>
             {
                 var resource = ModelRegistry.GetResource(x);
                 Cache.Update(resource.Id, x);
@@ -350,26 +359,12 @@ namespace RedArrow.Argo.Client.Session
             return ModelRegistry.GetAttributeValue<TModel, TAttr>(model, attrName);
         }
 
-        public void SetAttribute<TModel, TAttr>(TModel model, string attrName, TAttr value)
-        {
-            ThrowIfDisposed();
-
-            ModelRegistry.GetOrCreatePatch(model).SetAttribute(attrName, value, JsonSettings);
-        }
-
         public TMeta GetMeta<TModel, TMeta>(TModel model, string metaName)
         {
             ThrowIfDisposed();
 
             // NOTE: GetMeta is only used by model ctor. we can safely check the resource and ignore the patch
             return ModelRegistry.GetMetaValue<TModel, TMeta>(model, metaName);
-        }
-
-        public void SetMeta<TModel, TMeta>(TModel model, string metaName, TMeta value)
-        {
-            ThrowIfDisposed();
-
-            ModelRegistry.GetOrCreatePatch(model).SetMeta(metaName, value, JsonSettings);
         }
 
         public Guid GetReferenceId<TModel>(TModel model, string attrName)
@@ -387,31 +382,29 @@ namespace RedArrow.Argo.Client.Session
         {
             ThrowIfDisposed();
 
-            // check patch first, fall back on resource if rltnName not found
-            Relationship rltn;
-            var relationships = ModelRegistry.GetPatch(model)?.Relationships;
-            if (relationships == null || !relationships.TryGetValue(rltnName, out rltn))
+            // Assumption here is that GetReference is only used by HasOne to initialize itself
+            var resource = ModelRegistry.GetResource(model);
+            if (resource == null)
             {
-                var modelResource = ModelRegistry.GetResource(model);
-                relationships = modelResource.Relationships;
-                if (relationships == null || !relationships.TryGetValue(rltnName, out rltn))
+                throw new UnmanagedModelException(model.GetType(), ModelRegistry.GetId(model));
+            }
+            var relationships = resource.Relationships;
+            if (relationships == null || !relationships.TryGetValue(rltnName, out var rltn))
+            {
+                var related = GetSingleRelated(model, rltnName);
+                rltn = new Relationship
                 {
-                    var related = GetSingleRelated(model, rltnName);
-                    rltn = new Relationship
-                    {
-                        Data = related != null
-                            ? JToken.FromObject(ModelRegistry.GetResource(related).ToResourceIdentifier())
-                            : JValue.CreateNull()
-                    };
-                    // we're updating the resource, not the patch, since this is not a mutative action
-                    // updating the resource effectivly updates what the session knows about the data
-                    // the session won't try to hit the server again, and this change won't be persisted
-                    var resource = ModelRegistry.GetResource(model);
-                    resource.GetRelationships()[rltnName] = rltn;
-                }
+                    Data = related != null
+                        ? JToken.FromObject(ModelRegistry.GetResource(related).ToResourceIdentifier())
+                        : JValue.CreateNull()
+                };
             }
 
             // if we make it to here, 'rltn' has been set
+            if (rltn == null)
+            {
+                throw new ModelMapException("Cannot find HasOne relationship", model.GetType(), ModelRegistry.GetId(model));
+            }
             var rltnData = rltn.Data;
             ResourceIdentifier rltnIdentifier;
             if (rltnData == null || rltnData.Type == JTokenType.Null) return default(TRltn);
@@ -429,30 +422,6 @@ namespace RedArrow.Argo.Client.Session
             }
             // calling Get<TRltn>(...) here will check the cache first, then go remote if necessary
             return Get<TRltn>(rltnIdentifier.Id).GetAwaiter().GetResult();
-        }
-
-        public void SetReference<TModel, TRltn>(TModel model, string rltnName, TRltn rltn)
-        {
-            ThrowIfDisposed();
-
-            var relationship = new Relationship();
-            if (rltn != null)
-            {
-                var rltnIdentifier = new ResourceIdentifier
-                {
-                    Id = ModelRegistry.GetOrCreateId(rltn),
-                    Type = ModelRegistry.GetResourceType(rltn.GetType())
-                };
-                relationship.Data = JToken.FromObject(rltnIdentifier);
-                Cache.Update(rltnIdentifier.Id, rltn);
-            }
-            else
-            {
-                relationship.Data = JValue.CreateNull();
-            }
-            ModelRegistry
-                .GetOrCreatePatch(model)
-                .GetRelationships()[rltnName] = relationship;
         }
 
         public IEnumerable<Guid> GetRelationshipIds<TModel>(TModel model, string rltnName)
@@ -473,38 +442,14 @@ namespace RedArrow.Argo.Client.Session
             return GetRemoteCollection<TModel, TElmnt>(model, rltnName);
         }
 
-        public IEnumerable<TElmnt> SetGenericEnumerable<TModel, TElmnt>(
-            TModel model,
-            string attrName,
-            IEnumerable<TElmnt> value)
-        {
-            return SetRemoteCollection(model, attrName, value);
-        }
-
         public ICollection<TElmnt> GetGenericCollection<TModel, TElmnt>(TModel model, string rltnName)
         {
             return GetRemoteCollection<TModel, TElmnt>(model, rltnName);
         }
 
-        public ICollection<TElmnt> SetGenericCollection<TModel, TElmnt>(
-            TModel model,
-            string attrName,
-            IEnumerable<TElmnt> value)
-        {
-            return SetRemoteCollection(model, attrName, value);
-        }
-
         private RemoteGenericBag<TElmnt> GetRemoteCollection<TModel, TElmnt>(TModel model, string rltnName)
         {
             return new RemoteGenericBag<TElmnt>(this, model, rltnName);
-        }
-
-        private RemoteGenericBag<TElmnt> SetRemoteCollection<TModel, TElmnt>(
-            TModel model,
-            string rltnName,
-            IEnumerable<TElmnt> value)
-        {
-            return new RemoteGenericBag<TElmnt>(this, model, rltnName, value);
         }
 
         #endregion IModelSession
@@ -569,48 +514,132 @@ namespace RedArrow.Argo.Client.Session
             return model;
         }
 
-        public Resource CreateModelResource(object model)
+        public Resource BuildModelResource(object model)
         {
-            var modelType = model.GetType();
-            var resourceType = ModelRegistry.GetResourceType(modelType);
-
-            JObject attrs = null;
-            IDictionary<string, Relationship> rltns = null;
-            JObject meta = null;
+            var resourceType = ModelRegistry.GetResourceType(model.GetType());
 
             // attributes
             var modelAttributes = ModelRegistry.GetAttributeValues(model);
-            if (modelAttributes != null)
+            foreach (var attr in modelAttributes.Properties().ToArray())
             {
-                attrs = modelAttributes;
+                if (attr.Value.Type == JTokenType.Null)
+                {
+                    attr.Remove();
+                }
             }
 
             // relationships
             // Note: this process sets unset model Ids in order to create relationships
             var relationships = ModelRegistry.GetRelationshipValues(model);
-            if (!relationships.IsNullOrEmpty())
+            foreach (var rtln in relationships.ToList())
             {
-                rltns = relationships;
+                if (rtln.Value.Data.Type == JTokenType.Null)
+                {
+                    relationships.Remove(rtln);
+                }
             }
 
             var modelMeta = ModelRegistry.GetMetaValues(model);
-            if (!modelMeta.IsNullOrEmpty())
+            foreach (var meta in modelMeta.Properties().ToArray())
             {
-                meta = modelMeta;
+                if (meta.Value.Type == JTokenType.Null)
+                {
+                    meta.Remove();
+                }
             }
 
-            var resource = new Resource
+            return new Resource
             {
                 Id = ModelRegistry.GetId(model),
                 Type = resourceType,
-                Attributes = attrs,
-                Relationships = rltns,
-                Meta = meta
+                Attributes = modelAttributes.HasValues ? modelAttributes : null,
+                Relationships = relationships.Any() ? relationships : null,
+                Meta = modelMeta.HasValues ? modelMeta : null
             };
-            // Update the model instance in the argument
-            var initialize = modelType.GetInitializeMethod();
-            initialize.Invoke(model, new object[] { resource, this });
-            return resource;
+        }
+
+        private Resource BuildPatch(object model)
+        {
+            var originalResource = ModelRegistry.GetResource(model);
+
+            /* Trim any equivalent values from the patch.
+             * We're NOT removing/nulling values that exist in the original resource,
+             * but not in the new resource.  This trim is coarse-grained to avoid
+             * recursion and provide the safest update (in regard to array updates). */
+
+            // if not exists in original and null in model, then remove from patch
+            // if original same as model including nulls, then remove from patch
+            // if exists in original and null in model, then include in patch
+            // if original is different than model, then include in patch
+            var modelAttrs = ModelRegistry.GetAttributeValues(model) ?? new JObject();
+            var originalAttrs = originalResource.Attributes ?? new JObject();
+            foreach (var modelAttr in modelAttrs.Properties().ToArray())
+            {
+                if (!originalAttrs.TryGetValue(modelAttr.Name, out var ogValue))
+                {
+                    if (modelAttr.Value.Type == JTokenType.Null)
+                    {
+                        modelAttr.Remove();
+                    }
+                }
+                else if (JToken.DeepEquals(ogValue, modelAttr.Name))
+                {
+                    modelAttr.Remove();
+                }
+            }
+
+            var modelRtlns = ModelRegistry.GetRelationshipValues(model) ?? new Dictionary<string, Relationship>();
+            var originalRtlns = originalResource.Relationships ?? new Dictionary<string, Relationship>();
+            modelRtlns = modelRtlns.Where(modelRltn =>
+            {
+                if (!originalRtlns.TryGetValue(modelRltn.Key, out var ogRtln))
+                {
+                    if (modelRltn.Value == null || modelRltn.Value.Data.Type == JTokenType.Null)
+                    {
+                        return false;
+                    }
+                }
+                // Using ToString comparison here because the ID is a Guid in the OG and String in New
+                else if (JToken.DeepEquals(ogRtln.Data.ToString(), modelRltn.Value.Data.ToString()))
+                {
+                    return false;
+                }
+                return true;
+            }).ToDictionary(x => x.Key, x => x.Value);
+
+            var modelMetas = ModelRegistry.GetMetaValues(model) ?? new JObject();
+            var originalMetas = originalResource.Meta ?? new JObject();
+            foreach (var modelMeta in modelMetas.Properties().ToArray())
+            {
+                if (!originalMetas.TryGetValue(modelMeta.Name, out var ogValue))
+                {
+                    if (modelMeta.Value.Type == JTokenType.Null)
+                    {
+                        modelMeta.Remove();
+                    }
+                }
+                else if (JToken.DeepEquals(ogValue, modelMeta.Name))
+                {
+                    modelMeta.Remove();
+                }
+            }
+            // Links are not patched
+
+            if (!modelAttrs.HasValues
+                && !modelRtlns.Any()
+                && !modelMetas.HasValues)
+            {
+                // Nothing to update
+                return null;
+            }
+            return new Resource
+            {
+                Id = originalResource.Id,
+                Type = originalResource.Type,
+                Attributes = modelAttrs.HasValues ? modelAttrs : null,
+                Relationships = modelRtlns.Any() ? modelRtlns : null,
+                Meta = modelMetas.HasValues ? modelMetas : null
+            };
         }
 
         private void ThrowIfDisposed()

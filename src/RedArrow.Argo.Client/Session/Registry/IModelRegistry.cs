@@ -16,10 +16,7 @@ namespace RedArrow.Argo.Client.Session.Registry
 
         Resource GetResource(object model);
         void SetResource(object model, Resource resource);
-        Resource GetPatch(object model);
-        void SetPatch(object model, Resource patch);
-        Resource GetOrCreatePatch(object model);
-        void ApplyPatch(object model);
+        void ApplyPatch(object model, Resource patch);
 
         bool IsManagedModel(object model);
         bool IsManagedBy(IModelSession session, object model);
@@ -52,9 +49,6 @@ namespace RedArrow.Argo.Client.Session.Registry
         IEnumerable<RelationshipConfiguration> GetHasManyConfigs(Type modelType);
         RelationshipConfiguration GetHasManyConfig<TModel>(string rltnName);
         RelationshipConfiguration GetHasManyConfig(Type modelType, string rltnName);
-
-        JObject GetUnmappedAttributes(object model);
-        void SetUnmappedAttributes(object model, JObject attributes);
 
         object[] IncludedModelsCreate(object model);
     }
