@@ -268,14 +268,7 @@ namespace RedArrow.Argo.Client.Session
                 new RemoteQueryProvider(this, JsonSettings));
         }
 
-        public IQueryable<TRltn> CreateQuery<TParent, TRltn>(
-            TParent model,
-            Expression<Func<TParent, IEnumerable<TRltn>>> relationship)
-        {
-            return CreateQuery(ModelRegistry.GetId(model), relationship);
-        }
-
-        public IQueryable<TRltn> CreateQuery<TParent, TRltn>(
+        public IEnumerable<TRltn> GetRelated<TParent, TRltn>(
             Guid id,
             Expression<Func<TParent, IEnumerable<TRltn>>> relationship)
         {
@@ -293,7 +286,7 @@ namespace RedArrow.Argo.Client.Session
             var response = HttpClient.SendAsync(request).GetAwaiter().GetResult();
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
-                return new EnumerableQuery<TRltn>(Enumerable.Empty<TRltn>());
+                return Enumerable.Empty<TRltn>();
             }
 
             response.CheckStatusCode();
@@ -304,7 +297,7 @@ namespace RedArrow.Argo.Client.Session
                 .Cast<TRltn>()
                 .ToArray();
 
-            return new EnumerableQuery<TRltn>(related);
+            return related;
         }
 
         public async Task<IEnumerable<TModel>> Query<TModel>(IQueryContext query)

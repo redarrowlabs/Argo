@@ -97,7 +97,6 @@
     <Compile Include="Exceptions\ArgoException.cs" />
     <Compile Include="Exceptions\ModelNotRegisteredException.cs" />
     <Compile Include="Exceptions\ModelTypeMismatchException.cs" />
-    <Compile Include="Linq\EnumerableQuery.cs" />
     <Compile Include="Linq\Executors\SingularAttributesExecutor.cs" />
     <Compile Include="Linq\Queryables\OrderByQueryable.cs" />
     <Compile Include="Linq\Queryables\SkipQueryable.cs" />
