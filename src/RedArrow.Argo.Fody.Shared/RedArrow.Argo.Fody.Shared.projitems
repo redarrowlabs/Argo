@@ -14,7 +14,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)HasOneIdWeaver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)InitializeWeaver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MetaWeaver.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)AttributeWeaver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IncludeWeaver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IntroPrinter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ModelFieldWeaver.cs" />

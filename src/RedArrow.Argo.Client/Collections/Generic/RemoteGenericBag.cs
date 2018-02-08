@@ -1,11 +1,9 @@
-﻿using System;
+﻿using RedArrow.Argo.Client.Exceptions;
+using RedArrow.Argo.Client.Extensions;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Newtonsoft.Json.Linq;
-using RedArrow.Argo.Client.Exceptions;
-using RedArrow.Argo.Client.Extensions;
-using RedArrow.Argo.Client.Model;
 
 namespace RedArrow.Argo.Client.Collections.Generic
 {
@@ -31,8 +29,7 @@ namespace RedArrow.Argo.Client.Collections.Generic
             {
                 // pull from owner resource
                 var relationships = ModelRegistry.GetResource(owner).Relationships;
-                Relationship rltn;
-                if (relationships != null && relationships.TryGetValue(name, out rltn))
+                if (relationships != null && relationships.TryGetValue(name, out var rltn))
                 {
                     var ids = rltn.Data?.SelectTokens("[*].id");
                     ids.Each(id => Ids.Add(id.ToObject<Guid>()));
@@ -81,19 +78,12 @@ namespace RedArrow.Argo.Client.Collections.Generic
 
             Initialize();
 
-            if (!AddInternal(item)) return;
-
-            var rltn = GetOrCreateRelationship();
-            rltn.Add(JObject.FromObject(new ResourceIdentifier
-            {
-                Id = ModelRegistry.GetId(item),
-                Type = ModelRegistry.GetResourceType(item.GetType())
-            }));
+            AddInternal(item);
         }
 
-        private bool AddInternal(TItem item)
+        private void AddInternal(TItem item)
         {
-            if (item == null) return false;
+            if (item == null) return;
 
             if (ModelRegistry.IsManagedModel(item) && !ModelRegistry.IsManagedBy(Session, item))
             {
@@ -104,10 +94,10 @@ namespace RedArrow.Argo.Client.Collections.Generic
             var itemId = ModelRegistry.GetOrCreateId(item);
             Session.Cache.Update(itemId, item);
 
-            if (Ids.Contains(itemId)) return false;
+            if (Ids.Contains(itemId)) return;
 
             Ids.Add(itemId);
-            return true;
+            IsModified = true;
         }
 
         public void Clear()
@@ -116,14 +106,7 @@ namespace RedArrow.Argo.Client.Collections.Generic
             {
                 Initialize();
                 Ids.Clear();
-                var relationships = ModelRegistry.GetOrCreatePatch(Owner).GetRelationships();
-                Relationship rltn;
-                if (!relationships.TryGetValue(Name, out rltn))
-                {
-                    rltn = new Relationship();
-                    relationships[Name] = rltn;
-                }
-                rltn.Data = new JArray();
+                IsModified = true;
             }
         }
 
@@ -147,10 +130,8 @@ namespace RedArrow.Argo.Client.Collections.Generic
             var removed = Ids.Remove(itemId);
             if (removed)
             {
-                var rltn = GetOrCreateRelationship();
-                rltn.SelectToken($"[?(@.id == '{itemId}')]")?.Remove();
+                IsModified = true;
             }
-
             return removed;
         }
 
@@ -176,40 +157,6 @@ namespace RedArrow.Argo.Client.Collections.Generic
                 var model = Session.Get<TItem>(id).GetAwaiter().GetResult();
                 array.SetValue(model, i);
             }
-        }
-
-        private JArray GetOrCreateRelationship()
-        {
-            Relationship rltn;
-            var relationships = ModelRegistry.GetPatch(Owner)?.Relationships;
-            if (relationships == null || !relationships.TryGetValue(Name, out rltn))
-            {
-                var modelResource = ModelRegistry.GetResource(Owner);
-                relationships = modelResource.Relationships;
-                if (relationships == null || !relationships.TryGetValue(Name, out rltn))
-                {
-                    //TODO: this shouldn't be necessary, maybe invert the above ifs
-                    rltn = new Relationship {Data = new JArray()};
-                }
-                else if (rltn.Data != null && rltn.Data.Type != JTokenType.Array)
-                {
-                    throw new ModelMapException(
-                        $"Relationship {Name} mapped as [HasMany] but json relationship data was not an array",
-                        Owner.GetType(),
-                        ModelRegistry.GetId(Owner));
-                }
-
-                rltn = new Relationship
-                {
-                    Data = rltn.Data != null
-                        ? rltn.Data.DeepClone()
-                        : new JArray(),
-                    Links = rltn.Links,
-                    Meta = rltn.Meta
-                };
-                ModelRegistry.GetOrCreatePatch(Owner).GetRelationships()[Name] = rltn;
-            }
-            return (JArray) rltn.Data;
         }
     }
 }

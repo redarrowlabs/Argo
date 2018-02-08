@@ -8,6 +8,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using RedArrow.Argo.Client.Collections;
+using RedArrow.Argo.Client.Collections.Generic;
 
 namespace RedArrow.Argo.Client.Session.Registry
 {
@@ -57,31 +59,9 @@ namespace RedArrow.Argo.Client.Session.Registry
             GetModelConfig(modelType).ResourceProperty.SetValue(model, resource);
         }
 
-        public Resource GetPatch(object model)
+        public void ApplyPatch(object model, Resource patch)
         {
-            var modelType = model.GetType();
-            return (Resource)GetModelConfig(modelType).PatchProperty.GetValue(model);
-        }
-
-        public void SetPatch(object model, Resource resource)
-        {
-            var modelType = model.GetType();
-            GetModelConfig(modelType).PatchProperty.SetValue(model, resource);
-        }
-
-        public Resource GetOrCreatePatch(object model)
-        {
-            var patch = GetPatch(model);
-            if (patch != null) return patch;
-            patch = new Resource { Id = GetId(model), Type = GetResourceType(model.GetType()) };
-            SetPatch(model, patch);
-            return patch;
-        }
-
-        public void ApplyPatch(object model)
-        {
-            GetResource(model).Patch(GetPatch(model));
-            SetPatch(model, null);
+            GetResource(model).Patch(patch);
         }
 
         #endregion Resource
@@ -196,18 +176,13 @@ namespace RedArrow.Argo.Client.Session.Registry
 
         public JObject GetAttributeValues(object model)
         {
-            if (model == null) return null;
+            if (model == null) return new JObject();
+            // Include null values so we can build the patch correctly
             var attrValues = GetAttributeConfigs(model.GetType())
                 .Select(x => new KeyValuePair<string, object>(x.AttributeName, x.Property.GetValue(model)))
-                .Where(kvp => kvp.Value != null)
                 .ToDictionary(
                     kvp => kvp.Key,
                     kvp => kvp.Value);
-
-            if (!attrValues.Any())
-            {
-                return null;
-            }
 
             var result = new JObject();
             foreach (var key in attrValues.Keys)
@@ -218,65 +193,38 @@ namespace RedArrow.Argo.Client.Session.Registry
             return result;
         }
 
-        public IEnumerable<RelationshipConfiguration> GetHasOneConfigs<TModel>()
+        public IEnumerable<HasOneConfiguration> GetHasOneConfigs<TModel>()
         {
             return GetHasOneConfigs(typeof(TModel));
         }
 
-        public IEnumerable<RelationshipConfiguration> GetHasOneConfigs(Type modelType)
+        public IEnumerable<HasOneConfiguration> GetHasOneConfigs(Type modelType)
         {
             return GetModelConfig(modelType).HasOneProperties.Values;
         }
 
-        public IEnumerable<RelationshipConfiguration> GetHasManyConfigs<TModel>()
+        public IEnumerable<HasManyConfiguration> GetHasManyConfigs<TModel>()
         {
             return GetHasManyConfigs(typeof(TModel));
         }
 
-        public IEnumerable<RelationshipConfiguration> GetHasManyConfigs(Type modelType)
+        public IEnumerable<HasManyConfiguration> GetHasManyConfigs(Type modelType)
         {
             return GetModelConfig(modelType).HasManyProperties.Values;
         }
 
-        public RelationshipConfiguration GetHasManyConfig<TModel>(string rltnName)
+        public HasManyConfiguration GetHasManyConfig<TModel>(string rltnName)
         {
             return GetHasManyConfig(typeof(TModel), rltnName);
         }
 
-        public RelationshipConfiguration GetHasManyConfig(Type modelType, string rltnName)
+        public HasManyConfiguration GetHasManyConfig(Type modelType, string rltnName)
         {
             if (!GetModelConfig(modelType).HasManyProperties.TryGetValue(rltnName, out var ret))
             {
                 throw new RelationshipNotRegisteredExecption(rltnName, modelType);
             }
             return ret;
-        }
-
-        public JObject GetUnmappedAttributes(object model)
-        {
-            var modelType = model.GetType();
-            var unmapped = GetModelConfig(modelType).UnmappedAttributesProperty?.GetValue(model);
-
-            return unmapped != null
-                ? JObject.FromObject(unmapped, JsonSerializer.CreateDefault(JsonSettings))
-                : null;
-        }
-
-        public void SetUnmappedAttributes(object model, JObject attributes)
-        {
-            var modelType = model.GetType();
-            var unmappedProp = GetModelConfig(modelType).UnmappedAttributesProperty;
-
-            if (unmappedProp == null) return;
-
-            var mappedAttrNames = GetAttributeConfigs(modelType).Select(x => x.AttributeName);
-            var unmappedAttrs = attributes?.Properties().Where(x => !mappedAttrNames.Contains(x.Name));
-            if (unmappedAttrs == null) return;
-            unmappedProp.SetValue(
-                model,
-                new JObject(unmappedAttrs).ToObject(
-                    unmappedProp.PropertyType,
-                    JsonSerializer.CreateDefault(JsonSettings)));
         }
 
         public object[] IncludedModelsCreate(object model)
@@ -293,6 +241,7 @@ namespace RedArrow.Argo.Client.Session.Registry
                 .Select(hasOne => hasOne.PropertyInfo.GetValue(model))
                 .Union(GetHasManyConfigs(modelType)
                     .Select(hasMany => hasMany.PropertyInfo.GetValue(model))
+                    .Where(x => !(x is IRemoteCollection) || ((IRemoteCollection) x).IsModified)
                     .OfType<IEnumerable>()
                     .SelectMany(collection => collection.Cast<object>()))
                 .Where(x => x != null)
@@ -310,43 +259,69 @@ namespace RedArrow.Argo.Client.Session.Registry
         public IDictionary<string, Relationship> GetRelationshipValues(object model)
         {
             var modelType = model.GetType();
+            var resource = GetResource(model);
 
             var ret = new Dictionary<string, Relationship>();
 
             foreach (var hasOne in GetHasOneConfigs(modelType))
             {
-                var related = hasOne.PropertyInfo.GetValue(model);
-                if (related == null) continue;
-                var id = GetOrCreateId(related);
                 ret[hasOne.RelationshipName] = new Relationship
                 {
-                    Data = JObject.FromObject(new ResourceIdentifier
-                    {
-                        Id = id,
-                        Type = GetResourceType(related.GetType())
-                    })
+                    Data = JValue.CreateNull()
                 };
+                if (!IsManagedModel(model) || (bool) hasOne.IsInitializedFieldInfo.GetValue(model))
+                {
+                    var related = hasOne.PropertyInfo.GetValue(model);
+                    if (related != null)
+                    {
+                        ret[hasOne.RelationshipName].Data =
+                            JObject.FromObject(new ResourceIdentifier
+                            {
+                                Id = GetOrCreateId(related),
+                                Type = GetResourceType(related.GetType())
+                            });
+                    }
+                }
+                else if (resource.GetRelationships()
+                        .TryGetValue(hasOne.RelationshipName, out var existingRtln))
+                {
+                    // Do not try to fetch from the server
+                    ret[hasOne.RelationshipName].Data = existingRtln.Data.DeepClone();
+                }
             }
 
             foreach (var hasMany in GetHasManyConfigs(modelType))
             {
                 var collection = hasMany.PropertyInfo.GetValue(model) as IEnumerable;
-                if (collection == null) continue;
                 ret[hasMany.RelationshipName] = new Relationship
                 {
-                    Data = JArray.FromObject(collection
-                        .Cast<object>()
-                        .Select(related =>
-                        {
-                            var id = GetOrCreateId(related);
-                            return new ResourceIdentifier
-                            {
-                                Id = id,
-                                Type = GetResourceType(related.GetType())
-                            };
-                        })
-                        .ToArray())
+                    Data = JValue.CreateNull()
                 };
+                // Try not to fetch the existing data if not needed
+                if (collection is IRemoteCollection managedCollection && !managedCollection.IsModified)
+                {
+                    if (resource.GetRelationships()
+                        .TryGetValue(hasMany.RelationshipName, out var existingRtln))
+                    {
+                        ret[hasMany.RelationshipName].Data = existingRtln.Data.DeepClone();
+                    }
+                }
+                else if(collection != null)
+                {
+                    ret[hasMany.RelationshipName].Data = JArray.FromObject(collection
+                            .Cast<object>()
+                            .Select(related =>
+                            {
+                                var id = GetOrCreateId(related);
+                                return new ResourceIdentifier
+                                {
+                                    Id = id,
+                                    Type = GetResourceType(related.GetType())
+                                };
+                            })
+                            .ToArray());
+                }
+                
             }
 
             return ret;
@@ -371,18 +346,12 @@ namespace RedArrow.Argo.Client.Session.Registry
 
         public JObject GetMetaValues(object model)
         {
-            if (model == null) return null;
+            if (model == null) return new JObject();
             var metaValues = GetMetaConfigs(model.GetType())
                 .Select(x => new KeyValuePair<string, object>(x.MetaName, x.Property.GetValue(model)))
-                .Where(kvp => kvp.Value != null)
                 .ToDictionary(
                     kvp => kvp.Key,
                     kvp => kvp.Value);
-
-            if (!metaValues.Any())
-            {
-                return null;
-            }
 
             var result = new JObject();
             foreach (var key in metaValues.Keys)
@@ -417,7 +386,7 @@ namespace RedArrow.Argo.Client.Session.Registry
             var pathSegments = name.Split(new[] { '.' }, 2);
             if (pathSegments.Length > 1)
             {
-                var obj = new JObject();
+                var obj = token[pathSegments[0]] ?? new JObject();
                 BuildObject(obj, pathSegments[1], value);
                 token[pathSegments[0]] = obj;
             }
