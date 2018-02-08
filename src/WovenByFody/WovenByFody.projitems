@@ -21,6 +21,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)IdPropertyTestModels.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ObjectWithCollectionsAndComplexTypesAsProperties.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Patient.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Phone.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Provider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SystemMetadata.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Widget.cs" />

@@ -30,11 +30,6 @@ namespace RedArrow.Argo.Client.Cache
                 if (model == prevModel) return;
 
                 Log.Debug(() => $"caching model {{{id}}}");
-                var patch = ModelRegistry.GetPatch(prevModel);
-                if (patch != null)
-                {
-                    ModelRegistry.SetPatch(model, patch);
-                }
             }
             PoorMansCache[id] = model;
         }

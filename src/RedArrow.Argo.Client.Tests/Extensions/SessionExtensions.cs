@@ -5,7 +5,7 @@
         public static TModel ManageModel<TModel>(this Client.Session.Session session, TModel model)
             where TModel : class
         {
-            var resource = session.CreateModelResource(model);
+            var resource = session.BuildModelResource(model);
             return session.CreateResourceModel<TModel>(resource);
         }
     }

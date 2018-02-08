@@ -7,6 +7,11 @@ namespace RedArrow.Argo.Client.Collections
         object Owner { get; }
         string Name { get; }
 
+        /// <summary>
+        /// Theoretically, the relationships in this collection match the remote collection
+        /// </summary>
+        bool IsModified { get; }
+
         void SetItems(IEnumerable items);
     }
 }

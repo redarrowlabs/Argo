@@ -25,13 +25,10 @@ namespace RedArrow.Argo
         private MethodDefinition _session_GetAttribute;
         private MethodDefinition _session_GetReferenceId;
         private MethodDefinition _session_GetReference;
-        private MethodDefinition _session_SetReference;
         private MethodDefinition _session_GetMeta;
         private MethodDefinition _session_GetRelationshipIds;
         private MethodDefinition _session_GetGenericEnumerable;
-        private MethodDefinition _session_SetGenericEnumerable;
         private MethodDefinition _session_GetGenericCollection;
-        private MethodDefinition _session_SetGenericCollection;
 
         private int _stringComparison_ordinal;
         private MethodDefinition _string_equals;
@@ -75,9 +72,6 @@ namespace RedArrow.Argo
             _session_GetReference = _sessionTypeDef
                 .Methods
                 .Single(x => x.Name == "GetReference");
-            _session_SetReference = _sessionTypeDef
-                .Methods
-                .Single(x => x.Name == "SetReference");
             _session_GetMeta = _sessionTypeDef
                 .Methods
                 .Single(x => x.Name == "GetMeta");
@@ -87,15 +81,9 @@ namespace RedArrow.Argo
             _session_GetGenericEnumerable = _sessionTypeDef
                 .Methods
                 .Single(x => x.Name == "GetGenericEnumerable");
-            _session_SetGenericEnumerable = _sessionTypeDef
-                .Methods
-                .Single(x => x.Name == "SetGenericEnumerable");
             _session_GetGenericCollection = _sessionTypeDef
                 .Methods
                 .Single(x => x.Name == "GetGenericCollection");
-            _session_SetGenericCollection = _sessionTypeDef
-                .Methods
-                .Single(x => x.Name == "SetGenericCollection");
 
             _string_equals = ModuleDefinition
                 .TypeSystem

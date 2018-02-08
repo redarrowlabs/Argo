@@ -6,8 +6,11 @@ namespace RedArrow.Argo.Client.Config.Model
 {
     public class HasOneConfiguration : RelationshipConfiguration
     {
-        public HasOneConfiguration(PropertyInfo property) : base(property)
+        public FieldInfo IsInitializedFieldInfo { get; }
+
+        public HasOneConfiguration(PropertyInfo property, FieldInfo isInitialized) : base(property)
         {
+            IsInitializedFieldInfo = isInitialized;
         }
 
         protected override Type GetAttributeType()

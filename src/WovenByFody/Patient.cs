@@ -23,6 +23,9 @@ namespace WovenByFody
         public decimal AccountBalance { get; set; }
 
         [Property]
+        public Phone Phone { get; set; }
+
+        [Property]
         public Dictionary<string, string> RandomStuff { get; set; }
 
         [HasOne(LoadStrategy.Eager)]

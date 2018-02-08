@@ -67,8 +67,11 @@ namespace RedArrow.Argo.Client.Integration.Session
         {
             var initialFirstName = "Terry";
             var initialLastName = "Achey";
+            var initialPhone = "+12345567890";
 
             var updatedLastName = "Bull";
+            var updatedPhone = "+10987654321";
+            var updatedExtension = "1234";
 
             Guid crossSessionId;
 
@@ -77,7 +80,11 @@ namespace RedArrow.Argo.Client.Integration.Session
                 var patient = new Patient
                 {
                     FirstName = initialFirstName,
-                    LastName = initialLastName
+                    LastName = initialLastName,
+                    Phone = new Phone
+                    {
+                        Number = initialPhone
+                    }
                 };
 
                 await session.Create(patient);
@@ -89,6 +96,7 @@ namespace RedArrow.Argo.Client.Integration.Session
                 Assert.NotEqual(Guid.Empty, patient.Id);
                 Assert.Equal(initialFirstName, patient.FirstName);
                 Assert.Equal(initialLastName, patient.LastName);
+                Assert.Equal(initialPhone, patient.Phone.Number);
 
                 crossSessionId = patient.Id;
 
@@ -104,8 +112,11 @@ namespace RedArrow.Argo.Client.Integration.Session
                 Assert.Equal(crossSessionId, patient.Id);
                 Assert.Equal(initialFirstName, patient.FirstName);
                 Assert.Equal(initialLastName, patient.LastName);
+                Assert.Equal(initialPhone, patient.Phone.Number);
 
                 patient.LastName = updatedLastName;
+                patient.Phone.Number = updatedPhone;
+                patient.Phone.Extension = updatedExtension;
 
                 Assert.Equal(updatedLastName, patient.LastName);
 
@@ -115,6 +126,8 @@ namespace RedArrow.Argo.Client.Integration.Session
                 await session.Update(patient);
                 Assert.Equal(initialFirstName, patient.FirstName);
                 Assert.Equal(updatedLastName, patient.LastName);
+                Assert.Equal(updatedPhone, patient.Phone.Number);
+                Assert.Equal(updatedExtension, patient.Phone.Extension);
                 // The Update call should also mutate the passed in model with new Meta or attributes
                 Assert.NotEqual(oldUpdatedAt, patient.UpdatedAt);
                 Assert.NotEqual(oldEtag, patient.Etag);
@@ -133,6 +146,8 @@ namespace RedArrow.Argo.Client.Integration.Session
                 Assert.Equal(crossSessionId, patient.Id);
                 Assert.Equal(initialFirstName, patient.FirstName);
                 Assert.Equal(updatedLastName, patient.LastName);
+                Assert.Equal(updatedPhone, patient.Phone.Number);
+                Assert.Equal(updatedExtension, patient.Phone.Extension);
             }
             // cleanup
             using (var session = SessionFactory.CreateSession())
@@ -152,6 +167,10 @@ namespace RedArrow.Argo.Client.Integration.Session
                 {
                     FirstName = "Original",
                     LastName = "Name",
+                    Phone = new Phone
+                    {
+                        Number = "+1234567890"
+                    },
                     Version = "1"
                 };
 
@@ -159,6 +178,7 @@ namespace RedArrow.Argo.Client.Integration.Session
 
                 patient.FirstName = null;
                 patient.LastName = null;
+                patient.Phone.Number = null;
                 patient.Version = null;
 
                 await session.Update(patient);
@@ -173,6 +193,7 @@ namespace RedArrow.Argo.Client.Integration.Session
 
                 Assert.Null(patient.FirstName);
                 Assert.Null(patient.LastName);
+                Assert.Null(patient.Phone.Number);
                 Assert.Null(patient.Version);
             }
             // cleanup

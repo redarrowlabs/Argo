@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Ploeh.AutoFixture.Xunit2;
 using RedArrow.Argo.Client.Config.Model;
 using RedArrow.Argo.Client.Session.Registry;
@@ -262,7 +263,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
             var result = subject.GetAttributeValues(model);
 
             Assert.Equal(expectedAttr1, result.Value<string>("attribute1"));
-            Assert.Null(result["attribute-2"]);
+            Assert.True(result["attribute-2"].Type == JTokenType.Null);
             Assert.Equal(expectedAttr3, result.Value<long>("attribute3"));
         }
 
@@ -273,7 +274,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
 
             var result = subject.GetAttributeValues(null);
 
-            Assert.Null(result);
+            Assert.False(result.HasValues);
         }
 
         [Theory, AutoData]
@@ -311,7 +312,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
             var result = subject.GetMetaValues(model);
 
             Assert.Equal(expectedMeta1, result["meta1"].ToObject<string>());
-            Assert.False(result.TryGetValue("meta-2", out var meta2));
+            Assert.Equal(JTokenType.Null, result["meta-2"].Type);
             Assert.Equal(expectedMeta3, result["meta3"].ToObject<long>());
         }
 
@@ -322,7 +323,7 @@ namespace RedArrow.Argo.Client.Tests.Session.Registry
 
             var result = subject.GetMetaValues(null);
 
-            Assert.Null(result);
+            Assert.False(result.HasValues);
         }
 
         [Fact]

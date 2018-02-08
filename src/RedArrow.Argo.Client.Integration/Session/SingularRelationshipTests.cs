@@ -72,7 +72,7 @@ namespace RedArrow.Argo.Client.Integration.Session
             {
                 var patient = await session.Create<Patient>();
                 patientId = patient.Id;
-                //explicityly set the provider to null to set up the NullValue JToken
+                //explicitly set the provider to null to set up the NullValue JToken
                 patient.Provider = null;
                 await session.Update(patient);
             }
@@ -94,11 +94,9 @@ namespace RedArrow.Argo.Client.Integration.Session
                 var patient = await session.Create<Patient>();
                 patientId = patient.Id;
 
-                var provider = patient.Provider;
+                Assert.Null(patient.Provider);
 
-                Assert.Null(provider);
-
-                provider = await session.Create<Provider>();
+                var provider = await session.Create<Provider>();
 
                 patient.Provider = provider;
 

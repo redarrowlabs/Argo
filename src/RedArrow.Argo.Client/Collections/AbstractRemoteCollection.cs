@@ -11,6 +11,7 @@ namespace RedArrow.Argo.Client.Collections
 
         public object Owner { get; }
         public string Name { get; }
+        public bool IsModified { get; protected set; }
 
         protected bool Initializing { get; set; }
 
@@ -35,6 +36,7 @@ namespace RedArrow.Argo.Client.Collections
 
             Initializing = false;
             Initialized = true;
+            IsModified = false;
         }
 
         public abstract void SetItems(IEnumerable items);
