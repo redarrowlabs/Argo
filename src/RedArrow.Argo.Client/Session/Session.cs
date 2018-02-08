@@ -167,8 +167,8 @@ namespace RedArrow.Argo.Client.Session
 
             var originalResource = ModelRegistry.GetResource(model);
 
-            var request = await HttpRequestBuilder.UpdateResource(originalResource, root);
             var root = ResourceRootSingle.FromResource(patch, includes);
+            var request = await HttpRequestBuilder.UpdateResource(originalResource, root);
             var response = await HttpClient.SendAsync(request).ConfigureAwait(false);
             HttpResponseListener.UpdateResource(response.StatusCode, originalResource, root);
             response.CheckStatusCode();
