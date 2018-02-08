@@ -7,6 +7,7 @@ using RedArrow.Argo.Client.Session.Registry;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using RedArrow.Argo.Client.Http.Handlers.Response;
 
 namespace RedArrow.Argo.Client.Session
 {
@@ -16,17 +17,20 @@ namespace RedArrow.Argo.Client.Session
         private IEnumerable<ModelConfiguration> ModelConfigurations { get; }
         private JsonSerializerSettings JsonSettings { get; }
         private HttpRequestModifier HttpRequestModifier { get; }
+        private BundledHttpResponseListener HttpResponseListener { get; }
 
         internal SessionFactory(
             Func<HttpClient> httpClientFactory,
             IEnumerable<ModelConfiguration> modelConfigurations,
             JsonSerializerSettings jsonSettings,
-            HttpRequestModifier httpRequestModifier)
+            HttpRequestModifier httpRequestModifier,
+            BundledHttpResponseListener httpResponseListener)
         {
             HttpClientFactory = httpClientFactory;
             ModelConfigurations = modelConfigurations;
             JsonSettings = jsonSettings;
             HttpRequestModifier = httpRequestModifier;
+            HttpResponseListener = httpResponseListener;
         }
 
         public ISession CreateSession(Action<HttpClient> configureClient = null)
@@ -41,7 +45,8 @@ namespace RedArrow.Argo.Client.Session
                 new HttpRequestBuilder(HttpRequestModifier),
                 new BasicCacheProvider(modelRegistry),
                 modelRegistry,
-                JsonSettings);
+                JsonSettings,
+                HttpResponseListener);
         }
     }
 }

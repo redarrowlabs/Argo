@@ -9,6 +9,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using RedArrow.Argo.Client.Http.Handlers.Response;
 
 namespace RedArrow.Argo.Client.Config
 {
@@ -25,7 +26,9 @@ namespace RedArrow.Argo.Client.Config
 
         private Action<IHttpClientBuilder> HttpClientBuilder { get; set; }
 
-        private IList<HttpRequestModifier> HttpRequestModifiers { get; set; }
+        private IList<HttpRequestModifier> HttpRequestModifiers { get; }
+
+        private IList<HttpResponseListener> HttpResponseListeners { get; }
 
         private SessionFactoryConfiguration SessionFactoryConfiguration { get; }
 
@@ -43,6 +46,7 @@ namespace RedArrow.Argo.Client.Config
             ClientConfigurators = new List<Action<HttpClient>>();
             AsyncClientConfigurators = new List<Func<HttpClient, Task>>();
             HttpRequestModifiers = new List<HttpRequestModifier>();
+            HttpResponseListeners = new List<HttpResponseListener>();
 
             ApiHost = new Uri(apiHost);
 
@@ -105,6 +109,12 @@ namespace RedArrow.Argo.Client.Config
             return this;
         }
 
+        public IRemoteConfigurator Use(HttpResponseListener httpResponseListener)
+        {
+            HttpResponseListeners.Add(httpResponseListener);
+            return this;
+        }
+
         public SessionFactoryConfiguration BuildFactoryConfiguration()
         {
             // load all the models
@@ -121,11 +131,13 @@ namespace RedArrow.Argo.Client.Config
             }
 
             var bundledHttpRequestModifiers = new BundledHttpRequestModifier(HttpRequestModifiers);
+            var bundledHttpResponseListeners = new BundledHttpResponseListener(HttpResponseListeners);
 
             // translate model attributes to session config
             modelScanner.Configure(SessionFactoryConfiguration);
             SessionFactoryConfiguration.Configure(jsonSettings);
             SessionFactoryConfiguration.Configure(bundledHttpRequestModifiers);
+            SessionFactoryConfiguration.Configure(bundledHttpResponseListeners);
             ClientConfigurators.Add(client => client.BaseAddress = ApiHost);
 
             var builder = new HttpClientBuilder();

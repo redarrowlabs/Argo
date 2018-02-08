@@ -133,20 +133,20 @@ namespace RedArrow.Argo.Client.Tests.Session
 
             var mockRequestBuilder = new Mock<IHttpRequestBuilder>();
             mockRequestBuilder
-                .Setup(x => x.CreateResource(It.IsAny<Resource>(), It.IsAny<IEnumerable<Resource>>()))
-                .Callback<Resource, IEnumerable<Resource>>((resource, includes) =>
+                .Setup(x => x.CreateResource(It.IsAny<ResourceRootSingle>()))
+                .Callback<ResourceRootSingle>(resource =>
                 {
-                    Assert.Equal(expectedModelId, resource.Id);
-                    Assert.NotNull(resource.Attributes);
-                    Assert.Equal(2, resource.Attributes.Count);
-                    Assert.Equal(expectedPropA, resource.Attributes.GetValue("propA").ToObject<string>());
-                    Assert.Equal(expectedPropB, resource.Attributes.GetValue("propB").ToObject<string>());
+                    Assert.Equal(expectedModelId, resource.Data.Id);
+                    Assert.NotNull(resource.Data.Attributes);
+                    Assert.Equal(2, resource.Data.Attributes.Count);
+                    Assert.Equal(expectedPropA, resource.Data.Attributes.GetValue("propA").ToObject<string>());
+                    Assert.Equal(expectedPropB, resource.Data.Attributes.GetValue("propB").ToObject<string>());
 
-                    Assert.Null(resource.Relationships);
+                    Assert.Null(resource.Data.Relationships);
                     Assert.Null(resource.Links);
                     Assert.Null(resource.Meta);
 
-                    Assert.Empty(includes);
+                    Assert.Null(resource.Included);
                 })
                 .ReturnsAsync(expectedRequest);
 
@@ -197,17 +197,17 @@ namespace RedArrow.Argo.Client.Tests.Session
 
             var mockRequestBuilder = new Mock<IHttpRequestBuilder>();
             mockRequestBuilder
-                .Setup(x => x.CreateResource(It.IsAny<Resource>(), It.IsAny<IEnumerable<Resource>>()))
-                .Callback<Resource, IEnumerable<Resource>>((resource, includes) =>
+                .Setup(x => x.CreateResource(It.IsAny<ResourceRootSingle>()))
+                .Callback<ResourceRootSingle>((resource) =>
                 {
-                    Assert.Equal(modelId, resource.Id);
-                    Assert.Null(resource.Attributes);
+                    Assert.Equal(modelId, resource.Data.Id);
+                    Assert.Null(resource.Data.Attributes);
 
-                    Assert.NotNull(resource.Relationships);
-                    Assert.Equal(1, resource.Relationships.Count);
+                    Assert.NotNull(resource.Data.Relationships);
+                    Assert.Equal(1, resource.Data.Relationships.Count);
 
-                    Assert.NotEmpty(includes);
-                    Assert.Equal(2, includes.Count());
+                    Assert.NotEmpty(resource.Included);
+                    Assert.Equal(2, resource.Included.Count());
 
                     Assert.Null(resource.Links);
                     Assert.Null(resource.Meta);
@@ -292,7 +292,7 @@ namespace RedArrow.Argo.Client.Tests.Session
 
             Assert.Equal(0, mockHandler.RequestsSent);
 
-            mockRequestBuilder.Verify(x => x.UpdateResource(It.IsAny<Resource>(), It.IsAny<Resource>(), It.IsAny<IEnumerable<Resource>>()),
+            mockRequestBuilder.Verify(x => x.UpdateResource(It.IsAny<Resource>(), It.IsAny<ResourceRootSingle>()),
                 Times.Never);
             mockCacheProvider.Verify(x => x.Update(It.IsAny<Guid>(), It.IsAny<object>()), Times.Never);
         }
@@ -314,27 +314,27 @@ namespace RedArrow.Argo.Client.Tests.Session
 
             var mockRequestBuilder = new Mock<IHttpRequestBuilder>();
             mockRequestBuilder
-                .Setup(x => x.UpdateResource(It.IsAny<Resource>(), It.IsAny<Resource>(), It.IsAny<IEnumerable<Resource>>()))
-                .Callback<Resource, Resource, IEnumerable<Resource>>((resource, patch, includes) =>
+                .Setup(x => x.UpdateResource(It.IsAny<Resource>(), It.IsAny<ResourceRootSingle>()))
+                .Callback<Resource, ResourceRootSingle>((resource, patch) =>
                 {
-                    Assert.Equal(modelId, patch.Id);
+                    Assert.Equal(modelId, patch.Data.Id);
 
-                    Assert.Equal(modelPropA, patch.Attributes?["propertyA"]?.ToObject<string>());
-                    Assert.Single(patch.Attributes);
+                    Assert.Equal(modelPropA, patch.Data.Attributes?["propertyA"]?.ToObject<string>());
+                    Assert.Single(patch.Data.Attributes);
 
-                    Assert.NotNull(patch.Relationships);
-                    Assert.Equal(1, patch.Relationships.Count);
-                    Assert.Equal(JTokenType.Object, patch.Relationships["primaryBasicModel"]?.Data?.Type);
+                    Assert.NotNull(patch.Data.Relationships);
+                    Assert.Equal(1, patch.Data.Relationships.Count);
+                    Assert.Equal(JTokenType.Object, patch.Data.Relationships["primaryBasicModel"]?.Data?.Type);
 
-                    var rltnIdentifier = patch.Relationships["primaryBasicModel"]
+                    var rltnIdentifier = patch.Data.Relationships["primaryBasicModel"]
                         .Data.ToObject<ResourceIdentifier>();
                     Assert.NotEqual(Guid.Empty, rltnIdentifier.Id);
                     Assert.Equal(primaryBasicModel.Id, rltnIdentifier.Id);
                     Assert.Equal(modelRegistry.GetResourceType<BasicModel>(), rltnIdentifier.Type);
 
-                    Assert.NotEmpty(includes);
-                    Assert.Single(includes);
-                    var include = includes.First();
+                    Assert.NotEmpty(patch.Included);
+                    Assert.Single(patch.Included);
+                    var include = patch.Included.First();
                     Assert.Equal(include.Id, primaryBasicModel.Id);
                     Assert.Equal(modelRegistry.GetResourceType<BasicModel>(), include.Type);
                     Assert.Equal(modelPropB, include.Attributes?["propB"]?.ToObject<string>());

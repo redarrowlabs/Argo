@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using RedArrow.Argo.Client.Model;
+using RedArrow.Argo.Client.Query;
+using System;
 using System.Net.Http;
 using System.Threading.Tasks;
-using RedArrow.Argo.Client.Model;
-using RedArrow.Argo.Client.Query;
 
 namespace RedArrow.Argo.Client.Http
 {
@@ -11,8 +10,8 @@ namespace RedArrow.Argo.Client.Http
     {
         HttpRequestMessage GetResource(Guid id, string resourceType, string include);
         HttpRequestMessage GetRelated(Guid resourceId, string resourceType, string rltnName);
-        Task<HttpRequestMessage> CreateResource(Resource resource, IEnumerable<Resource> included);
-        Task<HttpRequestMessage> UpdateResource(Resource resource, Resource patch, IEnumerable<Resource> included);
+        Task<HttpRequestMessage> CreateResource(ResourceRootSingle root);
+        Task<HttpRequestMessage> UpdateResource(Resource resource, ResourceRootSingle root);
         HttpRequestMessage DeleteResource(string resourceType, Guid id);
 
         HttpRequestMessage QueryResources(IQueryContext query, string include);

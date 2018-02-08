@@ -4,7 +4,6 @@ using RedArrow.Argo.Client.Http.Handlers.Request;
 using RedArrow.Argo.Client.Model;
 using RedArrow.Argo.Client.Query;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -43,11 +42,9 @@ namespace RedArrow.Argo.Client.Http
             return request;
         }
 
-        public async Task<HttpRequestMessage> CreateResource(Resource resource, IEnumerable<Resource> include)
+        public async Task<HttpRequestMessage> CreateResource(ResourceRootSingle root)
         {
-            var root = ResourceRootSingle.FromResource(resource, include);
-
-            var request = new HttpRequestMessage(HttpMethod.Post, resource.Type);
+            var request = new HttpRequestMessage(HttpMethod.Post, root.Data.Type);
             HttpRequestModifier?.CreateResource(request, root);
             // Allowing the RequestModifier to set custom content, if they really wanted to
             if (request.Content == null)
@@ -57,11 +54,9 @@ namespace RedArrow.Argo.Client.Http
             return request;
         }
 
-        public async Task<HttpRequestMessage> UpdateResource(Resource resource, Resource patch, IEnumerable<Resource> include)
+        public async Task<HttpRequestMessage> UpdateResource(Resource resource, ResourceRootSingle root)
         {
-            var root = ResourceRootSingle.FromResource(patch, include);
-
-            var request = new HttpRequestMessage(new HttpMethod("PATCH"), $"{patch.Type}/{patch.Id}");
+            var request = new HttpRequestMessage(new HttpMethod("PATCH"), $"{root.Data.Type}/{root.Data.Id}");
             HttpRequestModifier?.UpdateResource(request, resource, root);
             // Allowing the RequestModifier to set custom content, if they really wanted to
             if (request.Content == null)

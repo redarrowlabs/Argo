@@ -4,6 +4,7 @@ using System.Net.Http;
 using Newtonsoft.Json;
 using RedArrow.Argo.Client.Config.Model;
 using RedArrow.Argo.Client.Http.Handlers.Request;
+using RedArrow.Argo.Client.Http.Handlers.Response;
 using RedArrow.Argo.Client.Session;
 
 namespace RedArrow.Argo.Client.Config
@@ -17,6 +18,8 @@ namespace RedArrow.Argo.Client.Config
         private JsonSerializerSettings JsonSettings { get; set; }
 
         private HttpRequestModifier HttpRequestModifier { get; set; }
+
+        private BundledHttpResponseListener HttpResponseListener { get; set; }
 
         internal SessionFactoryConfiguration()
         {
@@ -38,9 +41,14 @@ namespace RedArrow.Argo.Client.Config
             HttpRequestModifier = httpRequestModifier;
         }
 
+        internal void Configure(BundledHttpResponseListener httpResponseListener)
+        {
+            HttpResponseListener = httpResponseListener;
+        }
+
         public ISessionFactory BuildSessionFactory()
         {
-            return new SessionFactory(HttpClientFactory, ModelConfigurations, JsonSettings, HttpRequestModifier);
+            return new SessionFactory(HttpClientFactory, ModelConfigurations, JsonSettings, HttpRequestModifier, HttpResponseListener);
         }
     }
 }

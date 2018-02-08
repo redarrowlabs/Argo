@@ -89,7 +89,9 @@
     <Compile Include="Http\Handlers\GZip\HttpClientBuilderExtensions.cs" />
     <Compile Include="Http\Handlers\Request\BundledHttpRequestModifier.cs" />
     <Compile Include="Http\Handlers\Request\HttpRequestModifier.cs" />
+    <Compile Include="Http\Handlers\Response\BundledHttpRequestModifier.cs" />
     <Compile Include="Http\Handlers\Response\HttpClientBuilderExtensions.cs" />
+    <Compile Include="Http\Handlers\Response\HttpResponseListener.cs" />
     <Compile Include="Http\Handlers\Response\ResponseHandler.cs" />
     <Compile Include="Http\Handlers\Response\ResponseHandlerOptions.cs" />
     <Compile Include="Http\IHttpRequestBuilder.cs" />

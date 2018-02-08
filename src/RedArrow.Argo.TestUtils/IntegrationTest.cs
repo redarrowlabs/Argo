@@ -9,6 +9,8 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using RedArrow.Argo.Client.Http.Handlers.Request;
+using RedArrow.Argo.Client.Http.Handlers.Response;
+using Serilog;
 using WovenByFody;
 using Xunit;
 using Xunit.Abstractions;
@@ -19,6 +21,7 @@ namespace RedArrow.Argo.TestUtils
     {
         protected IntegrationTestFixture Fixture { get; }
         protected ISessionFactory SessionFactory { get; }
+        protected LoggingResponseListener TrackingResponseListener { get; }
 
         static IntegrationTest()
         {
@@ -50,6 +53,7 @@ namespace RedArrow.Argo.TestUtils
                 .Configure(HttpClient)
                 .Configure(HttpClientBuilder)
                 .Use(new EtagRequestModifier())
+                .Use(new LoggingResponseListener(Log.Logger))
                 .Models()
                 .Configure(scan => scan.AssemblyOf<Patient>())
                 .SerializeDictionariesAsArrays()
