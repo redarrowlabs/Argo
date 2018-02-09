@@ -8,6 +8,7 @@ using RedArrow.Argo.Client.Extensions;
 
 namespace RedArrow.Argo.Client.Http.Handlers.Response
 {
+    [Obsolete("Instead, use HttpResponseListener)")]
     public class ResponseHandler : DelegatingHandler
     {
         private ResponseHandlerOptions Options { get; }

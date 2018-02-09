@@ -11,6 +11,7 @@ using RedArrow.Argo.Client.Cache;
 using RedArrow.Argo.Client.Collections.Generic;
 using RedArrow.Argo.Client.Config.Model;
 using RedArrow.Argo.Client.Http;
+using RedArrow.Argo.Client.Http.Handlers.Response;
 using RedArrow.Argo.Client.Model;
 using RedArrow.Argo.Client.Session.Registry;
 using RedArrow.Argo.Client.Tests.Extensions;
@@ -111,7 +112,8 @@ namespace RedArrow.Argo.Client.Tests.Collections.Generic
                 requestBuilder ?? Mock.Of<IHttpRequestBuilder>(),
                 cacheProvider ?? Mock.Of<ICacheProvider>(),
                 modelRegistry ?? Mock.Of<IModelRegistry>(),
-                jsonSettings ?? new JsonSerializerSettings());
+                jsonSettings ?? new JsonSerializerSettings(),
+                Mock.Of<BundledHttpResponseListener>());
         }
     }
 }

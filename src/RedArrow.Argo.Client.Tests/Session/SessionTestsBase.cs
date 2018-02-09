@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using RedArrow.Argo.Client.Cache;
 using RedArrow.Argo.Client.Config.Model;
 using RedArrow.Argo.Client.Http;
+using RedArrow.Argo.Client.Http.Handlers.Response;
 using RedArrow.Argo.Client.Session.Registry;
 
 namespace RedArrow.Argo.Client.Tests.Session
@@ -29,7 +30,8 @@ namespace RedArrow.Argo.Client.Tests.Session
                 requestBuilder ?? Mock.Of<IHttpRequestBuilder>(),
                 cacheProvider ?? Mock.Of<ICacheProvider>(),
                 modelRegistry ?? Mock.Of<IModelRegistry>(),
-                jsonSettings ?? new JsonSerializerSettings());
+                jsonSettings ?? new JsonSerializerSettings(),
+                Mock.Of<BundledHttpResponseListener>());
         }
 
         protected static IModelRegistry CreateModelRegistry(params Type[] types)

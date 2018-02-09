@@ -22,6 +22,7 @@ using System.Linq.Expressions;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using RedArrow.Argo.Client.Http.Handlers.Response;
 
 namespace RedArrow.Argo.Client.Session
 {
@@ -39,6 +40,8 @@ namespace RedArrow.Argo.Client.Session
 
         internal JsonSerializerSettings JsonSettings { get; }
 
+        internal BundledHttpResponseListener HttpResponseListener { get; }
+
         public bool Disposed { get; set; }
 
         internal Session(
@@ -46,7 +49,8 @@ namespace RedArrow.Argo.Client.Session
             IHttpRequestBuilder httpRequestBuilder,
             ICacheProvider cache,
             IModelRegistry modelRegistry,
-            JsonSerializerSettings jsonSettings)
+            JsonSerializerSettings jsonSettings,
+            BundledHttpResponseListener httpResponseListener)
         {
             HttpClient = httpClientFactory();
             HttpRequestBuilder = httpRequestBuilder;
@@ -54,6 +58,7 @@ namespace RedArrow.Argo.Client.Session
 
             ModelRegistry = modelRegistry;
             JsonSettings = jsonSettings;
+            HttpResponseListener = httpResponseListener;
         }
 
         #region ISession
@@ -115,15 +120,18 @@ namespace RedArrow.Argo.Client.Session
                 }
             }
 
-            var request = await HttpRequestBuilder.CreateResource(rootResource, includes);
+
+            var root = ResourceRootSingle.FromResource(rootResource, includes);
+            var request = await HttpRequestBuilder.CreateResource(root);
             var response = await HttpClient.SendAsync(request).ConfigureAwait(false);
+            HttpResponseListener.CreateResource(response.StatusCode, root);
             response.CheckStatusCode();
             if (response.StatusCode == HttpStatusCode.Created)
             {
-                var root = await response.GetContentModel<ResourceRootSingle>(JsonSettings);
+                var responseRoot = await response.GetContentModel<ResourceRootSingle>(JsonSettings);
                 // Update the model instance in the argument
                 var initialize = rootModelType.GetInitializeMethod();
-                initialize.Invoke(model, new object[] { root.Data, this });
+                initialize.Invoke(model, new object[] { responseRoot.Data, this });
             }
 
             // create and cache includes
@@ -158,17 +166,20 @@ namespace RedArrow.Argo.Client.Session
             var includes = allModels.Select(ModelRegistry.GetResource).ToArray();
 
             var originalResource = ModelRegistry.GetResource(model);
-            var request = await HttpRequestBuilder.UpdateResource(originalResource, patch, includes);
+
+            var root = ResourceRootSingle.FromResource(patch, includes);
+            var request = await HttpRequestBuilder.UpdateResource(originalResource, root);
             var response = await HttpClient.SendAsync(request).ConfigureAwait(false);
+            HttpResponseListener.UpdateResource(response.StatusCode, originalResource, root);
             response.CheckStatusCode();
 
             if (response.StatusCode == HttpStatusCode.OK)
             {
-                var root = await response.GetContentModel<ResourceRootSingle>(JsonSettings);
+                var responseRoot = await response.GetContentModel<ResourceRootSingle>(JsonSettings);
                 // Update the model instance in the argument
                 var initialize = typeof(TModel).GetInitializeMethod();
-                initialize.Invoke(model, new object[] { root.Data, this });
-                Cache.Update(root.Data.Id, model);
+                initialize.Invoke(model, new object[] { responseRoot.Data, this });
+                Cache.Update(responseRoot.Data.Id, model);
             }
             else if (response.StatusCode == HttpStatusCode.NoContent)
             {
@@ -197,6 +208,7 @@ namespace RedArrow.Argo.Client.Session
             var include = ModelRegistry.GetInclude<TModel>();
             var request = HttpRequestBuilder.GetResource(id, resourceType, include);
             var response = await HttpClient.SendAsync(request).ConfigureAwait(false);
+            HttpResponseListener.GetResource(response.StatusCode, id, resourceType);
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
                 return default(TModel); // null
@@ -222,8 +234,11 @@ namespace RedArrow.Argo.Client.Session
             var resource = ModelRegistry.GetResource(model);
             var request = HttpRequestBuilder.GetRelated(resource.Id, resource.Type, rltnName);
             var response = HttpClient.SendAsync(request).GetAwaiter().GetResult();
-            if (response.StatusCode == HttpStatusCode.NotFound) return null;
-
+            HttpResponseListener.GetRelated(response.StatusCode, resource.Id, resource.Type, rltnName);
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return null;
+            }
             response.CheckStatusCode();
 
             // TODO: perhaps use a 3rd ResourceRoot with JToken Data to determine if array was erroneously returned
@@ -251,6 +266,7 @@ namespace RedArrow.Argo.Client.Session
             var resourceType = ModelRegistry.GetResourceType<TModel>();
             var request = HttpRequestBuilder.DeleteResource(resourceType, id);
             var response = await HttpClient.SendAsync(request);
+            HttpResponseListener.DeleteResource(response.StatusCode, id, resourceType);
             response.CheckStatusCode();
             var model = Cache.Retrieve<TModel>(id);
             if (model != null)
@@ -282,8 +298,10 @@ namespace RedArrow.Argo.Client.Session
             Expression<Func<TParent, IEnumerable<TRltn>>> relationship)
         {
             var modelType = typeof(TParent);
-            var mExpression = relationship.Body as MemberExpression;
-            if (mExpression == null) throw new NotSupportedException();
+            if (!(relationship.Body is MemberExpression mExpression))
+            {
+                throw new NotSupportedException();
+            }
             var attr = mExpression.Member.CustomAttributes
                 .SingleOrDefault(a => a.AttributeType == typeof(HasManyAttribute));
             if (attr == null) throw new RelationshipNotRegisteredExecption(mExpression.Member.Name, modelType);
@@ -293,6 +311,7 @@ namespace RedArrow.Argo.Client.Session
 
             var request = HttpRequestBuilder.GetRelated(id, resourceType, rltnName);
             var response = HttpClient.SendAsync(request).GetAwaiter().GetResult();
+            HttpResponseListener.GetRelated(response.StatusCode, id, resourceType, rltnName);
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
                 return Enumerable.Empty<TRltn>();
@@ -321,6 +340,7 @@ namespace RedArrow.Argo.Client.Session
             var request = HttpRequestBuilder.QueryResources(query, include);
 
             var response = await HttpClient.SendAsync(request).ConfigureAwait(false);
+            HttpResponseListener.QueryResources(response.StatusCode, query);
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
                 return Enumerable.Empty<TModel>();
@@ -471,9 +491,8 @@ namespace RedArrow.Argo.Client.Session
             var resource = ModelRegistry.GetResource(collection.Owner);
 
             // determine if the cache is missing any models for this relationship
-            Relationship rltn;
             var relationships = ModelRegistry.GetResource(collection.Owner).Relationships;
-            if (relationships != null && relationships.TryGetValue(collection.Name, out rltn))
+            if (relationships != null && relationships.TryGetValue(collection.Name, out var rltn))
             {
                 if (rltn?.Data.Type == JTokenType.Array
                     && rltn.Data.ToObject<IEnumerable<ResourceIdentifier>>()
@@ -485,6 +504,7 @@ namespace RedArrow.Argo.Client.Session
 
             var request = HttpRequestBuilder.GetRelated(resource.Id, resource.Type, collection.Name);
             var response = HttpClient.SendAsync(request).GetAwaiter().GetResult();
+            HttpResponseListener.GetRelated(response.StatusCode, resource.Id, resource.Type, collection.Name);
             if (response.StatusCode == HttpStatusCode.NotFound) return;
 
             response.CheckStatusCode();
