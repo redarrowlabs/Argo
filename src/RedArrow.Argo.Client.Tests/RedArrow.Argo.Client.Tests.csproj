@@ -107,6 +107,9 @@
     <Compile Include="Collections\Generic\RemoteGenericBagTests.cs" />
     <Compile Include="Extensions\HttpRequestMessageExtensions.cs" />
     <Compile Include="Extensions\SessionExtensions.cs" />
+    <Compile Include="Json\JsonDiffTests.cs" />
+    <Compile Include="Json\LooseJsonEqualityComparerTests.cs" />
+    <Compile Include="Json\TestJsonObject.cs" />
     <Compile Include="Linq\Queryable\OrderByQueryableTests.cs" />
     <Compile Include="Linq\Queryable\SkipQueryableTests.cs" />
     <Compile Include="Linq\Queryable\TakeQueryableTests.cs" />
