@@ -23,6 +23,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using RedArrow.Argo.Client.Http.Handlers.Response;
+using RedArrow.Argo.Client.Json;
 
 namespace RedArrow.Argo.Client.Session
 {
@@ -42,6 +43,9 @@ namespace RedArrow.Argo.Client.Session
 
         internal BundledHttpResponseListener HttpResponseListener { get; }
 
+        internal JsonDiff JsonDiff { get; set; }
+        internal IEqualityComparer<JToken> JsonComparer { get; set; }
+
         public bool Disposed { get; set; }
 
         internal Session(
@@ -59,6 +63,8 @@ namespace RedArrow.Argo.Client.Session
             ModelRegistry = modelRegistry;
             JsonSettings = jsonSettings;
             HttpResponseListener = httpResponseListener;
+            JsonDiff = new JsonDiff();
+            JsonComparer = new LooseJsonEqualityComparer();
         }
 
         #region ISession
@@ -588,72 +594,27 @@ namespace RedArrow.Argo.Client.Session
         {
             var originalResource = ModelRegistry.GetResource(model);
 
-            /* Trim any equivalent values from the patch.
-             * We're NOT removing/nulling values that exist in the original resource,
-             * but not in the new resource.  This trim is coarse-grained to avoid
-             * recursion and provide the safest update (in regard to array updates). */
-
-            // if not exists in original and null in model, then remove from patch
-            // if original same as model including nulls, then remove from patch
-            // if exists in original and null in model, then include in patch
-            // if original is different than model, then include in patch
-            var modelAttrs = ModelRegistry.GetAttributeValues(model) ?? new JObject();
-            var originalAttrs = originalResource.Attributes ?? new JObject();
-            foreach (var modelAttr in modelAttrs.Properties().ToArray())
-            {
-                if (!originalAttrs.TryGetValue(modelAttr.Name, out var ogValue))
-                {
-                    if (modelAttr.Value.Type == JTokenType.Null)
-                    {
-                        modelAttr.Remove();
-                    }
-                }
-                else if (JsonConvert.SerializeObject(ogValue, JsonSettings) == JsonConvert.SerializeObject(modelAttr.Value, JsonSettings))
-                {
-                    modelAttr.Remove();
-                }
-            }
-
             var modelRtlns = ModelRegistry.GetRelationshipValues(model) ?? new Dictionary<string, Relationship>();
             var originalRtlns = originalResource.Relationships ?? new Dictionary<string, Relationship>();
-            modelRtlns = modelRtlns.Where(modelRltn =>
+            var patchRtlns = modelRtlns.Where(modelRltn =>
             {
-                if (!originalRtlns.TryGetValue(modelRltn.Key, out var ogRtln))
-                {
-                    if (modelRltn.Value == null || modelRltn.Value.Data.Type == JTokenType.Null)
-                    {
-                        return false;
-                    }
-                }
-                // Using ToString comparison here because the ID is a Guid in the OG and String in New
-                else if (JsonConvert.SerializeObject(ogRtln.Data, JsonSettings) == JsonConvert.SerializeObject(modelRltn.Value.Data, JsonSettings))
-                {
-                    return false;
-                }
-                return true;
+                originalRtlns.TryGetValue(modelRltn.Key, out var ogRtln);
+                // JToken.DeepEquals does not work here
+                return !JsonComparer.Equals(ogRtln?.Data, modelRltn.Value?.Data);
             }).ToDictionary(x => x.Key, x => x.Value);
+            
+            var modelAttrs = ModelRegistry.GetAttributeValues(model) ?? new JObject();
+            var originalAttrs = originalResource.Attributes ?? new JObject();
 
             var modelMetas = ModelRegistry.GetMetaValues(model) ?? new JObject();
             var originalMetas = originalResource.Meta ?? new JObject();
-            foreach (var modelMeta in modelMetas.Properties().ToArray())
-            {
-                if (!originalMetas.TryGetValue(modelMeta.Name, out var ogValue))
-                {
-                    if (modelMeta.Value.Type == JTokenType.Null)
-                    {
-                        modelMeta.Remove();
-                    }
-                }
-                else if (JsonConvert.SerializeObject(ogValue, JsonSettings) == JsonConvert.SerializeObject(modelMeta.Value, JsonSettings))
-                {
-                    modelMeta.Remove();
-                }
-            }
             // Links are not patched
-
-            if (!modelAttrs.HasValues
-                && !modelRtlns.Any()
-                && !modelMetas.HasValues)
+            
+            var patchAttrs = (JObject)JsonDiff.ReducePatch(originalAttrs, modelAttrs);
+            var patchMetas = (JObject)JsonDiff.ReducePatch(originalMetas, modelMetas);
+            if (patchAttrs == null
+                && !patchRtlns.Any()
+                && patchMetas == null)
             {
                 // Nothing to update
                 return null;
@@ -662,9 +623,9 @@ namespace RedArrow.Argo.Client.Session
             {
                 Id = originalResource.Id,
                 Type = originalResource.Type,
-                Attributes = modelAttrs.HasValues ? modelAttrs : null,
-                Relationships = modelRtlns.Any() ? modelRtlns : null,
-                Meta = modelMetas.HasValues ? modelMetas : null
+                Attributes = patchAttrs,
+                Relationships = patchRtlns.Any() ? patchRtlns : null,
+                Meta = patchMetas
             };
         }
 
